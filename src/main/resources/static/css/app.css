@@ -1,0 +1,702 @@
+:root {
+	--navy: #0b1f3a;
+	--navy-2: #102b4d;
+	--blue: #1677ee;
+	--ink: #14243a;
+	--muted: #728198;
+	--line: #e7edf4;
+	--canvas: #f5f7fb
+}
+
+* {
+	box-sizing: border-box
+}
+
+body {
+	margin: 0;
+	background: var(--canvas);
+	color: var(--ink);
+	font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI",
+		sans-serif;
+	font-size: 14px
+}
+
+.sidebar {
+	position: fixed;
+	inset: 0 auto 0 0;
+	width: 292px;
+	padding: 18px 12px;
+	background: var(--navy);
+	color: #e9f1ff;
+	display: flex;
+	flex-direction: column;
+	z-index: 1030
+}
+
+.brand {
+	min-height: 62px;
+	padding: 0 10px 14px;
+	display: flex;
+	align-items: center;
+	gap: 13px;
+	text-decoration: none;
+	color: white;
+	border-bottom: 1px solid #253d59;
+	margin-bottom: 20px
+}
+
+.brand-logo {
+	width: 64px;
+	height: 44px;
+	flex: 0 0 auto;
+	object-fit: contain
+}
+
+.brand strong, .brand small {
+	display: block
+}
+
+.brand strong {
+	font-size: 15px;
+	letter-spacing: -.3px
+}
+
+.brand small {
+	margin-top: 2px;
+	color: #b0c3dc;
+	font-size: 12px
+}
+
+.nav-caption {
+	padding: 0 16px;
+	margin: 2px 0 9px;
+	color: #82a3ca;
+	font-size: 10px;
+	font-weight: 750;
+	letter-spacing: 1.15px
+}
+
+.side-link {
+	height: 43px;
+	padding: 0 16px;
+	margin: 2px 0;
+	border-radius: 10px;
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	color: #e1eafb;
+	text-decoration: none;
+	font-size: 14px;
+	transition: .15s
+}
+
+.side-link>.nav-icon {
+	width: 18px;
+	text-align: center;
+	font-size: 16px
+}
+
+.side-link:hover, .side-link.active {
+	background: #193b63;
+	color: #fff
+}
+
+.workspace-card {
+	margin: 20px 6px 4px;
+	padding: 16px 17px;
+	background: #112e50;
+	border: 1px solid #1b3c60;
+	border-radius: 10px
+}
+
+.workspace-card small, .workspace-card strong {
+	display: block
+}
+
+.workspace-card small {
+	color: #a9c0df;
+	font-size: 12px
+}
+
+.workspace-card strong {
+	color: #1688ff;
+	font-size: 14px
+}
+
+.main-area {
+	margin-left: 292px;
+	min-height: 100vh
+}
+
+.topbar {
+	height: 78px;
+	background: #fff;
+	border-bottom: 1px solid var(--line);
+	display: flex;
+	align-items: center;
+	padding: 0 28px;
+	gap: 30px;
+	position: sticky;
+	top: 0;
+	z-index: 1020
+}
+
+.top-title {
+	font-size: 19px;
+	letter-spacing: -.45px
+}
+
+.search-wrap {
+	width: min(370px, 38vw);
+	position: relative
+}
+
+.search-wrap>.search-icon {
+	position: absolute;
+	left: 13px;
+	top: 14px;
+	font-size: 14px;
+	color: #53677e
+}
+
+.search-wrap .form-control {
+	height: 42px;
+	padding-left: 43px;
+	border-color: #dce4ed;
+	border-radius: 9px;
+	font-size: 14px
+}
+
+.profile-button {
+	border: 0;
+	background: none;
+	display: flex;
+	align-items: center;
+	gap: 11px;
+	text-align: left;
+	padding: 4px 0 4px 15px
+}
+
+.avatar {
+	height: 40px;
+	width: 40px;
+	flex: 0 0 40px;
+	border-radius: 50%;
+	background: #e0edff;
+	color: #1474dc;
+	display: grid;
+	place-items: center;
+	font-weight: 700;
+	font-size: 14px
+}
+
+.profile-copy strong, .profile-copy small {
+	display: block
+}
+
+.profile-copy strong {
+	font-size: 13px
+}
+
+.profile-copy small {
+	font-size: 11px;
+	color: var(--muted);
+	margin-top: 2px
+}
+
+.chevron {
+	color: #718096
+}
+
+.menu-toggle {
+	display: none
+}
+
+.page-content {
+	padding: 32px 34px;
+	max-width: 1500px;
+	margin: 0 auto
+}
+
+.page-heading {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 25px;
+	gap: 20px
+}
+
+.page-heading h1 {
+	margin: 4px 0 5px;
+	font-size: 27px;
+	font-weight: 700;
+	letter-spacing: -.8px
+}
+
+.page-heading p {
+	margin: 0;
+	color: var(--muted)
+}
+
+.user-import-form {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	flex-wrap: wrap
+}
+
+.excel-file-picker {
+	position: relative;
+	min-width: 285px;
+	min-height: 48px;
+	margin: 0;
+	padding: 6px 9px 6px 11px;
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	background: #fff;
+	border: 1px solid #dce4ed;
+	border-radius: 10px;
+	cursor: pointer;
+	transition: border-color .15s, box-shadow .15s, background-color .15s
+}
+
+.excel-file-picker:hover,
+.excel-file-picker:focus-within {
+	border-color: #8bbcf5;
+	box-shadow: 0 0 0 3px #1677ee12
+}
+
+.excel-file-picker.has-file {
+	background: #f8fbff;
+	border-color: #b7d5fb
+}
+
+.excel-file-input {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	white-space: nowrap;
+	clip-path: inset(50%)
+}
+
+.excel-file-icon {
+	width: 34px;
+	height: 34px;
+	flex: 0 0 34px;
+	display: grid;
+	place-items: center;
+	border-radius: 8px;
+	background: #eaf4ff;
+	color: #16804a;
+	font-size: 16px
+}
+
+.excel-file-copy {
+	min-width: 0;
+	flex: 1
+}
+
+.excel-file-copy strong,
+.excel-file-copy small {
+	display: block;
+	max-width: 170px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap
+}
+
+.excel-file-copy strong {
+	color: var(--ink);
+	font-size: 12px;
+	font-weight: 650
+}
+
+.excel-file-copy small {
+	margin-top: 2px;
+	color: var(--muted);
+	font-size: 11px
+}
+
+.excel-browse {
+	padding: 6px 9px;
+	border: 1px solid #e4ebf3;
+	border-radius: 7px;
+	background: #f8fafc;
+	color: #53677e;
+	font-size: 11px;
+	font-weight: 650
+}
+
+.excel-upload-button {
+	min-height: 48px;
+	padding-inline: 16px;
+	white-space: nowrap
+}
+
+.eyebrow {
+	color: #7d91ab;
+	font-size: 10px;
+	font-weight: 750;
+	letter-spacing: 1.1px
+}
+
+.btn-primary {
+	background: #1277eb;
+	border-color: #1277eb
+}
+
+.btn-primary:hover {
+	background: #0964cd;
+	border-color: #0964cd
+}
+
+.stat-card {
+	height: 100%;
+	min-height: 172px;
+	background: #fff;
+	border: 1px solid var(--line);
+	border-radius: 12px;
+	padding: 20px;
+	display: block;
+	text-decoration: none;
+	color: inherit
+}
+
+.stat-icon {
+	height: 36px;
+	width: 36px;
+	display: grid;
+	place-items: center;
+	background: #edf5ff;
+	border-radius: 9px;
+	color: #1477e8;
+	font-size: 18px;
+	margin-bottom: 17px
+}
+
+.stat-label {
+	color: #7c8ba0;
+	font-size: 10px;
+	font-weight: 750;
+	letter-spacing: .9px
+}
+
+.stat-value {
+	font-size: 28px;
+	font-weight: 700;
+	margin: 3px 0
+}
+
+.stat-note {
+	color: var(--muted);
+	font-size: 12px
+}
+
+.link-card:hover {
+	border-color: #9fc8fb;
+	transform: translateY(-1px)
+}
+
+.welcome-card {
+	background: #fff;
+	border: 1px solid var(--line);
+	border-radius: 12px;
+	padding: 24px;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 20px
+}
+
+.welcome-card h2 {
+	font-size: 18px;
+	margin: 6px 0
+}
+
+.welcome-card p {
+	margin: 0;
+	color: var(--muted)
+}
+
+.table-card, .form-card {
+	background: #fff;
+	border: 1px solid var(--line);
+	border-radius: 12px;
+	overflow: hidden
+}
+
+.form-card {
+	padding: 25px;
+	max-width: 600px
+}
+
+.table {
+	--bs-table-bg: transparent
+}
+
+.table thead th {
+	padding: 14px 17px;
+	background: #fafbfd;
+	color: #8290a4;
+	font-size: 10px;
+	font-weight: 750;
+	letter-spacing: .6px;
+	border-bottom-color: var(--line)
+}
+
+.table tbody td {
+	padding: 14px 17px;
+	border-bottom-color: #edf1f6
+}
+
+.table tbody tr:last-child td {
+	border-bottom: 0
+}
+
+.user-cell {
+	display: flex;
+	align-items: center;
+	gap: 11px
+}
+
+.user-cell .avatar {
+	height: 34px;
+	width: 34px;
+	flex-basis: 34px;
+	font-size: 12px
+}
+
+.user-cell strong {
+	font-size: 13px
+}
+
+.role-badge {
+	display: inline-flex;
+	padding: 5px 9px;
+	border-radius: 6px;
+	background: #eef4fb;
+	color: #45617f;
+	font-size: 10px;
+	font-weight: 700;
+	letter-spacing: .3px
+}
+
+.status-dot {
+	font-size: 12px;
+	color: #8a96a6
+}
+
+.status-dot:before {
+	content: "";
+	display: inline-block;
+	height: 7px;
+	width: 7px;
+	margin-right: 7px;
+	border-radius: 50%;
+	background: #aab4c1
+}
+
+.status-dot.enabled:before {
+	background: #19a879
+}
+
+.empty-state {
+	text-align: center;
+	color: var(--muted);
+	padding: 40px !important
+}
+
+.description-cell {
+	min-width: 220px;
+	max-width: 470px
+}
+
+.alerts {
+	margin-bottom: 15px
+}
+
+.auth-page {
+	min-height: 100vh;
+	display: grid;
+	place-items: center;
+	padding: 24px;
+	background: radial-gradient(ellipse at top right, #e5f1ff, transparent 55%),
+		var(--canvas)
+}
+
+.auth-card {
+	width: min(100%, 430px);
+	padding: 34px;
+	background: white;
+	border: 1px solid var(--line);
+	border-radius: 15px;
+	box-shadow: 0 15px 50px #18375b10
+}
+
+.auth-brand {
+	padding: 0 0 23px;
+	margin-bottom: 26px;
+	border-bottom: 1px solid var(--line);
+	color: var(--ink)
+}
+
+.auth-brand small {
+	color: var(--muted)
+}
+
+.auth-card h1 {
+	font-size: 24px;
+	font-weight: 700;
+	letter-spacing: -.6px;
+	margin: 8px 0
+}
+
+.auth-card>p {
+	margin-bottom: 22px
+}
+
+.form-label {
+	font-weight: 600;
+	font-size: 13px
+}
+
+.form-control, .form-select {
+	border-color: #dce4ed;
+	border-radius: 8px;
+	min-height: 42px;
+	font-size: 14px
+}
+
+.form-control:focus, .form-select:focus {
+	border-color: #74b2fc;
+	box-shadow: 0 0 0 .2rem #1677ee18
+}
+
+.auth-help {
+	display: block;
+	text-align: center;
+	margin-top: 19px;
+	color: #1471d5;
+	text-decoration: none
+}
+
+.auth-foot {
+	text-align: center;
+	border-top: 1px solid var(--line);
+	margin-top: 24px;
+	padding-top: 17px;
+	color: #8996a8;
+	font-size: 12px
+}
+
+.field-error {
+	color: #c63442;
+	font-size: 12px;
+	margin-top: 4px
+}
+
+.dropdown-menu {
+	border-color: var(--line);
+	border-radius: 10px;
+	padding: 6px;
+	min-width: 190px
+}
+
+.dropdown-item {
+	padding: 9px 11px;
+	font-size: 13px;
+	border-radius: 6px
+}
+
+.modal-content {
+	border: 0;
+	border-radius: 12px
+}
+
+.modal-header, .modal-footer {
+	border-color: var(--line)
+}
+
+@media ( max-width :950px) {
+	.sidebar {
+		width: 250px
+	}
+	.main-area {
+		margin-left: 250px
+	}
+	.topbar {
+		padding: 0 20px;
+		gap: 18px
+	}
+	.page-content {
+		padding: 26px 20px
+	}
+	.page-heading {
+		flex-wrap: wrap
+	}
+}
+
+@media ( max-width :700px) {
+	.sidebar {
+		transform: translateX(-100%);
+		transition: transform .2s
+	}
+	.sidebar-open .sidebar {
+		transform: translateX(0);
+		box-shadow: 0 0 0 9999px #06132988
+	}
+	.main-area {
+		margin-left: 0
+	}
+	.menu-toggle {
+		display: block
+	}
+	.topbar {
+		height: 66px;
+		padding: 0 14px;
+		gap: 12px
+	}
+	.top-title {
+		font-size: 16px
+	}
+	.search-wrap {
+		display: none
+	}
+	.profile-copy {
+		display: none
+	}
+	.profile-button {
+		padding-left: 5px
+	}
+	.page-content {
+		padding: 23px 15px
+	}
+	.page-heading {
+		align-items: flex-start
+	}
+	.user-import-form {
+		width: 100%
+	}
+	.excel-file-picker {
+		min-width: 0;
+		flex: 1
+	}
+	.excel-upload-button {
+		padding-inline: 12px
+	}
+	.page-heading h1 {
+		font-size: 23px
+	}
+	.auth-card {
+		padding: 26px 21px
+	}
+	.welcome-card {
+		align-items: flex-start;
+		flex-direction: column
+	}
+}
