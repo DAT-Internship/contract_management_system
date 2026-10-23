@@ -123,10 +123,6 @@ public class Contract {
     private MasterCurrency currency;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "paymenttype_id", nullable = false)
-    private MasterPaymentType legacyPaymentType;
-
-    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "project_incharge_id", nullable = false)
     private User projectIncharge;
 

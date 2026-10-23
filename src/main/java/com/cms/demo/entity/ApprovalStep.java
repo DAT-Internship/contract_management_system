@@ -16,10 +16,7 @@ public class ApprovalStep {
     @Column(name = "step_id")
     private Long stepId;
 
-    @Column(name = "value")
-    private Long value;
-
-    @Column(name = "current_approval", length=100)
+    @Column(name = "current_approval", length=50)
     private String currentApproval;
 
     @Column(name = "status", length=10)
