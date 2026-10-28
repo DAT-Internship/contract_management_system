@@ -32,6 +32,8 @@ public class Department {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_dept_id", nullable = false)
     private Department parentDepartment;
+    
+   
 
 }
 

@@ -51,10 +51,9 @@
 			class="fa-solid fa-key nav-icon" aria-hidden="true"></i>Password
 			requests <span class="badge rounded-pill text-bg-primary ms-auto"
 			th:if="${pendingResetCount > 0}" th:text="${pendingResetCount}"></span></a>
-		<a class="side-link" th:href="@{/profile/password}"
-			th:classappend="${page == 'password'} ? ' active'"><i
-			class="fa-solid fa-lock nav-icon" aria-hidden="true"></i>Change
-			password</a>
+		<a class="side-link" th:href="@{/change-password}">
+    <i class="fa-solid fa-lock nav-icon"></i>Change password
+</a>
 		<div class="workspace-card mt-auto">
 			<small>FY2026</small><strong>Contract Control Center</strong><small>PMO
 				governed workflow</small>

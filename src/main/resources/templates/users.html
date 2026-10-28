@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head('User Management')}"></head>
+<body>
+	<!-- Sidebar -->
+	<aside th:replace="~{fragments/layout :: sidebar}"></aside>
+	
+	<!-- Topbar -->
+	<div style="margin-left: 280px; width: calc(100% - 280px); position: fixed; top: 0; z-index: 1000;">
+		<header th:replace="~{fragments/layout :: topbar}"></header>
+	</div>
+
+	<!-- Main Content -->
+	<div class="main-wrapper" style="margin-left: 270px; width: calc(100% - 270px); padding: 20px; margin-top: 80px;">
+		
+		<main class="content">
+			<div th:replace="~{fragments/layout :: alerts}"></div>
+			
+			<div class="d-flex justify-content-between align-items-center mb-4">
+				<h2>User Management</h2>
+				<!-- Add User Modal ဖွင့်ဖို့ ခလုတ် -->
+				<button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">+ Add New User</button>
+			</div>
+
+			<div class="card shadow-sm">
+				<div class="card-body">
+					<table class="table table-hover">
+						<thead class="table-light">
+							<tr>
+								<th>Staff ID</th>
+								<th>Name</th>
+								<th>Email</th>
+								<th>Role</th>
+								<th>Status</th>
+								<th>Actions</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr th:each="user : ${users}">
+								<td th:text="${user.employeeCode}"></td>
+								<td th:text="${user.fullName}"></td>
+								<td th:text="${user.email}"></td>
+								<td><span class="badge bg-primary" th:text="${user.role.roleName}"></span></td>
+								<td>
+									<span th:if="${user.isActive}" class="badge bg-success">Active</span>
+									<span th:unless="${user.isActive}" class="badge bg-danger">Inactive</span>
+								</td>
+								<td>
+                                    <!-- 🔴 Edit ခလုတ် ထည့်ပြီ -->
+									<a th:href="@{/users/edit/{id}(id=${user.userId})}" class="btn btn-sm btn-outline-primary">
+                                        Edit
+                                    </a>
+                                    
+                                    <!-- Deactivate ခလုတ် -->
+									<a th:href="@{/users/deactivate/{id}(id=${user.userId})}" 
+									   class="btn btn-sm btn-outline-danger" 
+									   th:if="${user.isActive}">Deactivate</a>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</main>
+	</div>
+
+	<!-- Add User Modal -->
+	<div class="modal fade" id="addUserModal" tabindex="-1">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<form th:action="@{/users/create}" method="post">
+					<div class="modal-header">
+						<h5 class="modal-title">Add New User</h5>
+						<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+					</div>
+					<div class="modal-body">
+						<div class="mb-3">
+							<label class="form-label">Staff ID</label>
+							<input type="text" name="employeeCode" class="form-control" placeholder="e.g. 25-00002" required>
+						</div>
+						<div class="mb-3">
+							<label class="form-label">Full Name</label>
+							<input type="text" name="fullName" class="form-control" required>
+						</div>
+						<div class="mb-3">
+							<label class="form-label">Email</label>
+							<input type="email" name="email" class="form-control" required>
+						</div>
+                        
+						<div class="mb-3">
+                            <label class="form-label">Role</label>
+                            <select name="roleId" class="form-select" required>
+                                <option value="">-- Select Role --</option>
+                                <option th:each="role : ${roles}" 
+                                        th:value="${role.roleId}" 
+                                        th:text="${role.roleName}">
+                                </option>
+                            </select>
+                        </div>
+						<div class="mb-3">
+                          <label class="form-label">Department</label>
+                            <select name="departmentId" class="form-select" required>
+                                 <option value="">-- Select Department --</option>
+                                 <option th:each="dept : ${departments}" 
+                                   th:value="${dept.departmentId}" 
+                                   th:text="${dept.deptName}">
+                                 </option>
+                             </select>
+                         </div>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+						<button type="submit" class="btn btn-primary">Save User</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+
+	<!-- Scripts -->
+	<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

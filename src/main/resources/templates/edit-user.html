@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head('Edit User')}"></head>
+<body>
+	<aside th:replace="~{fragments/layout :: sidebar}"></aside>
+	<div style="margin-left: 280px; width: calc(100% - 280px); position: fixed; top: 0; z-index: 1000;">
+		<header th:replace="~{fragments/layout :: topbar}"></header>
+	</div>
+
+	<div class="main-wrapper" style="margin-left: 270px; width: calc(100% - 270px); padding: 20px; margin-top: 80px;">
+		<main class="content">
+			<div class="card shadow-sm w-50">
+				<div class="card-header bg-white">
+					<h4 class="mb-0">Edit User</h4>
+				</div>
+				<div class="card-body">
+					<form th:action="@{/users/update/{id}(id=${user.userId})}" method="post">
+						
+						<div class="mb-3">
+							<label class="form-label">Staff ID (Cannot change)</label>
+							<input type="text" class="form-control" th:value="${user.employeeCode}" disabled>
+						</div>
+						
+						<div class="mb-3">
+							<label class="form-label">Full Name</label>
+							<input type="text" name="fullName" class="form-control" th:value="${user.fullName}" required>
+						</div>
+						
+						<div class="mb-3">
+							<label class="form-label">Email</label>
+							<input type="email" name="email" class="form-control" th:value="${user.email}" required>
+						</div>
+
+						<div class="mb-3">
+							<label class="form-label">Department</label>
+							<select name="departmentId" class="form-select" required>
+								<option th:each="dept : ${departments}" 
+										th:value="${dept.departmentId}" 
+										th:text="${dept.deptName}"
+										th:selected="${dept.departmentId == user.department.departmentId}">
+								</option>
+							</select>
+						</div>
+
+						<div class="mb-3">
+							<label class="form-label">Role</label>
+							<select name="roleId" class="form-select" required>
+								<option th:each="role : ${roles}" 
+										th:value="${role.roleId}" 
+										th:text="${role.roleName}"
+										th:selected="${role.roleId == user.role.roleId}">
+								</option>
+							</select>
+						</div>
+
+						<div class="d-flex justify-content-between">
+							<a th:href="@{/users}" class="btn btn-secondary">Cancel</a>
+							<button type="submit" class="btn btn-primary">Update User</button>
+						</div>
+					</form>
+				</div>
+			</div>
+		</main>
+	</div>
+	<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>
