@@ -22,10 +22,10 @@ public class MasterCurrency {
     @Column(name = "name", length=80, nullable=false)
     private String name;
 
-    @Column(name = "is_active")
+    @Column(name = "is_active", nullable=false)
     private Boolean isActive;
 
-    @Column(name = "sort_order")
+    @Column(name = "sort_order", nullable=false)
     private Integer sortOrder;
 
 }

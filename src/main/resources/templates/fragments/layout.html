@@ -15,6 +15,7 @@
 
 
 <link rel="stylesheet" th:href="@{/css/app.css}">
+<link rel="stylesheet" th:if="${page == 'master-setup'}" th:href="@{/css/master-setup.css}">
 </head>
 <body>
 	<th:block th:fragment="scripts">
@@ -40,6 +41,9 @@
 			class="fa-solid fa-bell nav-icon" aria-hidden="true"></i>Notifications</a><a
 			class="side-link" href="#"><i
 			class="fa-solid fa-chart-column nav-icon" aria-hidden="true"></i>Reports</a>
+		<a class="side-link" th:href="@{/master-setup}"
+			th:classappend="${page == 'master-setup'} ? ' active'"><i
+			class="fa-solid fa-sliders nav-icon" aria-hidden="true"></i>Master Setup</a>
 		<div class="nav-caption mt-4">ADMINISTRATION</div>
 		<a class="side-link" th:href="@{/users}"
 			sec:authorize="hasRole('ADMIN')"
@@ -61,14 +65,19 @@
 		</div>
 	</aside>
 
-	<header th:fragment="topbar" class="topbar">
+	<header th:fragment="topbar" class="topbar"
+		th:classappend="${page == 'master-setup'} ? ' master-setup-topbar'">
 		<button class="btn btn-light menu-toggle" type="button"
 			aria-label="Toggle navigation"
 			onclick="document.body.classList.toggle('sidebar-open')">
 			<i class="fa-solid fa-bars" aria-hidden="true"></i>
 		</button>
 
-		<strong class="top-title">Contract Management</strong>
+		<div class="master-page-identity" th:if="${page == 'master-setup'}">
+			<div class="master-breadcrumb">DAT <span>/</span> Settings</div>
+			<strong class="master-page-title">Master Setup</strong>
+		</div>
+		<strong class="top-title" th:unless="${page == 'master-setup'}">Contract Management</strong>
 
 		<!--  <div class="search-wrap">
 			<i class="fa-solid fa-magnifying-glass search-icon"
@@ -76,7 +85,19 @@
 				placeholder="Search contracts, customers…" aria-label="Search">
 		</div>-->
 
-		<div class="dropdown ms-auto">
+		<div class="master-role-tools ms-auto" th:if="${page == 'master-setup'}">
+			<label class="visually-hidden" for="masterRole">Current role</label>
+			<select id="masterRole" class="master-role-select" aria-label="Current role">
+				<option data-initials="PM">Admin · PMO</option>
+				<option data-initials="CM" selected>Contract Manager</option>
+				<option data-initials="AH">Approver · Dept Head</option>
+				<option data-initials="FN">Finance</option>
+				<option data-initials="OP">Operator · PM/PIC</option>
+			</select>
+			<span class="master-role-avatar" aria-label="Contract Manager">CM</span>
+		</div>
+
+		<div class="dropdown ms-auto" th:unless="${page == 'master-setup'}">
 			<button class="profile-button" type="button"
 				data-bs-toggle="dropdown" aria-expanded="false">
 				<span class="avatar">U</span> <span class="profile-copy"> <strong>User</strong>
