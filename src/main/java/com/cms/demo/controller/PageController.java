@@ -19,13 +19,7 @@ public class PageController {
         this.userService = userService;
     }
 
-    // ၁။ ပင်မလမ်းကြောင်း (/) ကို ခေါ်ရင် Login ကို သွားခိုင်းမယ်
-    @GetMapping("/")
-    public String root() {
-        return "redirect:/login"; 
-    }
-
-    // ၂။ Login Page ကို ပြဖို့
+    // Login Page ကို ပြဖို့
     @GetMapping("/login")
     public String loginPage() {
         return "auth/login";
@@ -38,13 +32,13 @@ public class PageController {
     }
     
     // Change Password Form ပြသဖို့
-    @GetMapping("/change-password")
+    @GetMapping({"/change-password", "/profile/password"})
     public String showChangePasswordForm() {
         return "auth/change-password"; 
     }
 
     // Form ကနေ Password အသစ် လက်ခံဖို့
-    @PostMapping("/change-password")
+    @PostMapping({"/change-password", "/profile/password"})
     public String changePassword(@RequestParam("currentPassword") String currentPassword,
                                  @RequestParam("newPassword") String newPassword,
                                  @RequestParam("confirmPassword") String confirmPassword,

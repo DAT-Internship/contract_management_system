@@ -38,7 +38,7 @@ public class DataInitializer implements CommandLineRunner {
         if (userRepository.findByEmployeeCode("25-00001").isEmpty()) {
             
             // ၂။ Department မရှိရင် "Management" ဆိုတဲ့ ဌာန ဆောက်မယ်
-            Department dept = departmentRepository.findByDeptCode("MGMT").orElseGet(() -> {
+            Department dept = departmentRepository.findByDeptCodeIgnoreCase("MGMT").orElseGet(() -> {
                 Department newDept = new Department();
                 newDept.setDeptCode("MGMT");
                 newDept.setDeptName("Management");

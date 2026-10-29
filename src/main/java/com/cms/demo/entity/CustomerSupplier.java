@@ -26,22 +26,22 @@ public class CustomerSupplier {
     @Column(name = "party_type", length=20, nullable=false)
     private String partyType;
 
-    @Column(name = "tax_id", length=40)
+    @Column(name = "tax_id", length=40, nullable=false)
     private String taxId;
 
-    @Column(name = "address", columnDefinition="text")
+    @Column(name = "address", columnDefinition="text", nullable=false)
     private String address;
 
-    @Column(name = "contact_person", length=120)
+    @Column(name = "contact_person", length=120, nullable=false)
     private String contactPerson;
 
-    @Column(name = "contact_email", length=120)
+    @Column(name = "contact_email", length=120, nullable=false)
     private String contactEmail;
 
-    @Column(name = "contact_phone", length=30)
+    @Column(name = "contact_phone", length=30, nullable=false)
     private String contactPhone;
 
-    @Column(name = "is_active")
+    @Column(name = "is_active", nullable=false)
     private Boolean isActive;
 
     @Column(name = "created_at")
