@@ -9,6 +9,12 @@ import com.cms.demo.entity.MasterContractType;
 import com.cms.demo.entity.MasterCurrency;
 import com.cms.demo.entity.MasterPaymentStatus;
 import com.cms.demo.entity.MasterPaymentType;
+import com.cms.demo.entity.Project;
+import com.cms.demo.entity.User;
+import com.cms.demo.repository.ProjectRepository;
+import com.cms.demo.repository.UserRepository;
+import org.springframework.format.annotation.DateTimeFormat;
+import java.time.LocalDate;
 
 import com.cms.demo.repository.AgreementForRepository;
 import com.cms.demo.repository.ContractCategoryRepository;
@@ -46,6 +52,8 @@ public class MasterSetupController {
     private final PaymentStatusRepository paymentStatusRepository;
     private final CurrencyRepository currencyRepository;
     private final DepartmentRepository departmentRepository;
+    private final ProjectRepository projectRepository;
+    private final UserRepository userRepository;
 
     public MasterSetupController(
             CustomerSupplierRepository customerSupplierRepository,
@@ -56,7 +64,9 @@ public class MasterSetupController {
             ContractStatusRepository contractStatusRepository,
             PaymentStatusRepository paymentStatusRepository,
             CurrencyRepository currencyRepository,
-            DepartmentRepository departmentRepository) {
+            DepartmentRepository departmentRepository,
+            ProjectRepository projectRepository,
+            UserRepository userRepository) {
 
         this.customerSupplierRepository = customerSupplierRepository;
         this.agreementForRepository = agreementForRepository;
@@ -67,6 +77,8 @@ public class MasterSetupController {
         this.paymentStatusRepository = paymentStatusRepository;
         this.currencyRepository = currencyRepository;
         this.departmentRepository = departmentRepository;
+        this.projectRepository = projectRepository;
+        this.userRepository = userRepository;
     }
 
 
@@ -132,6 +144,18 @@ public class MasterSetupController {
                 departmentRepository.findAll(Sort.by(Sort.Direction.ASC, "deptName")).stream()
                         .filter(item -> Boolean.TRUE.equals(item.getIsActive())).toList()
         );
+        model.addAttribute(
+                "projects",
+                projectRepository.findAll(Sort.by(Sort.Direction.ASC, "projectName")).stream()
+                        .filter(item -> item.getStatus() == null || !"INACTIVE".equalsIgnoreCase(item.getStatus())).toList()
+        );
+
+        model.addAttribute(
+                "allUsers",
+                userRepository.findAll(Sort.by(Sort.Direction.ASC, "fullName")).stream()
+                        .filter(item -> Boolean.TRUE.equals(item.getIsActive())).toList()
+        );
+
 
         return "master-setup";
     }
@@ -158,6 +182,12 @@ public class MasterSetupController {
             @RequestParam(value = "contactPerson", required = false) String contactPerson,
             @RequestParam(value = "contactEmail", required = false) String contactEmail,
             @RequestParam(value = "contactPhone", required = false) String contactPhone,
+            @RequestParam(value = "projectRank", required = false) String projectRank,
+            @RequestParam(value = "departmentId", required = false) Integer departmentId,
+            @RequestParam(value = "projectManagerId", required = false) Long projectManagerId,
+            @RequestParam(value = "startDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(value = "endDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @RequestParam(value = "status", required = false) String status,
 
             RedirectAttributes redirectAttributes) {
 
@@ -459,6 +489,40 @@ public class MasterSetupController {
 
                     break;
 
+                // =================================================
+                // PROJECT
+                // =================================================
+
+                case "project":
+
+                    if (projectRepository.existsByProjectCodeIgnoreCase(code)) {
+                        return showError("Project code already exists: " + code, redirectAttributes);
+                    }
+
+                    String rank = projectRank == null ? "" : projectRank.trim().toUpperCase();
+                    if (!rank.equals("A") && !rank.equals("B") && !rank.equals("C")) {
+                        return showError("Project rank must be A, B, or C.", redirectAttributes);
+                    }
+
+                    Project project = new Project();
+                    project.setProjectCode(code);
+                    project.setProjectName(name);
+                    project.setProjectRank(rank);
+                    if (departmentId != null) {
+                        project.setDepartment(departmentRepository.findById(departmentId).orElse(null));
+                    }
+                    if (projectManagerId != null) {
+                        project.setProjectManager(userRepository.findById(projectManagerId).orElse(null));
+                    }
+                    project.setStartDate(startDate);
+                    project.setEndDate(endDate);
+                    project.setStatus(status != null && !status.isBlank() ? status.trim().toUpperCase() : "ACTIVE");
+                    project.setCreatedAt(LocalDateTime.now());
+
+                    projectRepository.save(project);
+                    break;
+
+
 
                 default:
 
@@ -516,6 +580,12 @@ public class MasterSetupController {
             @RequestParam(value = "contactPerson", required = false) String contactPerson,
             @RequestParam(value = "contactEmail", required = false) String contactEmail,
             @RequestParam(value = "contactPhone", required = false) String contactPhone,
+            @RequestParam(value = "projectRank", required = false) String projectRank,
+            @RequestParam(value = "departmentId", required = false) Integer departmentId,
+            @RequestParam(value = "projectManagerId", required = false) Long projectManagerId,
+            @RequestParam(value = "startDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(value = "endDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @RequestParam(value = "status", required = false) String status,
 
             RedirectAttributes redirectAttributes) {
 
@@ -725,6 +795,46 @@ public class MasterSetupController {
 
                     break;
 
+                // =================================================
+                // PROJECT
+                // =================================================
+
+                case "project":
+
+                    Project projectToUpdate = projectRepository.findById(Long.parseLong(id)).orElseThrow();
+                    String updatedRank = projectRank == null ? "" : projectRank.trim().toUpperCase();
+                    if (!updatedRank.equals("A") && !updatedRank.equals("B") && !updatedRank.equals("C")) {
+                        return showError("Project rank must be A, B, or C.", redirectAttributes);
+                    }
+
+                    if (!projectToUpdate.getProjectCode().equalsIgnoreCase(code)
+                            && projectRepository.existsByProjectCodeIgnoreCase(code)) {
+                        return showError("Project code already exists: " + code, redirectAttributes);
+                    }
+
+                    projectToUpdate.setProjectCode(code);
+                    projectToUpdate.setProjectName(name);
+                    projectToUpdate.setProjectRank(updatedRank);
+                    if (departmentId != null) {
+                        projectToUpdate.setDepartment(departmentRepository.findById(departmentId).orElse(null));
+                    } else {
+                        projectToUpdate.setDepartment(null);
+                    }
+                    if (projectManagerId != null) {
+                        projectToUpdate.setProjectManager(userRepository.findById(projectManagerId).orElse(null));
+                    } else {
+                        projectToUpdate.setProjectManager(null);
+                    }
+                    projectToUpdate.setStartDate(startDate);
+                    projectToUpdate.setEndDate(endDate);
+                    if (status != null && !status.isBlank()) {
+                        projectToUpdate.setStatus(status.trim().toUpperCase());
+                    }
+
+                    projectRepository.save(projectToUpdate);
+                    break;
+
+
 
                 default:
 
@@ -844,6 +954,13 @@ public class MasterSetupController {
                     departmentRepository.save(department);
 
                     break;
+
+                case "project":
+                    Project projectToDelete = projectRepository.findById(Long.parseLong(id)).orElseThrow();
+                    projectToDelete.setStatus("INACTIVE");
+                    projectRepository.save(projectToDelete);
+                    break;
+
 
 
                 default:

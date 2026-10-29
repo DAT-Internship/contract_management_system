@@ -465,6 +465,62 @@
 					</button>
 				</div>
 
+				<!-- ================= PROJECT ================= -->
+				<div class="master-card">
+					<div class="card-top-content">
+						<div class="master-card-header">
+							<div>
+								<div class="master-icon">
+									<i class="fa-solid fa-diagram-project"></i>
+								</div>
+								<h3>Projects</h3>
+							</div>
+							<span class="count-badge"
+								th:text="${projects != null ? projects.size() : 0}">0</span>
+						</div>
+
+						<div class="master-items">
+							<div class="master-item" th:each="item : ${projects}">
+								<div class="d-flex flex-column">
+									<span class="fw-semibold" th:text="${item.projectName}">Project Name</span>
+									<small class="text-muted">
+										<span class="badge bg-light text-dark border me-1" th:text="${item.projectCode}">Code</span>
+										<span class="badge bg-primary me-1" th:text="'Rank ' + ${item.projectRank}">Rank A</span>
+										<span th:if="${item.department != null}" th:text="${item.department.deptName}">Dept</span>
+									</small>
+								</div>
+								<div class="master-actions">
+									<button type="button" class="btn btn-sm btn-outline-primary"
+										onclick="openEditFromButton(this)"
+										th:attr="data-id=${item.projectId},data-type='project',data-code=${item.projectCode},data-name=${item.projectName},data-project-rank=${item.projectRank},data-department-id=${item.department != null ? item.department.departmentId : ''},data-project-manager-id=${item.projectManager != null ? item.projectManager.userId : ''},data-start-date=${item.startDate},data-end-date=${item.endDate},data-status=${item.status}"
+										title="Edit">
+										<i class="fa-solid fa-pen"></i>
+									</button>
+									<form th:action="@{/master-setup/delete}" method="post"
+										onsubmit="return confirm('Delete this project?');"
+										class="d-inline">
+										<input type="hidden" name="type" value="project">
+										<input type="hidden" name="id" th:value="${item.projectId}">
+										<button type="submit" class="btn btn-sm btn-outline-danger"
+											title="Delete">
+											<i class="fa-solid fa-trash"></i>
+										</button>
+									</form>
+								</div>
+							</div>
+							<div class="empty-message"
+								th:if="${projects == null || projects.isEmpty()}">No
+								projects found.</div>
+						</div>
+					</div>
+
+					<button type="button" class="btn btn-primary add-btn"
+						onclick="openAddModal('project')">
+						<i class="fa-solid fa-plus me-1"></i> Add
+					</button>
+				</div>
+
+
 			</div>
 
 		</main>
@@ -536,6 +592,51 @@
 									maxlength="11" pattern="[0-9+() -]{7,11}"
 									title="Enter 7–11 characters using digits, +, parentheses, spaces or hyphens."
 									inputmode="tel" required>
+							</div>
+						</div>
+
+						<div id="projectFields" style="display: none;">
+							<div class="mb-3">
+								<label class="form-label fw-semibold" for="projectRank">Project Rank <span class="text-danger">*</span></label>
+								<select class="form-select" name="projectRank" id="projectRank">
+									<option value="A">A</option>
+									<option value="B">B</option>
+									<option value="C">C</option>
+								</select>
+								<div class="form-text">Project rank must be A, B, or C.</div>
+							</div>
+							<div class="mb-3">
+								<label class="form-label fw-semibold" for="projectDepartmentId">In-charge Department</label>
+								<select class="form-select" name="departmentId" id="projectDepartmentId">
+									<option value="">Select department (optional)</option>
+									<option th:each="dept : ${departments}" th:value="${dept.departmentId}" th:text="${dept.deptName}"></option>
+								</select>
+							</div>
+							<div class="mb-3">
+								<label class="form-label fw-semibold" for="projectManagerId">Project Manager</label>
+								<select class="form-select" name="projectManagerId" id="projectManagerId">
+									<option value="">Select manager (optional)</option>
+									<option th:each="user : ${allUsers}" th:value="${user.userId}" th:text="${user.fullName + ' (' + user.employeeCode + ')'}"></option>
+								</select>
+							</div>
+							<div class="row g-2 mb-3">
+								<div class="col-6">
+									<label class="form-label fw-semibold" for="projectStartDate">Start Date</label>
+									<input type="date" class="form-control" name="startDate" id="projectStartDate">
+								</div>
+								<div class="col-6">
+									<label class="form-label fw-semibold" for="projectEndDate">End Date</label>
+									<input type="date" class="form-control" name="endDate" id="projectEndDate">
+								</div>
+							</div>
+							<div class="mb-3">
+								<label class="form-label fw-semibold" for="projectStatus">Status</label>
+								<select class="form-select" name="status" id="projectStatus">
+									<option value="ACTIVE">ACTIVE</option>
+									<option value="IN_PROGRESS">IN_PROGRESS</option>
+									<option value="COMPLETED">COMPLETED</option>
+									<option value="ON_HOLD">ON_HOLD</option>
+								</select>
 							</div>
 						</div>
 

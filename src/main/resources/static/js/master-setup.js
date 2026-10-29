@@ -13,7 +13,8 @@
         contractStatus: 'Contract Status',
         paymentStatus: 'Payment Status',
         department: 'In-charge Department',
-        currency: 'Currency'
+        currency: 'Currency',
+        project: 'Project'
     };
 
     function show(type, mode, id, code, name, partyType, details = {}) {
@@ -37,6 +38,27 @@
             field.value = details[fieldId] || '';
         });
 
+        // Project specific fields
+        const projectFields = document.getElementById('projectFields');
+        if (projectFields) {
+            projectFields.style.display = type === 'project' ? '' : 'none';
+            const rankSelect = document.getElementById('projectRank');
+            if (rankSelect) {
+                rankSelect.required = type === 'project';
+                rankSelect.value = details.projectRank || 'A';
+            }
+            const deptSelect = document.getElementById('projectDepartmentId');
+            if (deptSelect) deptSelect.value = details.departmentId || '';
+            const pmSelect = document.getElementById('projectManagerId');
+            if (pmSelect) pmSelect.value = details.projectManagerId || '';
+            const startDateInput = document.getElementById('projectStartDate');
+            if (startDateInput) startDateInput.value = details.startDate || '';
+            const endDateInput = document.getElementById('projectEndDate');
+            if (endDateInput) endDateInput.value = details.endDate || '';
+            const statusSelect = document.getElementById('projectStatus');
+            if (statusSelect) statusSelect.value = details.status || 'ACTIVE';
+        }
+
         modal.show();
     }
 
@@ -49,7 +71,13 @@
             address: data.address,
             contactPerson: data.contactPerson,
             contactEmail: data.contactEmail,
-            contactPhone: data.contactPhone
+            contactPhone: data.contactPhone,
+            projectRank: data.projectRank,
+            departmentId: data.departmentId,
+            projectManagerId: data.projectManagerId,
+            startDate: data.startDate,
+            endDate: data.endDate,
+            status: data.status
         });
     };
 })();
