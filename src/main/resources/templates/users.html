@@ -7,12 +7,12 @@
 	<aside th:replace="~{fragments/layout :: sidebar}"></aside>
 	
 	<!-- Topbar -->
-	<div style="margin-left: 280px; width: calc(100% - 280px); position: fixed; top: 0; z-index: 1000;">
+	<div style="margin-left: 292px; width: calc(100% - 292px); position: fixed; top: 0; z-index: 1000;">
 		<header th:replace="~{fragments/layout :: topbar}"></header>
 	</div>
 
 	<!-- Main Content -->
-	<div class="main-wrapper" style="margin-left: 270px; width: calc(100% - 270px); padding: 20px; margin-top: 80px;">
+	<div class="main-wrapper" style="margin-left: 292px; width: calc(100% - 292px); padding: 30px; margin-top: 80px;">
 		
 		<main class="content">
 			<div th:replace="~{fragments/layout :: alerts}"></div>
@@ -25,41 +25,43 @@
 
 			<div class="card shadow-sm">
 				<div class="card-body">
-					<table class="table table-hover">
-						<thead class="table-light">
-							<tr>
-								<th>Staff ID</th>
-								<th>Name</th>
-								<th>Email</th>
-								<th>Role</th>
-								<th>Status</th>
-								<th>Actions</th>
-							</tr>
-						</thead>
-						<tbody>
-							<tr th:each="user : ${users}">
-								<td th:text="${user.employeeCode}"></td>
-								<td th:text="${user.fullName}"></td>
-								<td th:text="${user.email}"></td>
-								<td><span class="badge bg-primary" th:text="${user.role.roleName}"></span></td>
-								<td>
-									<span th:if="${user.isActive}" class="badge bg-success">Active</span>
-									<span th:unless="${user.isActive}" class="badge bg-danger">Inactive</span>
-								</td>
-								<td>
-                                    <!-- 🔴 Edit ခလုတ် ထည့်ပြီ -->
-									<a th:href="@{/users/edit/{id}(id=${user.userId})}" class="btn btn-sm btn-outline-primary">
-                                        Edit
-                                    </a>
-                                    
-                                    <!-- Deactivate ခလုတ် -->
-									<a th:href="@{/users/deactivate/{id}(id=${user.userId})}" 
-									   class="btn btn-sm btn-outline-danger" 
-									   th:if="${user.isActive}">Deactivate</a>
-								</td>
-							</tr>
-						</tbody>
-					</table>
+					<div class="table-responsive">
+						<table class="table table-hover text-center align-middle">
+							<thead class="table-light">
+								<tr>
+									<th class="text-center">Staff ID</th>
+									<th class="text-center">Name</th>
+									<th class="text-center">Email</th>
+									<th class="text-center">Role</th>
+									<th class="text-center">Status</th>
+									<th class="text-center">Actions</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr th:each="user : ${users}">
+									<td class="text-center" th:text="${user.employeeCode}"></td>
+									<td class="text-center" th:text="${user.fullName}"></td>
+									<td class="text-center" th:text="${user.email}"></td>
+									<td class="text-center"><span class="badge bg-primary" th:text="${user.role.roleName}"></span></td>
+									<td class="text-center">
+										<span th:if="${user.isActive}" class="badge bg-success">Active</span>
+										<span th:unless="${user.isActive}" class="badge bg-danger">Inactive</span>
+									</td>
+									<td class="text-center">
+										<!-- 🔴 Edit ခလုတ် ထည့်ပြီ -->
+										<a th:href="@{/users/edit/{id}(id=${user.userId})}" class="btn btn-sm btn-outline-primary me-1">
+											Edit
+										</a>
+										
+										<!-- Deactivate ခလုတ် -->
+										<a th:href="@{/users/deactivate/{id}(id=${user.userId})}" 
+										   class="btn btn-sm btn-outline-danger" 
+										   th:if="${user.isActive}">Deactivate</a>
+									</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
 				</div>
 			</div>
 		</main>

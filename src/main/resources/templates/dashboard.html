@@ -7,13 +7,13 @@
 	<aside th:replace="~{fragments/layout :: sidebar}"></aside>
 	
 	<!-- ၂။ Topbar အတွက် Div အသစ် (Sidebar ရဲ့ ညာဘက်ကို ရွှေ့ထားမယ်) -->
-	<div style="margin-left: 280px; width: calc(100% - 280px); position: fixed; top: 0; z-index: 1000;">
+	<div style="margin-left: 292px; width: calc(100% - 292px); position: fixed; top: 0; z-index: 1000;">
 		<!-- မူရင်း Topbar ကို ဒီထဲမှာ ထည့်လိုက်တယ် -->
 		<header th:replace="~{fragments/layout :: topbar}"></header>
 	</div>
 
 	<!-- ၃။ Main Content (Topbar ရဲ့ အောက်မှာ ရှိမယ်) -->
-	<div class="main-wrapper" style="margin-left: 270px; width: calc(100% - 270px); padding: 20px; margin-top: 80px;">
+	<div class="main-wrapper" style="margin-left: 292px; width: calc(100% - 292px); padding: 30px; margin-top: 80px;">
 		
 		<main class="content">
 			<div th:replace="~{fragments/layout :: alerts}"></div>
