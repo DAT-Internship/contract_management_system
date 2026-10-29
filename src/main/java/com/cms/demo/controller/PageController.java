@@ -28,7 +28,7 @@ public class PageController {
     // ၂။ Login Page ကို ပြဖို့
     @GetMapping("/login")
     public String loginPage() {
-        return "login";
+        return "auth/login";
     }
 
     // ၃။ Dashboard ကို ပြဖို့
@@ -40,7 +40,7 @@ public class PageController {
     // Change Password Form ပြသဖို့
     @GetMapping("/change-password")
     public String showChangePasswordForm() {
-        return "change-password"; 
+        return "auth/change-password"; 
     }
 
     // Form ကနေ Password အသစ် လက်ခံဖို့
