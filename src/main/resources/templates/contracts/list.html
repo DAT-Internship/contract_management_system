@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Contracts')}"></head>
+<body>
+	<aside th:replace="~{fragments/layout :: sidebar}"></aside>
+	<div class="main-area">
+		<header th:replace="~{fragments/layout :: topbar}"></header>
+		<main class="page-content">
+			<div th:replace="~{fragments/layout :: alerts}"></div>
+			<div class="page-heading contract-heading">
+				<div>
+					<div class="eyebrow">WORKSPACE / CONTRACTS</div>
+					<h1>Contracts</h1>
+					<p>Review registered contracts and track their status and remaining time.</p>
+				</div>
+				<a class="btn btn-primary" th:href="@{/contracts/new}">
+					<i class="fa-solid fa-plus me-2" aria-hidden="true"></i>Register Contract
+				</a>
+			</div>
+
+			<div class="contract-summary">
+				<div class="summary-tile"><span>Total contracts</span><strong th:text="${#lists.size(contracts)}">0</strong></div>
+				<div class="summary-tile"><span>Active</span><strong th:text="${#lists.size(contracts.?[statusCode == 'ACTIVE'])}">0</strong></div>
+				<div class="summary-tile"><span>Expiring in 30 days</span><strong th:text="${#lists.size(contracts.?[remainingDays != null and remainingDays <= 30])}">0</strong></div>
+			</div>
+
+			<div class="table-card contract-table-card">
+				<div class="table-responsive">
+					<table class="table align-middle mb-0">
+						<thead><tr>
+							<th>PO NUMBER</th><th>CUSTOMER / SUPPLIER</th><th>REGISTER DATE</th>
+							<th>PERIOD</th><th>REMAINING DAYS</th><th>HEADCOUNT / MONTH</th>
+							<th>TOTAL MAN MONTH</th><th>STATUS</th>
+						</tr></thead>
+						<tbody>
+							<tr th:each="contract : ${contracts}">
+								<td><strong th:text="${contract.contractPoNo}">PO number</strong><small class="d-block text-muted" th:text="${contract.contractNo}">Contract number</small></td>
+								<td th:text="${contract.partyName}">Customer</td>
+								<td th:text="${#temporals.format(contract.registerDate, 'dd MMM yyyy')}">29 Oct 2026</td>
+								<td><span th:text="${contract.periodMonths}">12</span> months</td>
+								<td><span class="remaining-pill" th:classappend="${contract.remainingDays <= 30} ? ' urgent'" th:text="${contract.remainingDays}">30</span></td>
+								<td th:text="${contract.headcountPerMonth != null ? #numbers.formatDecimal(contract.headcountPerMonth, 1, 2) : '—'}">5.00</td>
+								<td th:text="${#numbers.formatDecimal(contract.totalManMonths, 1, 2)}">60.00</td>
+								<td><span class="status-badge" th:text="${contract.statusName}" th:classappend="${contract.statusCode == 'ACTIVE'} ? ' status-active' : ''">Active</span></td>
+							</tr>
+							<tr th:if="${#lists.isEmpty(contracts)}"><td colspan="8" class="empty-state">
+								<div class="empty-icon"><i class="fa-regular fa-folder-open" aria-hidden="true"></i></div>
+								<strong>No contracts registered</strong><span>Start by registering your first contract.</span>
+								<a class="btn btn-outline-primary mt-3" th:href="@{/contracts/new}">Register a contract</a>
+							</td></tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</main>
+	</div>
+	<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

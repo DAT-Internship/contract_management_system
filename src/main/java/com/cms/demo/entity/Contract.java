@@ -22,7 +22,7 @@ public class Contract {
     @Column(name = "contract_no", length=30, nullable=false, unique=true)
     private String contractNo;
 
-    @Column(name = "fiscal_year", length=100, nullable=false)
+    @Column(name = "fiscal_year", length=10, nullable=false)
     private String fiscalYear;
 
     @Column(name = "contract_po_no", length=40, nullable=false)
@@ -83,59 +83,59 @@ public class Contract {
     private LocalDateTime updatedAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "renewed_from_id", nullable = false)
+    @JoinColumn(name = "renewed_from_id")
     private Contract renewedFrom;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "agreement_for_id", nullable = true)
+    @JoinColumn(name = "agreement_for_id", nullable = false)
     private MasterAgreementFor agreementFor;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "category_id", nullable = true)
+    @JoinColumn(name = "category_id", nullable = false)
     private MasterContractCategory category;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "contract_type_id", nullable = true)
+    @JoinColumn(name = "contract_type_id", nullable = false)
     private MasterContractType contractType;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "payment_type_id", nullable = true)
+    @JoinColumn(name = "payment_type_id", nullable = false)
     private MasterPaymentType paymentType;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "status_id", nullable = true)
+    @JoinColumn(name = "status_id", nullable = false)
     private MasterContractStatus status;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "department_id", nullable = true)
+    @JoinColumn(name = "department_id", nullable = false)
     private Department department;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "project_id", nullable = false)
+    @JoinColumn(name = "project_id")
     private Project project;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "party_id", nullable = true)
+    @JoinColumn(name = "party_id", nullable = false)
     private CustomerSupplier party;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "currency_id", nullable = true)
+    @JoinColumn(name = "currency_id", nullable = false)
     private MasterCurrency currency;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "project_incharge_id", nullable = false)
+    @JoinColumn(name = "project_incharge_id")
     private User projectIncharge;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "contract_manager_id", nullable = false)
+    @JoinColumn(name = "contract_manager_id")
     private User contractManager;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "created_by", nullable = true)
+    @JoinColumn(name = "created_by", nullable = false)
     private User createdBy;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "updated_by", nullable = false)
+    @JoinColumn(name = "updated_by")
     private User updatedBy;
 
 }

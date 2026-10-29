@@ -16,6 +16,7 @@
 
 <link rel="stylesheet" th:href="@{/css/app.css}">
 <link rel="stylesheet" th:if="${page == 'master-setup'}" th:href="@{/css/master-setup.css}">
+<link rel="stylesheet" th:if="${page == 'contracts'}" th:href="@{/css/contracts.css}">
 </head>
 <body>
 	<th:block th:fragment="scripts">
@@ -30,7 +31,7 @@
 		<a class="side-link"
 			th:classappend="${page == 'dashboard'} ? ' active'" th:href="@{/}"><i
 			class="fa-solid fa-display"></i>Dashboard</a> <a class="side-link"
-			href="#"><i class="fa-solid fa-file-contract nav-icon"
+			 th:href="@{/contracts}" th:classappend="${page == 'contracts'} ? ' active'"><i class="fa-solid fa-file-contract nav-icon"
 			aria-hidden="true"></i>Contracts</a><a class="side-link" href="#"><i
 			class="fa-solid fa-credit-card nav-icon" aria-hidden="true"></i>Payments</a>
 		<a class="side-link" href="#"><i

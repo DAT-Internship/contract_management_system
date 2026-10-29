@@ -39,12 +39,17 @@ public class DataInitializer implements CommandLineRunner {
             
             // ၂။ Department မရှိရင် "Management" ဆိုတဲ့ ဌာန ဆောက်မယ်
             Department dept = departmentRepository.findByDeptCodeIgnoreCase("MGMT").orElseGet(() -> {
+                // parent_dept_id is NOT NULL; attach new departments to the seeded ROOT row.
+                Department root = departmentRepository.findByDeptCodeIgnoreCase("ROOT")
+                        .orElseThrow(() -> new IllegalStateException(
+                                "ROOT department is missing; verify database migrations have run"));
+
                 Department newDept = new Department();
                 newDept.setDeptCode("MGMT");
                 newDept.setDeptName("Management");
                 newDept.setIsActive(true);
                 newDept.setCreatedAt(LocalDateTime.now());
-                newDept.setParentDepartment(null); // မိခင်ဌာန မရှိဘူးလို့ သတ်မှတ်မယ်
+                newDept.setParentDepartment(root);
                 return departmentRepository.save(newDept);
             });
 
