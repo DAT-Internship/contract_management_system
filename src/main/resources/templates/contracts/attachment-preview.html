@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Attachment Preview')}"></head>
+<body>
+<aside th:replace="~{fragments/layout :: sidebar}"></aside>
+<div class="main-area">
+	<header th:replace="~{fragments/layout :: topbar}"></header>
+	<main class="page-content">
+		<nav aria-label="breadcrumb" class="mb-3">
+			<ol class="breadcrumb small">
+				<li class="breadcrumb-item"><a th:href="@{/dashboard}">Home</a></li>
+				<li class="breadcrumb-item"><a th:href="@{/contracts}">Contracts</a></li>
+				<li class="breadcrumb-item"><a th:href="@{/contracts/{id}(id=${contractId})}">Contract details</a></li>
+				<li class="breadcrumb-item active" aria-current="page">Attachment preview</li>
+			</ol>
+		</nav>
+		<div class="page-heading mb-3">
+			<div><div class="eyebrow">CONTRACT ATTACHMENT</div><h1 class="h4 mb-1" th:text="${fileName}">Workbook</h1><p class="text-muted small mb-0">Spreadsheet preview - first worksheet</p></div>
+			<div class="d-flex gap-2">
+				<a class="btn btn-outline-secondary btn-sm" th:href="@{/contracts/{id}(id=${contractId})}">Back to contract</a>
+				<a class="btn btn-primary btn-sm" th:href="@{/contracts/{id}/attachments/{attachmentId}/download(id=${contractId},attachmentId=${attachmentId})}" th:attr="download=${fileName}"><i class="fa-solid fa-cloud-arrow-down me-1" aria-hidden="true"></i>Download</a>
+			</div>
+		</div>
+		<section class="card border-0 shadow-sm rounded-4 overflow-hidden">
+			<div class="d-flex justify-content-between align-items-center gap-2 px-3 py-3 border-bottom">
+				<strong class="small">Worksheet data</strong>
+				<span class="text-muted small" th:text="${totalPreviewRows + ' rows'}">0 rows</span>
+			</div>
+			<div th:if="${#lists.isEmpty(previewRows)}" class="p-4 text-center text-muted small">This workbook has no previewable rows.</div>
+			<div th:unless="${#lists.isEmpty(previewRows)}" class="table-responsive">
+				<table class="table table-sm table-hover align-middle mb-0 attachment-preview-table">
+					<thead><tr><th th:each="column : ${columns}" th:text="${column}">Column</th></tr></thead>
+					<tbody><tr th:each="row : ${previewRows}"><td th:each="column : ${columns}" th:text="${row.get(column) ?: '-'}">Value</td></tr></tbody>
+				</table>
+			</div>
+			<div class="px-3 py-2 border-top text-muted small" th:if="${totalPreviewRows > 200}">Showing the first 200 rows. Download the workbook to see the complete sheet.</div>
+		</section>
+	</main>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

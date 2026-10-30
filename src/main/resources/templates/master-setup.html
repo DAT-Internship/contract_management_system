@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head th:replace="~{fragments/layout :: head('Master Setup')}"></head>
+
+<body class="app-layout-body">
+
+	<!-- Sidebar -->
+	<aside th:replace="~{fragments/layout :: sidebar}"></aside>
+
+	<!-- Main Wrapper (Topbar နှင့် Content များကို Sidebar နှင့် မထပ်စေရန် ထိန်းပေးသည်) -->
+	<div class="main-wrapper">
+
+		<!-- Topbar Fragment -->
+		<header th:replace="~{fragments/layout :: topbar}"></header>
+
+		<!-- Alerts Fragment -->
+		<div th:replace="~{fragments/layout :: alerts}"></div>
+
+		<!-- ================= MAIN CONTENT ================= -->
+		<main class="main-content master-setup-page">
+
+			<div class="page-header px-4 pt-3 pb-2">
+				<h1>Master Setup</h1>
+				<p class="text-muted">Maintain controlled lists used by contract
+					registration and payment entry.</p>
+			</div>
+
+			<div class="mx-4 alert master-setup-notice mb-4" role="note">
+				Only Admin / PMO should manage master data in production. This
+				mockup lets you add values for demonstration.</div>
+
+			<div class="master-grid">
+
+				<!-- ================= CUSTOMER / SUPPLIER ================= -->
+				<div class="master-card">
+					<div class="card-top-content">
+						<div class="master-card-header">
+							<div>
+								<div class="master-icon">
+									<i class="fa-solid fa-users"></i>
+								</div>
+								<h3>Customer / Supplier</h3>
+							</div>
+							<span class="count-badge"
+								th:text="${customerSuppliers != null ? customerSuppliers.size() : 0}">0</span>
+						</div>
+
+						<div class="master-items">
+							<div class="master-item" th:each="item : ${customerSuppliers}">
+								<span th:text="${item.partyName}">Customer</span>
+								<div class="master-actions">
+									<button type="button" class="btn btn-sm btn-outline-primary"
+										onclick="openEditFromButton(this)"
+										th:attr="data-id=${item.partyId},data-type='customerSupplier',data-code=${item.partyCode},data-name=${item.partyName},data-party-type=${item.partyType},data-tax-id=${item.taxId},data-address=${item.address},data-contact-person=${item.contactPerson},data-contact-email=${item.contactEmail},data-contact-phone=${item.contactPhone}"
+										title="Edit">
+										<i class="fa-solid fa-pen"></i>
+									</button>
+									<form th:action="@{/master-setup/delete}" method="post"
+										onsubmit="return confirm('Delete this item?');"
+										class="d-inline">
+										<input type="hidden" name="type" value="customerSupplier">
+										<input type="hidden" name="id" th:value="${item.partyId}">
+										<button type="submit" class="btn btn-sm btn-outline-danger"
+											title="Delete">
+											<i class="fa-solid fa-trash"></i>
+										</button>
+									</form>
+								</div>
+							</div>
+							<div class="empty-message"
+								th:if="${customerSuppliers == null || customerSuppliers.isEmpty()}">
+								No customer / supplier found.</div>
+						</div>
+					</div>
+
+					<button type="button" class="btn btn-primary add-btn"
+						onclick="openAddModal('customerSupplier')">
+						<i class="fa-solid fa-plus me-1"></i> Add
+					</button>
+				</div>
+
+				<!-- ================= AGREEMENT TYPES ================= -->
+				<div class="master-card">
+					<div class="card-top-content">
+						<div class="master-card-header">
+							<div>
+								<div class="master-icon">
+									<i class="fa-solid fa-handshake"></i>
+								</div>
+								<h3>Agreement Types</h3>
+							</div>
+							<span class="count-badge"
+								th:text="${agreementFors != null ? agreementFors.size() : 0}">0</span>
+						</div>
+
+						<div class="master-items">
+							<div class="master-item" th:each="item : ${agreementFors}">
+								<span th:text="${item.name}">Agreement Type</span>
+								<div class="master-actions">
+									<button type="button" class="btn btn-sm btn-outline-primary"
+										onclick="openEditFromButton(this)"
+										th:attr="data-id=${item.id},data-type='agreementFor',data-code=${item.code},data-name=${item.name}"
+										title="Edit">
+										<i class="fa-solid fa-pen"></i>
+									</button>
+									<form th:action="@{/master-setup/delete}" method="post"
+										onsubmit="return confirm('Remove this item from the list?');"
+										class="d-inline">
+										<input type="hidden" name="type" value="agreementFor">
+										<input type="hidden" name="id" th:value="${item.id}">
+										<button type="submit" class="btn btn-sm btn-outline-danger"
+											title="Delete">
+											<i class="fa-solid fa-trash"></i>
+										</button>
+									</form>
+								</div>
+							</div>
+							<div class="empty-message"
+								th:if="${agreementFors == null || agreementFors.isEmpty()}">
+								No agreement type found.</div>
+						</div>
+					</div>
+
+					<button type="button" class="btn btn-primary add-btn"
+						onclick="openAddModal('agreementFor')">
+						<i class="fa-solid fa-plus me-1"></i> Add
+					</button>
+				</div>
+
+				<!-- ================= CONTRACT TYPE ================= -->
+				<div class="master-card">
+					<div class="card-top-content">
+						<div class="master-card-header">
+							<div>
+								<div class="master-icon">
+									<i class="fa-solid fa-file-contract"></i>
+								</div>
+								<h3>Contract Type</h3>
+							</div>
+							<span class="count-badge"
+								th:text="${contractTypes != null ? contractTypes.size() : 0}">0</span>
+						</div>
+
+						<div class="master-items">
+							<div class="master-item" th:each="item : ${contractTypes}">
+								<span th:text="${item.name}">Contract Type</span>
+								<div class="master-actions">
+									<button type="button" class="btn btn-sm btn-outline-primary"
+										onclick="openEditFromButton(this)"
+										th:attr="data-id=${item.id},data-type='contractType',data-code=${item.code},data-name=${item.name}"
+										title="Edit">
+										<i class="fa-solid fa-pen"></i>
+									</button>
+									<form th:action="@{/master-setup/delete}" method="post"
+										onsubmit="return confirm('Delete this item?');"
+										class="d-inline">
+										<input type="hidden" name="type" value="contractType">
+										<input type="hidden" name="id" th:value="${item.id}">
+										<button type="submit" class="btn btn-sm btn-outline-danger"
+											title="Delete">
+											<i class="fa-solid fa-trash"></i>
+										</button>
+									</form>
+								</div>
+							</div>
+							<div class="empty-message"
+								th:if="${contractTypes == null || contractTypes.isEmpty()}">
+								No contract type found.</div>
+						</div>
+					</div>
+
+					<button type="button" class="btn btn-primary add-btn"
+						onclick="openAddModal('contractType')">
+						<i class="fa-solid fa-plus me-1"></i> Add
+					</button>
+				</div>
+
+				<!-- ================= CONTRACT CATEGORY ================= -->
+				<div class="master-card">
+					<div class="card-top-content">
+						<div class="master-card-header">
+							<div>
+								<div class="master-icon">
+									<i class="fa-solid fa-layer-group"></i>
+								</div>
+								<h3>Contract Category</h3>
+							</div>
+							<span class="count-badge"
+								th:text="${contractCategories != null ? contractCategories.size() : 0}">0</span>
+						</div>
+
+						<div class="master-items">
+							<div class="master-item" th:each="item : ${contractCategories}">
+								<span th:text="${item.name}">Category</span>
+								<div class="master-actions">
+									<button type="button" class="btn btn-sm btn-outline-primary"
+										onclick="openEditFromButton(this)"
+										th:attr="data-id=${item.id},data-type='contractCategory',data-code=${item.code},data-name=${item.name}"
+										title="Edit">
+										<i class="fa-solid fa-pen"></i>
+									</button>
+									<form th:action="@{/master-setup/delete}" method="post"
+										onsubmit="return confirm('Delete this item?');"
+										class="d-inline">
+										<input type="hidden" name="type" value="contractCategory">
+										<input type="hidden" name="id" th:value="${item.id}">
+										<button type="submit" class="btn btn-sm btn-outline-danger"
+											title="Delete">
+											<i class="fa-solid fa-trash"></i>
+										</button>
+									</form>
+								</div>
+							</div>
+							<div class="empty-message"
+								th:if="${contractCategories == null || contractCategories.isEmpty()}">
+								No contract category found.</div>
+						</div>
+					</div>
+
+					<button type="button" class="btn btn-primary add-btn"
+						onclick="openAddModal('contractCategory')">
+						<i class="fa-solid fa-plus me-1"></i> Add
+					</button>
+				</div>
+
+				<!-- ================= PAYMENT TYPE ================= -->
+				<div class="master-card">
+					<div class="card-top-content">
+						<div class="master-card-header">
+							<div>
+								<div class="master-icon">
+									<i class="fa-solid fa-money-bill-wave"></i>
+								</div>
+								<h3>Payment Type</h3>
+							</div>
+							<span class="count-badge"
+								th:text="${paymentTypes != null ? paymentTypes.size() : 0}">0</span>
+						</div>
+
+						<div class="master-items">
+							<div class="master-item" th:each="item : ${paymentTypes}">
+								<span th:text="${item.name}">Payment Type</span>
+								<div class="master-actions">
+									<button type="button" class="btn btn-sm btn-outline-primary"
+										onclick="openEditFromButton(this)"
+										th:attr="data-id=${item.id},data-type='paymentType',data-code=${item.code},data-name=${item.name}"
+										title="Edit">
+										<i class="fa-solid fa-pen"></i>
+									</button>
+									<form th:action="@{/master-setup/delete}" method="post"
+										onsubmit="return confirm('Delete this item?');"
+										class="d-inline">
+										<input type="hidden" name="type" value="paymentType">
+										<input type="hidden" name="id" th:value="${item.id}">
+										<button type="submit" class="btn btn-sm btn-outline-danger"
+											title="Delete">
+											<i class="fa-solid fa-trash"></i>
+										</button>
+									</form>
+								</div>
+							</div>
+							<div class="empty-message"
+								th:if="${paymentTypes == null || paymentTypes.isEmpty()}">
+								No payment type found.</div>
+						</div>
+					</div>
+
+					<button type="button" class="btn btn-primary add-btn"
+						onclick="openAddModal('paymentType')">
+						<i class="fa-solid fa-plus me-1"></i> Add
+					</button>
+				</div>
+
+				<!-- ================= CONTRACT STATUS ================= -->
+				<div class="master-card">
+					<div class="card-top-content">
+						<div class="master-card-header">
+							<div>
+								<div class="master-icon">
+									<i class="fa-solid fa-file-signature"></i>
+								</div>
+								<h3>Contract Status</h3>
+							</div>
+							<span class="count-badge"
+								th:text="${contractStatuses != null ? contractStatuses.size() : 0}">0</span>
+						</div>
+
+						<div class="master-items">
+							<div class="master-item" th:each="item : ${contractStatuses}">
+								<span th:text="${item.name}">Contract Status</span>
+								<div class="master-actions">
+									<button type="button" class="btn btn-sm btn-outline-primary"
+										onclick="openEditFromButton(this)"
+										th:attr="data-id=${item.id},data-type='contractStatus',data-code=${item.code},data-name=${item.name}"
+										title="Edit">
+										<i class="fa-solid fa-pen"></i>
+									</button>
+									<form th:action="@{/master-setup/delete}" method="post"
+										onsubmit="return confirm('Delete this item?');"
+										class="d-inline">
+										<input type="hidden" name="type" value="contractStatus">
+										<input type="hidden" name="id" th:value="${item.id}">
+										<button type="submit" class="btn btn-sm btn-outline-danger"
+											title="Delete">
+											<i class="fa-solid fa-trash"></i>
+										</button>
+									</form>
+								</div>
+							</div>
+							<div class="empty-message"
+								th:if="${contractStatuses == null || contractStatuses.isEmpty()}">
+								No contract status found.</div>
+						</div>
+					</div>
+
+					<button type="button" class="btn btn-primary add-btn"
+						onclick="openAddModal('contractStatus')">
+						<i class="fa-solid fa-plus me-1"></i> Add
+					</button>
+				</div>
+
+				<!-- ================= PAYMENT STATUS ================= -->
+				<div class="master-card">
+					<div class="card-top-content">
+						<div class="master-card-header">
+							<div>
+								<div class="master-icon">
+									<i class="fa-solid fa-credit-card"></i>
+								</div>
+								<h3>Payment Status</h3>
+							</div>
+							<span class="count-badge"
+								th:text="${paymentStatuses != null ? paymentStatuses.size() : 0}">0</span>
+						</div>
+
+						<div class="master-items">
+							<div class="master-item" th:each="item : ${paymentStatuses}">
+								<span th:text="${item.name}">Payment Status</span>
+								<div class="master-actions">
+									<button type="button" class="btn btn-sm btn-outline-primary"
+										onclick="openEditFromButton(this)"
+										th:attr="data-id=${item.id},data-type='paymentStatus',data-code=${item.code},data-name=${item.name}"
+										title="Edit">
+										<i class="fa-solid fa-pen"></i>
+									</button>
+									<form th:action="@{/master-setup/delete}" method="post"
+										onsubmit="return confirm('Delete this item?');"
+										class="d-inline">
+										<input type="hidden" name="type" value="paymentStatus">
+										<input type="hidden" name="id" th:value="${item.id}">
+										<button type="submit" class="btn btn-sm btn-outline-danger"
+											title="Delete">
+											<i class="fa-solid fa-trash"></i>
+										</button>
+									</form>
+								</div>
+							</div>
+							<div class="empty-message"
+								th:if="${paymentStatuses == null || paymentStatuses.isEmpty()}">
+								No payment status found.</div>
+						</div>
+					</div>
+
+					<button type="button" class="btn btn-primary add-btn"
+						onclick="openAddModal('paymentStatus')">
+						<i class="fa-solid fa-plus me-1"></i> Add
+					</button>
+				</div>
+
+				<!-- ================= IN-CHARGE DEPARTMENT ================= -->
+				<div class="master-card">
+					<div class="card-top-content">
+						<div class="master-card-header">
+							<div>
+								<div class="master-icon">
+									<i class="fa-solid fa-sitemap"></i>
+								</div>
+								<h3>In-charge Department</h3>
+							</div>
+							<span class="count-badge"
+								th:text="${departments != null ? departments.size() : 0}">0</span>
+						</div>
+
+						<div class="master-items">
+							<div class="master-item" th:each="item : ${departments}">
+								<span th:text="${item.deptName}">Department</span>
+								<div class="master-actions">
+									<button type="button" class="btn btn-sm btn-outline-primary"
+										onclick="openEditFromButton(this)"
+										th:attr="data-id=${item.departmentId},data-type='department',data-code=${item.deptCode},data-name=${item.deptName}"
+										title="Edit">
+										<i class="fa-solid fa-pen"></i>
+									</button>
+									<form th:action="@{/master-setup/delete}" method="post"
+										onsubmit="return confirm('Delete this item?');"
+										class="d-inline">
+										<input type="hidden" name="type" value="department"> <input
+											type="hidden" name="id" th:value="${item.departmentId}">
+										<button type="submit" class="btn btn-sm btn-outline-danger"
+											title="Delete">
+											<i class="fa-solid fa-trash"></i>
+										</button>
+									</form>
+								</div>
+							</div>
+							<div class="empty-message"
+								th:if="${departments == null || departments.isEmpty()}">
+								No department found.</div>
+						</div>
+					</div>
+
+					<button type="button" class="btn btn-primary add-btn"
+						onclick="openAddModal('department')">
+						<i class="fa-solid fa-plus me-1"></i> Add
+					</button>
+				</div>
+
+				<!-- ================= CURRENCY ================= -->
+				<div class="master-card">
+					<div class="card-top-content">
+						<div class="master-card-header">
+							<div>
+								<div class="master-icon">
+									<i class="fa-solid fa-coins"></i>
+								</div>
+								<h3>Currency</h3>
+							</div>
+							<span class="count-badge"
+								th:text="${currencies != null ? currencies.size() : 0}">0</span>
+						</div>
+
+						<div class="master-items">
+							<div class="master-item" th:each="item : ${currencies}">
+								<span th:text="${item.name}">Currency</span>
+								<div class="master-actions">
+									<button type="button" class="btn btn-sm btn-outline-primary"
+										onclick="openEditFromButton(this)"
+										th:attr="data-id=${item.id},data-type='currency',data-code=${item.code},data-name=${item.name}"
+										title="Edit">
+										<i class="fa-solid fa-pen"></i>
+									</button>
+									<form th:action="@{/master-setup/delete}" method="post"
+										onsubmit="return confirm('Delete this item?');"
+										class="d-inline">
+										<input type="hidden" name="type" value="currency"> <input
+											type="hidden" name="id" th:value="${item.id}">
+										<button type="submit" class="btn btn-sm btn-outline-danger"
+											title="Delete">
+											<i class="fa-solid fa-trash"></i>
+										</button>
+									</form>
+								</div>
+							</div>
+							<div class="empty-message"
+								th:if="${currencies == null || currencies.isEmpty()}">No
+								currency found.</div>
+						</div>
+					</div>
+
+					<button type="button" class="btn btn-primary add-btn"
+						onclick="openAddModal('currency')">
+						<i class="fa-solid fa-plus me-1"></i> Add
+					</button>
+				</div>
+
+				<!-- ================= PROJECT ================= -->
+				<div class="master-card">
+					<div class="card-top-content">
+						<div class="master-card-header">
+							<div>
+								<div class="master-icon">
+									<i class="fa-solid fa-diagram-project"></i>
+								</div>
+								<h3>Projects</h3>
+							</div>
+							<span class="count-badge"
+								th:text="${projects != null ? projects.size() : 0}">0</span>
+						</div>
+
+						<div class="master-items">
+							<div class="master-item" th:each="item : ${projects}">
+								<div class="d-flex flex-column">
+									<span class="fw-semibold" th:text="${item.projectName}">Project Name</span>
+									<small class="text-muted">
+										<span class="badge bg-light text-dark border me-1" th:text="${item.projectCode}">Code</span>
+										<span class="badge bg-primary me-1" th:text="'Rank ' + ${item.projectRank}">Rank A</span>
+										<span th:if="${item.department != null}" th:text="${item.department.deptName}">Dept</span>
+									</small>
+								</div>
+								<div class="master-actions">
+									<button type="button" class="btn btn-sm btn-outline-primary"
+										onclick="openEditFromButton(this)"
+										th:attr="data-id=${item.projectId},data-type='project',data-code=${item.projectCode},data-name=${item.projectName},data-project-rank=${item.projectRank},data-department-id=${item.department != null ? item.department.departmentId : ''},data-project-manager-id=${item.projectManager != null ? item.projectManager.userId : ''},data-start-date=${item.startDate},data-end-date=${item.endDate},data-status=${item.status}"
+										title="Edit">
+										<i class="fa-solid fa-pen"></i>
+									</button>
+									<form th:action="@{/master-setup/delete}" method="post"
+										onsubmit="return confirm('Delete this project?');"
+										class="d-inline">
+										<input type="hidden" name="type" value="project">
+										<input type="hidden" name="id" th:value="${item.projectId}">
+										<button type="submit" class="btn btn-sm btn-outline-danger"
+											title="Delete">
+											<i class="fa-solid fa-trash"></i>
+										</button>
+									</form>
+								</div>
+							</div>
+							<div class="empty-message"
+								th:if="${projects == null || projects.isEmpty()}">No
+								projects found.</div>
+						</div>
+					</div>
+
+					<button type="button" class="btn btn-primary add-btn"
+						onclick="openAddModal('project')">
+						<i class="fa-solid fa-plus me-1"></i> Add
+					</button>
+				</div>
+
+
+			</div>
+
+		</main>
+	</div>
+
+	<!-- ================= ADD / EDIT MODAL ================= -->
+	<div class="modal fade" id="masterModal" tabindex="-1"
+		aria-hidden="true">
+		<div class="modal-dialog modal-dialog-centered">
+			<div class="modal-content">
+				<form id="masterForm" method="post" th:action="@{/master-setup/add}">
+					<div class="modal-header">
+						<h5 class="modal-title fw-bold" id="masterModalTitle">Add
+							Master Data</h5>
+						<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+					</div>
+
+					<div class="modal-body">
+						<input type="hidden" id="masterId" name="id"> <input
+							type="hidden" id="masterType" name="type">
+
+						<div class="mb-3">
+							<label class="form-label fw-semibold">Code</label> <input
+								type="text" class="form-control" id="masterCode" name="code"
+								required>
+						</div>
+
+						<div class="mb-3">
+							<label class="form-label fw-semibold">Name</label> <input
+								type="text" class="form-control" id="masterName" name="name"
+								required>
+						</div>
+
+						<div class="mb-3" id="partyTypeGroup" style="display: none;">
+							<label class="form-label fw-semibold">Party Type</label> <select
+								class="form-select" name="partyType" id="partyType">
+								<option value="CUSTOMER">Customer</option>
+								<option value="SUPPLIER">Supplier</option>
+								<option value="BOTH">Both</option>
+							</select>
+						</div>
+
+						<div id="customerSupplierFields" style="display: none;">
+							<div class="mb-3">
+								<label class="form-label fw-semibold" for="taxId">Tax ID</label>
+								<input type="text" class="form-control" name="taxId" id="taxId"
+									maxlength="40" required>
+							</div>
+							<div class="mb-3">
+								<label class="form-label fw-semibold" for="address">Address</label>
+								<textarea class="form-control" name="address" id="address"
+									rows="2" required></textarea>
+							</div>
+							<div class="mb-3">
+								<label class="form-label fw-semibold" for="contactPerson">Contact
+									Person</label> <input type="text" class="form-control"
+									name="contactPerson" id="contactPerson" maxlength="120"
+									required>
+							</div>
+							<div class="mb-3">
+								<label class="form-label fw-semibold" for="contactEmail">Contact
+									Email</label> <input type="email" class="form-control"
+									name="contactEmail" id="contactEmail" maxlength="120" required>
+							</div>
+							<div class="mb-3">
+								<label class="form-label fw-semibold" for="contactPhone">Contact
+									Phone</label> <input type="tel" class="form-control"
+									name="contactPhone" id="contactPhone" minlength="7"
+									maxlength="11" pattern="[0-9+() -]{7,11}"
+									title="Enter 7–11 characters using digits, +, parentheses, spaces or hyphens."
+									inputmode="tel" required>
+							</div>
+						</div>
+
+						<div id="projectFields" style="display: none;">
+							<div class="mb-3">
+								<label class="form-label fw-semibold" for="projectRank">Project Rank <span class="text-danger">*</span></label>
+								<select class="form-select" name="projectRank" id="projectRank">
+									<option value="A">A</option>
+									<option value="B">B</option>
+									<option value="C">C</option>
+								</select>
+								<div class="form-text">Project rank must be A, B, or C.</div>
+							</div>
+							<div class="mb-3">
+								<label class="form-label fw-semibold" for="projectDepartmentId">In-charge Department</label>
+								<select class="form-select" name="departmentId" id="projectDepartmentId">
+									<option value="">Select department (optional)</option>
+									<option th:each="dept : ${departments}" th:value="${dept.departmentId}" th:text="${dept.deptName}"></option>
+								</select>
+							</div>
+							<div class="mb-3">
+								<label class="form-label fw-semibold" for="projectManagerId">Project Manager</label>
+								<select class="form-select" name="projectManagerId" id="projectManagerId">
+									<option value="">Select manager (optional)</option>
+									<option th:each="user : ${allUsers}" th:value="${user.userId}" th:text="${user.fullName + ' (' + user.employeeCode + ')'}"></option>
+								</select>
+							</div>
+							<div class="row g-2 mb-3">
+								<div class="col-6">
+									<label class="form-label fw-semibold" for="projectStartDate">Start Date</label>
+									<input type="date" class="form-control" name="startDate" id="projectStartDate">
+								</div>
+								<div class="col-6">
+									<label class="form-label fw-semibold" for="projectEndDate">End Date</label>
+									<input type="date" class="form-control" name="endDate" id="projectEndDate">
+								</div>
+							</div>
+							<div class="mb-3">
+								<label class="form-label fw-semibold" for="projectStatus">Status</label>
+								<select class="form-select" name="status" id="projectStatus">
+									<option value="ACTIVE">ACTIVE</option>
+									<option value="IN_PROGRESS">IN_PROGRESS</option>
+									<option value="COMPLETED">COMPLETED</option>
+									<option value="ON_HOLD">ON_HOLD</option>
+								</select>
+							</div>
+						</div>
+
+					</div>
+
+					<div class="modal-footer">
+						<button type="button" class="btn btn-light"
+							data-bs-dismiss="modal">Cancel</button>
+						<button type="submit" class="btn btn-primary px-4">
+							<i class="fa-solid fa-save me-1"></i> Save
+						</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+
+	<!-- Layout Scripts Fragment -->
+	<div th:replace="~{fragments/layout :: scripts}"></div>
+	<!-- Master Setup Specific JS -->
+	<script th:src="@{/js/master-setup.js}"></script>
+
+</body>
+</html>

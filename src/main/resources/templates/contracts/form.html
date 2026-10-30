@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Contract Registration')}"></head>
+<body>
+	<aside th:replace="~{fragments/layout :: sidebar}"></aside>
+	<div class="main-area">
+		<header th:replace="~{fragments/layout :: topbar}"></header>
+		<main class="page-content contract-form-page">
+			<div class="page-heading contract-heading">
+				<div>
+					<div class="eyebrow" th:text="${contractForm.contractId != null ? 'WORKSPACE / CONTRACTS / EDIT' : 'WORKSPACE / CONTRACTS / NEW'}">WORKSPACE / CONTRACTS / NEW</div>
+					<h1 th:text="${contractForm.contractId != null ? 'Edit Contract' : 'Contract Registration'}">Contract Registration</h1>
+					<p>Enter the agreement details, dates, and contract status.</p>
+				</div>
+				<a class="btn btn-light border" th:href="@{/contracts}"><i class="fa-solid fa-arrow-left me-2" aria-hidden="true"></i>Back to contracts</a>
+			</div>
+			<div th:replace="~{fragments/layout :: alerts}"></div>
+
+			<form th:action="${contractForm.contractId != null ? '/contracts/' + contractForm.contractId : '/contracts'}" th:object="${contractForm}" method="post" id="contractForm" enctype="multipart/form-data">
+				<input type="hidden" th:field="*{contractId}">
+				<input type="hidden" th:field="*{contractNo}">
+				<div th:if="${#fields.hasErrors('*')}" class="alert alert-danger" role="alert">Please correct the invalid or missing form values and try again.</div>
+				<section class="contract-form-card">
+					<div class="form-section-heading"><span class="section-number">01</span><div><h2>Contract details</h2><p>Classification, parties, and internal tracking.</p></div></div>
+					<div class="row g-3">
+						<div class="col-md-4"><label class="form-label required" for="agreementForId">Agreement For</label><select class="form-select" id="agreementForId" th:field="*{agreementForId}" required><option value="">Select agreement type</option><option th:each="item : ${agreementFors}" th:value="${item.id}" th:text="${item.name}"></option></select></div>
+						<div class="col-md-4"><label class="form-label required" for="categoryId">Contract Category</label><select class="form-select" id="categoryId" th:field="*{categoryId}" required><option value="">Select category</option><option th:each="item : ${categories}" th:value="${item.id}" th:text="${item.name}"></option></select></div>
+						<div class="col-md-4"><label class="form-label required" for="departmentId">In-charge Department</label><select class="form-select" id="departmentId" th:field="*{departmentId}" required><option value="">Select department</option><option th:each="item : ${departments}" th:value="${item.departmentId}" th:text="${item.deptName}"></option></select></div>
+						<div class="col-md-4"><label class="form-label required" for="fiscalYear">Fiscal Year</label><input class="form-control" id="fiscalYear" th:field="*{fiscalYear}" maxlength="10" placeholder="FY2026" required></div>
+						<div class="col-md-4"><label class="form-label required" for="contractTypeId">Contract Type</label><select class="form-select" id="contractTypeId" th:field="*{contractTypeId}" required><option value="">Select type</option><option th:each="item : ${contractTypes}" th:value="${item.id}" th:text="${item.name}"></option></select></div>
+						<div class="col-md-4"><label class="form-label required" for="contractPoNo">Contract / PO No.</label><input class="form-control" id="contractPoNo" th:field="*{contractPoNo}" maxlength="30" placeholder="PO-78421" required></div>
+						<div class="col-md-6"><label class="form-label required" for="partyId">Customer / Supplier</label><select class="form-select" id="partyId" th:field="*{partyId}" required><option value="">Select customer or supplier</option><option th:each="item : ${parties}" th:value="${item.partyId}" th:text="${item.partyName}"></option></select></div>
+						<div class="col-md-6"><label class="form-label" for="projectId">Project ID</label><select class="form-select" id="projectId" th:field="*{projectId}"><option value="">No project selected</option><option th:each="item : ${projects}" th:value="${item.projectId}" th:text="${item.projectCode + ' — ' + item.projectName}"></option></select><div class="form-text">Select a project when this contract is tied to a project.</div></div>
+						<div class="col-md-4"><label class="form-label required" for="paymentTypeId">Payment Type</label><select class="form-select" id="paymentTypeId" th:field="*{paymentTypeId}" required><option value="">Select payment type</option><option th:each="item : ${paymentTypes}" th:value="${item.id}" th:text="${item.name}"></option></select></div>
+						<div class="col-md-4"><label class="form-label required" for="statusId">Status</label><select class="form-select" id="statusId" th:field="*{statusId}" required><option value="">Select status</option><option th:each="item : ${statuses}" th:value="${item.id}" th:text="${item.name}"></option></select></div>
+						<div class="col-md-4"><label class="form-label" for="poNoRef">PO Reference (optional)</label><input class="form-control" id="poNoRef" th:field="*{poNoRef}" maxlength="40" placeholder="Reference number"></div>
+						<div class="col-12"><label class="form-label required" for="description">Description</label><textarea class="form-control" id="description" th:field="*{description}" rows="3" placeholder="Purpose and scope of agreement" required></textarea></div>
+					</div>
+				</section>
+
+				<section class="contract-form-card">
+					<div class="form-section-heading"><span class="section-number">02</span><div><h2>Dates and resources</h2><p>Period and staffing values are calculated from your dates and headcount.</p></div></div>
+					<div class="row g-3">
+						<div class="col-md-3"><label class="form-label" for="signedDate">Signed Date</label><input class="form-control" id="signedDate" type="date" th:field="*{signedDate}"></div>
+						<div class="col-md-3"><label class="form-label required" for="registerDate">Register Date</label><input class="form-control" id="registerDate" type="date" th:field="*{registerDate}" required></div>
+						<div class="col-md-3"><label class="form-label required" for="startDate">Start Date</label><input class="form-control" id="startDate" type="date" th:field="*{startDate}" required></div>
+						<div class="col-md-3"><label class="form-label required" for="endDate">End Date</label><input class="form-control" id="endDate" type="date" th:field="*{endDate}" required></div>
+						<div class="col-md-3"><label class="form-label" for="periodMonths">Period (months)</label><input class="form-control" id="periodMonths" th:field="*{periodMonths}" type="number" min="1" placeholder="Auto-calculated"></div>
+						<div class="col-md-3"><label class="form-label" for="remainingDays">Remaining Days</label><input class="form-control computed-field" id="remainingDays" readonly placeholder="Calculated from end date"></div>
+						<div class="col-md-3"><label class="form-label" for="headcountPerMonth">Headcount per Month</label><input class="form-control" id="headcountPerMonth" th:field="*{headcountPerMonth}" type="number" min="0" step="0.01" placeholder="0.00"></div>
+						<div class="col-md-3"><label class="form-label" for="totalManMonths">Total Man Month</label><input class="form-control computed-field" id="totalManMonths" readonly placeholder="Period × headcount"></div>
+					</div>
+				</section>
+
+				<section class="contract-form-card">
+					<div class="form-section-heading"><span class="section-number">03</span><div><h2>Commercial details</h2><p>Contract amount, tax, and currency.</p></div></div>
+					<div class="row g-3">
+						<div class="col-md-4"><label class="form-label required" for="contractValue">Contract Value</label><input class="form-control" id="contractValue" th:field="*{contractValue}" type="number" min="0" step="0.01" placeholder="0.00" required></div>
+						<div class="col-md-4"><label class="form-label required" for="currencyId">Currency</label><select class="form-select" id="currencyId" th:field="*{currencyId}" required><option value="">Select currency</option><option th:each="item : ${currencies}" th:value="${item.id}" th:text="${item.code}"></option></select></div>
+						<div class="col-md-4"><label class="form-label" for="commercialTaxRate">Commercial Tax</label><div class="input-group"><input class="form-control" id="commercialTaxRate" th:field="*{commercialTaxRate}" type="number" min="0" max="100" step="0.01"><span class="input-group-text">%</span></div></div>
+					</div>
+				</section>
+
+				<section class="contract-form-card">
+					<div class="form-section-heading"><span class="section-number">04</span><div><h2>Contract contacts</h2><p>Assign internal owners and the client contact.</p></div></div>
+					<div class="row g-3">
+						<div class="col-md-4"><label class="form-label" for="projectInchargeId">Project In-charge</label><select class="form-select" id="projectInchargeId" th:field="*{projectInchargeId}"><option value="">Select user</option><option th:each="item : ${users}" th:value="${item.userId}" th:text="${item.fullName}"></option></select></div>
+						<div class="col-md-4"><label class="form-label" for="contractManagerId">Contract Manager</label><select class="form-select" id="contractManagerId" th:field="*{contractManagerId}"><option value="">Select user</option><option th:each="item : ${users}" th:value="${item.userId}" th:text="${item.fullName}"></option></select></div>
+						<div class="col-md-4"><label class="form-label" for="clientIncharge">Client In-charge</label><input class="form-control" id="clientIncharge" th:field="*{clientIncharge}" maxlength="120"></div>
+					</div>
+				</section>
+
+				<!-- Attachments section matching screenshot -->
+				<section class="contract-form-card attachment-section-card">
+					<div class="card-title-header">
+						<h2>Attachments</h2>
+					</div>
+					<div class="attachment-box" id="attachmentBox">
+						<div class="attachment-cloud-icon">
+							<i class="fa-solid fa-cloud-arrow-up" aria-hidden="true"></i>
+						</div>
+						<div class="attachment-main-text">Drop contract files here</div>
+						<div class="attachment-sub-text">PDF, DOC/DOCX, XLS/XLSX, JPG, PNG • Multiple files supported</div>
+						<div class="attachment-input-wrapper">
+							<input class="form-control" type="file" id="contractFilesInput" name="files" multiple
+								accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png">
+						</div>
+					</div>
+					<div class="selected-files-container d-none" id="selectedFilesContainer">
+						<div class="selected-files-title">
+							<span><i class="fa-solid fa-paperclip me-1"></i>Selected files (<span id="fileCount">0</span>)</span>
+							<button type="button" class="btn btn-sm btn-link text-danger p-0" id="clearAllFiles">Clear all</button>
+						</div>
+						<div class="selected-files-list" id="selectedFilesList"></div>
+					</div>
+				</section>
+
+				<div class="contract-form-actions">
+					<a class="btn btn-outline-secondary" th:href="@{/contracts}">Cancel</a>
+					<button th:if="${contractForm.contractId == null or isDraft}" class="btn btn-outline-secondary" type="submit" name="action" value="draft" formnovalidate>Save Draft</button>
+					<button class="btn btn-primary" type="submit" name="action" value="submit">Submit for Approval</button>
+				</div>
+			</form>
+		</main>
+	</div>
+	<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+	<script th:src="@{/js/contracts.js}"></script>
+</body>
+</html>
