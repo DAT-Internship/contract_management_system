@@ -7,6 +7,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.ui.Model;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
@@ -29,6 +30,13 @@ public class PageController {
     @GetMapping("/dashboard")
     public String showDashboard() {
         return "dashboard";
+    }
+
+    @GetMapping("/master-setup/import-batches")
+    public String showImportBatches(@RequestParam(required = false) String type, Model model) {
+        model.addAttribute("page", "import-batches");
+        model.addAttribute("importType", type == null ? "" : type.toLowerCase(java.util.Locale.ROOT));
+        return "import-batches";
     }
     
     // Change Password Form ပြသဖို့

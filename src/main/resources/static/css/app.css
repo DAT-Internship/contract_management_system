@@ -25,8 +25,12 @@ body {
 	position: fixed;
 	inset: 0 auto 0 0;
 	width: 292px;
-	padding: 18px 12px;
-	background: var(--navy);
+	height: 100vh;
+	padding: 12px;
+	overflow-y: auto;
+	scrollbar-width: thin;
+	scrollbar-color: #29486b transparent;
+	background: linear-gradient(180deg, #0a1b30 0%, #0b2039 100%);
 	color: #e9f1ff;
 	display: flex;
 	flex-direction: column;
@@ -34,15 +38,15 @@ body {
 }
 
 .brand {
-	min-height: 62px;
-	padding: 0 10px 14px;
+	min-height: 54px;
+	padding: 0 10px 9px;
 	display: flex;
 	align-items: center;
 	gap: 13px;
 	text-decoration: none;
 	color: white;
 	border-bottom: 1px solid #253d59;
-	margin-bottom: 20px
+	margin-bottom: 10px
 }
 
 .brand-logo {
@@ -69,41 +73,83 @@ body {
 
 .nav-caption {
 	padding: 0 16px;
-	margin: 2px 0 9px;
+	margin: 7px 0 4px;
 	color: #82a3ca;
 	font-size: 10px;
 	font-weight: 750;
 	letter-spacing: 1.15px
 }
 
+.nav-section-gap { margin-top: 11px; }
+
 .side-link {
-	height: 43px;
-	padding: 0 16px;
-	margin: 2px 0;
+	height: 42px;
+	min-height: 42px;
+	padding: 0 12px;
+	margin: 4px 0;
+	border: 1px solid transparent;
 	border-radius: 10px;
 	display: flex;
 	align-items: center;
-	gap: 14px;
+	gap: 11px;
+	width: 100%;
+	background: transparent;
 	color: #e1eafb;
 	text-decoration: none;
+	font-size: 13px;
+	font-weight: 600;
+	transition: background-color .12s ease, border-color .12s ease, color .12s ease
+}
+
+.side-link > .nav-icon {
+	width: 32px;
+	height: 32px;
+	flex: 0 0 32px;
+	display: grid;
+	place-items: center;
+	border-radius: 9px;
+	background: #142d49;
+	color: #aac1de;
 	font-size: 14px;
-	transition: .15s
+	text-align: center
 }
 
-.side-link>.nav-icon {
-	width: 18px;
-	text-align: center;
-	font-size: 16px
-}
-
-.side-link:hover, .side-link.active {
-	background: #193b63;
+.side-link:hover {
+	border-color: #234669;
+	background: #102b49;
 	color: #fff
 }
 
+.side-link.active {
+	position: relative;
+	border-color: #2b5b8c;
+	background: linear-gradient(100deg, #173d65, #102c4c);
+	color: #fff
+}
+
+.side-link.active > .nav-icon,
+.side-link:hover > .nav-icon {
+	background: #2466a2;
+	color: #fff
+}
+
+.side-link.active::before {
+	position: absolute;
+	inset: 9px auto 9px 0;
+	width: 3px;
+	border-radius: 0 4px 4px 0;
+	background: #49a8ff;
+	content: ""
+}
+
+.side-link:focus-visible {
+	outline: 2px solid #69adff;
+	outline-offset: 2px
+}
+
 .workspace-card {
-	margin: 20px 6px 4px;
-	padding: 16px 17px;
+	margin: 10px 6px 2px;
+	padding: 10px 12px;
 	background: #112e50;
 	border: 1px solid #1b3c60;
 	border-radius: 10px
@@ -121,6 +167,23 @@ body {
 .workspace-card strong {
 	color: #1688ff;
 	font-size: 14px
+}
+
+@media (max-height: 950px) and (min-width: 701px) {
+	.sidebar { padding-top: 8px; padding-bottom: 8px; }
+	.brand { min-height: 48px; margin-bottom: 6px; }
+	.brand-logo { width: 56px; height: 38px; }
+	.nav-section-gap { margin-top: 7px; }
+	.side-link { height: 34px; min-height: 34px; margin: 3px 0; font-size: 12px; }
+	.side-link > .nav-icon { width: 28px; height: 28px; flex-basis: 28px; }
+	.workspace-card { padding: 8px 11px; margin-top: 6px; }
+	.workspace-card strong { font-size: 13px; }
+}
+
+@media (max-height: 680px) and (min-width: 701px) {
+	.nav-caption { margin-top: 3px; margin-bottom: 2px; }
+	.side-link { height: 30px; min-height: 30px; margin: 2px 0; }
+	.workspace-card { padding: 6px 10px; }
 }
 
 .main-area {
@@ -699,4 +762,22 @@ body {
 		align-items: flex-start;
 		flex-direction: column
 	}
+}
+/* Short success feedback for contract create, update and draft actions. */
+.app-toast-container { z-index: 1090; }
+.app-success-toast {
+	min-width: min(340px, calc(100vw - 2rem));
+	border: 1px solid #cfe8db;
+	border-radius: 12px;
+	box-shadow: 0 12px 34px rgba(15, 35, 56, .16);
+}
+.app-toast-mark {
+	width: 24px;
+	height: 24px;
+	display: inline-grid;
+	place-items: center;
+	border-radius: 50%;
+	background: #e7f7ef;
+	color: #168552;
+	font-size: 12px;
 }

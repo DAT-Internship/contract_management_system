@@ -8,15 +8,17 @@
 		<main class="page-content contract-form-page">
 			<div class="page-heading contract-heading">
 				<div>
-					<div class="eyebrow">WORKSPACE / CONTRACTS / NEW</div>
-					<h1>Contract Registration</h1>
+					<div class="eyebrow" th:text="${contractForm.contractId != null ? 'WORKSPACE / CONTRACTS / EDIT' : 'WORKSPACE / CONTRACTS / NEW'}">WORKSPACE / CONTRACTS / NEW</div>
+					<h1 th:text="${contractForm.contractId != null ? 'Edit Contract' : 'Contract Registration'}">Contract Registration</h1>
 					<p>Enter the agreement details, dates, and contract status.</p>
 				</div>
 				<a class="btn btn-light border" th:href="@{/contracts}"><i class="fa-solid fa-arrow-left me-2" aria-hidden="true"></i>Back to contracts</a>
 			</div>
-			<div th:if="${error}" class="alert alert-danger" role="alert" th:text="${error}"></div>
+			<div th:replace="~{fragments/layout :: alerts}"></div>
 
-			<form th:action="@{/contracts}" th:object="${contractForm}" method="post" id="contractForm" enctype="multipart/form-data">
+			<form th:action="${contractForm.contractId != null ? '/contracts/' + contractForm.contractId : '/contracts'}" th:object="${contractForm}" method="post" id="contractForm" enctype="multipart/form-data">
+				<input type="hidden" th:field="*{contractId}">
+				<input type="hidden" th:field="*{contractNo}">
 				<div th:if="${#fields.hasErrors('*')}" class="alert alert-danger" role="alert">Please correct the invalid or missing form values and try again.</div>
 				<section class="contract-form-card">
 					<div class="form-section-heading"><span class="section-number">01</span><div><h2>Contract details</h2><p>Classification, parties, and internal tracking.</p></div></div>
@@ -95,7 +97,7 @@
 
 				<div class="contract-form-actions">
 					<a class="btn btn-outline-secondary" th:href="@{/contracts}">Cancel</a>
-					<button class="btn btn-outline-secondary" type="submit" name="action" value="draft">Save Draft</button>
+					<button th:if="${contractForm.contractId == null or isDraft}" class="btn btn-outline-secondary" type="submit" name="action" value="draft" formnovalidate>Save Draft</button>
 					<button class="btn btn-primary" type="submit" name="action" value="submit">Submit for Approval</button>
 				</div>
 			</form>

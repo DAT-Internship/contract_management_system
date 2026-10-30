@@ -47,13 +47,13 @@ public class ContractController {
     }
 
     @GetMapping
-    public List<ContractResponse> findAll() {
-        return contractService.findAll();
+    public List<ContractResponse> findAll(Principal principal) {
+        return contractService.findAll(principal.getName());
     }
 
     @GetMapping("/{id}")
-    public ContractResponse findById(@PathVariable Long id) {
-        return contractService.findById(id);
+    public ContractResponse findById(@PathVariable Long id, Principal principal) {
+        return contractService.findById(id, principal.getName());
     }
 
     @PutMapping("/{id}")
@@ -74,14 +74,16 @@ public class ContractController {
     }
 
     @GetMapping("/{id}/attachments")
-    public List<AttachmentResponse> getAttachments(@PathVariable Long id) {
-        return contractService.getAttachmentResponses(id);
+    public List<AttachmentResponse> getAttachments(@PathVariable Long id, Principal principal) {
+        return contractService.getAttachmentResponses(id, principal.getName());
     }
 
     @GetMapping("/{contractId}/attachments/{attachmentId}/download")
     public ResponseEntity<Resource> downloadAttachment(
             @PathVariable Long contractId,
-            @PathVariable Long attachmentId) {
+            @PathVariable Long attachmentId,
+            Principal principal) {
+        contractService.getContractForUser(contractId, principal.getName());
         ContractAttachment attachment = contractService.getAttachment(attachmentId);
         if (!attachment.getContract().getContractId().equals(contractId)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Attachment mismatch");

@@ -5,6 +5,7 @@ import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import org.springframework.format.annotation.DateTimeFormat;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -14,6 +15,7 @@ import java.time.LocalDate;
 @Data
 @NoArgsConstructor
 public class ContractForm {
+    private Long contractId;
     private String contractNo;
     @NotBlank @Size(max = 40)
     private String contractPoNo;
@@ -27,10 +29,14 @@ public class ContractForm {
     @NotBlank @Size(max = 10) private String fiscalYear;
     @NotNull private Long partyId;
     @NotBlank private String description;
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     private LocalDate signedDate;
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     private LocalDate registerDate;
-    @NotNull private LocalDate startDate;
-    @NotNull private LocalDate endDate;
+    @NotNull @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+    private LocalDate startDate;
+    @NotNull @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+    private LocalDate endDate;
     private Integer periodMonths;
     @DecimalMin("0.0")
     private BigDecimal headcountPerMonth;

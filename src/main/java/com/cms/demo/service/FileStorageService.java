@@ -26,6 +26,7 @@ public class FileStorageService {
     private static final Logger log = LoggerFactory.getLogger(FileStorageService.class);
 
     private final Path baseUploadLocation;
+    private final Path legacyUploadLocation = Paths.get("src/main/resources/static/uploads").toAbsolutePath().normalize();
 
     public record StoredFile(
             String originalFileName,
@@ -36,7 +37,7 @@ public class FileStorageService {
             String mimeType) {
     }
 
-    public FileStorageService(@Value("${app.upload.dir:src/main/resources/static/uploads}") String uploadDir) {
+    public FileStorageService(@Value("${app.upload.dir:uploads}") String uploadDir) {
         this.baseUploadLocation = Paths.get(uploadDir).toAbsolutePath().normalize();
         try {
             Files.createDirectories(this.baseUploadLocation);
@@ -114,20 +115,13 @@ public class FileStorageService {
 
     public Resource loadFileAsResource(String relativePath) {
         try {
-            String cleanRelative = relativePath.trim().replace('\\', '/')
-                    .replaceFirst("^/uploads/", "")
-                    .replaceFirst("^/", "");
-            Path filePath = this.baseUploadLocation.resolve(cleanRelative).normalize();
-
-            if (!filePath.startsWith(this.baseUploadLocation)) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid file path");
-            }
+            Path filePath = resolveStoredPath(relativePath);
 
             Resource resource = new UrlResource(filePath.toUri());
             if (resource.exists() && resource.isReadable()) {
                 return resource;
             } else {
-                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "File not found: " + cleanRelative);
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Uploaded file is missing from storage");
             }
         } catch (MalformedURLException ex) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "File not found", ex);
@@ -139,16 +133,40 @@ public class FileStorageService {
             return false;
         }
         try {
-            String cleanRelative = relativePath.trim().replace('\\', '/')
-                    .replaceFirst("^/uploads/", "")
-                    .replaceFirst("^/", "");
-            Path filePath = this.baseUploadLocation.resolve(cleanRelative).normalize();
-            if (filePath.startsWith(this.baseUploadLocation)) {
-                return Files.deleteIfExists(filePath);
-            }
+            return Files.deleteIfExists(resolveStoredPath(relativePath));
         } catch (IOException e) {
+            log.warn("Could not delete file at: {}", relativePath, e);
+        } catch (ResponseStatusException e) {
             log.warn("Could not delete file at: {}", relativePath, e);
         }
         return false;
+    }
+
+    private Path resolveStoredPath(String relativePath) {
+        if (relativePath == null || relativePath.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Uploaded file path is missing");
+        }
+        String cleanRelative = relativePath.trim().replace('\\', '/')
+                .replaceFirst("^/?uploads/", "")
+                .replaceFirst("^/+", "");
+        Path relative = Paths.get(cleanRelative);
+        if (relative.isAbsolute()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid file path");
+        }
+
+        Path currentPath = this.baseUploadLocation.resolve(relative).normalize();
+        if (!currentPath.startsWith(this.baseUploadLocation)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid file path");
+        }
+        if (Files.isRegularFile(currentPath)) {
+            return currentPath;
+        }
+
+        // Older uploads were written under src/main/resources/static/uploads.
+        Path legacyPath = this.legacyUploadLocation.resolve(relative).normalize();
+        if (!legacyPath.startsWith(this.legacyUploadLocation)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid file path");
+        }
+        return Files.isRegularFile(legacyPath) ? legacyPath : currentPath;
     }
 }

@@ -15,7 +15,6 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SecurityConfig {
 
     private final CustomUserDetailsService customUserDetailsService;
-
     public SecurityConfig(CustomUserDetailsService customUserDetailsService) {
         this.customUserDetailsService = customUserDetailsService;
     }
@@ -41,6 +40,8 @@ public class SecurityConfig {
         http
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/audit", "/audit/**").hasRole("ADMIN")
+                .requestMatchers("/uploads/**").denyAll()
                 .requestMatchers("/", "/login", "/css/**", "/js/**", "/images/**").permitAll() 
                 .anyRequest().authenticated() 
             )
@@ -49,10 +50,7 @@ public class SecurityConfig {
                 .defaultSuccessUrl("/dashboard", true) 
                 .permitAll()
             )
-            .logout(logout -> logout
-                .logoutSuccessUrl("/login?logout")
-                .permitAll()
-            );
+            .logout(logout -> logout.logoutSuccessUrl("/login?logout").permitAll());
         return http.build();
     }
 }

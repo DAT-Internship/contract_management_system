@@ -19,7 +19,7 @@ public class AuditLog {
     @Column(name = "entity_type", length=40, nullable=false)
     private String entityType;
 
-    @Column(name = "entity_id", nullable=false)
+    @Column(name = "entity_id")
     private Long entityId;
 
     @Column(name = "action", length=40, nullable=false)

@@ -25,5 +25,8 @@ public record ContractResponse(
         String currencyCode,
         String statusCode,
         String statusName,
-        String clientIncharge) {
+        String clientIncharge,
+        String projectCode,
+        String categoryName,
+        String departmentName) {
 }

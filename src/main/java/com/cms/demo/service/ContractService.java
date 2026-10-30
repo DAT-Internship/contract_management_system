@@ -40,6 +40,7 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class ContractService {
@@ -105,7 +106,7 @@ public class ContractService {
                 : files.stream().filter(f -> f != null && !f.isEmpty()).toList();
 
         Contract contract = new Contract();
-        applyRequest(contract, request, contractNo);
+        applyRequest(contract, request, contractNo, employeeCode);
         contract.setMissingAttachment(validFiles.isEmpty() ? "YES" : "NO");
         contract.setCreatedBy(actor);
         contract.setUpdatedBy(actor);
@@ -134,27 +135,73 @@ public class ContractService {
         return toResponse(savedContract);
     }
 
+    @Transactional
+    public ContractResponse saveDraft(ContractRequest request, List<MultipartFile> files, String employeeCode) {
+        User actor = getUserByEmployeeCode(employeeCode);
+        String draftNo = request.contractNo() == null || request.contractNo().isBlank()
+                ? "DR-" + UUID.randomUUID().toString().replace("-", "").substring(0, 12).toUpperCase()
+                : request.contractNo().trim();
+        if (contractRepository.existsByContractNo(draftNo)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Draft number already exists; please save again");
+        }
+
+        Contract contract = new Contract();
+        applyDraftRequest(contract, request, draftNo, employeeCode);
+        contract.setCreatedBy(actor);
+        contract.setUpdatedBy(actor);
+        contract.setCreatedAt(LocalDateTime.now());
+        contract.setUpdatedAt(LocalDateTime.now());
+        contract.setMissingAttachment("YES");
+        Contract saved = contractRepository.save(contract);
+        addAttachments(saved, files, actor);
+        return toResponse(saved);
+    }
+
+    @Transactional
+    public ContractResponse updateDraft(Long id, ContractRequest request, List<MultipartFile> files, String employeeCode) {
+        Contract contract = getContractForUser(id, employeeCode);
+        if (!isDraft(contract)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Only an existing draft can be saved as a draft");
+        }
+        User actor = getUserByEmployeeCode(employeeCode);
+        String draftNo = request.contractNo() == null || request.contractNo().isBlank()
+                ? contract.getContractNo() : request.contractNo().trim();
+        if (!contract.getContractNo().equals(draftNo) && contractRepository.existsByContractNo(draftNo)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Draft number already exists");
+        }
+        applyDraftRequest(contract, request, draftNo, employeeCode);
+        contract.setStatus(findDraftStatus());
+        contract.setUpdatedBy(actor);
+        contract.setUpdatedAt(LocalDateTime.now());
+        List<ContractAttachment> existing = contractAttachmentRepository.findByContractContractId(id);
+        contract.setMissingAttachment(existing.isEmpty() ? "YES" : "NO");
+        Contract saved = contractRepository.save(contract);
+        addAttachments(saved, files, actor);
+        return toResponse(saved);
+    }
+
     @Transactional(readOnly = true)
-    public List<ContractResponse> findAll() {
+    public List<ContractResponse> findAll(String employeeCode) {
         return contractRepository.findAllByOrderByRegisterDateDescContractIdDesc().stream()
+                .filter(contract -> !isDraft(contract) || isCreatedBy(contract, employeeCode))
                 .map(this::toResponse)
                 .toList();
     }
 
     @Transactional(readOnly = true)
-    public ContractResponse findById(Long id) {
-        return toResponse(getContract(id));
+    public ContractResponse findById(Long id, String employeeCode) {
+        return toResponse(getContractForUser(id, employeeCode));
     }
 
     @Transactional
     public ContractResponse update(Long id, ContractRequest request, String employeeCode) {
-        Contract contract = getContract(id);
+        Contract contract = getContractForUser(id, employeeCode);
         String contractNo = normalizeContractNo(request);
         if (!contract.getContractNo().equals(contractNo) && contractRepository.existsByContractNo(contractNo)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Contract number already exists");
         }
 
-        applyRequest(contract, request, contractNo);
+        applyRequest(contract, request, contractNo, employeeCode);
 
         // Update missing_attachment based on existing attachments in database
         List<ContractAttachment> existingAttachments = contractAttachmentRepository.findByContractContractId(id);
@@ -165,16 +212,97 @@ public class ContractService {
         return toResponse(contractRepository.save(contract));
     }
 
-    @Transactional(readOnly = true)
-    public List<ContractAttachment> getAttachmentsByContractId(Long contractId) {
-        // verify contract exists
-        getContract(contractId);
-        return contractAttachmentRepository.findByContractContractId(contractId);
+    private void applyDraftRequest(Contract contract, ContractRequest request, String contractNo, String employeeCode) {
+        LocalDate today = LocalDate.now();
+        contract.setContractNo(contractNo);
+        contract.setContractPoNo(trimToNull(request.contractPoNo()));
+        contract.setPoNoRef(trimToNull(request.poNoRef()));
+        contract.setFiscalYear(request.fiscalYear() == null || request.fiscalYear().isBlank()
+                ? "FY" + today.getYear() : request.fiscalYear().trim());
+        contract.setAgreementFor(request.agreementForId() == null ? null
+                : agreementForRepository.findById(request.agreementForId()).orElse(null));
+        contract.setCategory(request.categoryId() == null ? null
+                : categoryRepository.findById(request.categoryId()).orElse(null));
+        contract.setContractType(request.contractTypeId() == null ? null
+                : contractTypeRepository.findById(request.contractTypeId()).orElse(null));
+        contract.setPaymentType(request.paymentTypeId() == null ? null
+                : paymentTypeRepository.findById(request.paymentTypeId()).orElse(null));
+        contract.setStatus(findDraftStatus());
+        contract.setDepartment(request.departmentId() == null ? null
+                : departmentRepository.findById(request.departmentId()).orElse(null));
+        contract.setParty(request.partyId() == null ? null
+                : partyRepository.findById(request.partyId()).orElse(null));
+        contract.setCurrency(request.currencyId() == null ? null
+                : currencyRepository.findById(request.currencyId()).orElse(null));
+        contract.setProject(optionalProject(request.projectId()));
+        contract.setProjectIncharge(optionalUser(request.projectInchargeId(), "Project in-charge"));
+        contract.setContractManager(optionalUser(request.contractManagerId(), "Contract manager"));
+        contract.setRenewedFrom(request.renewedFromId() == null ? null : getContractForUser(request.renewedFromId(), employeeCode));
+        contract.setDescription(trimToNull(request.description()));
+        contract.setSignedDate(request.signedDate());
+        contract.setRegisterDate(request.registerDate() == null ? today : request.registerDate());
+        contract.setStartDate(request.startDate());
+        contract.setEndDate(request.endDate());
+        Integer months = request.periodMonths();
+        if (months == null && request.startDate() != null && request.endDate() != null) {
+            months = (int) Math.max(1, ChronoUnit.MONTHS.between(request.startDate(), request.endDate().plusDays(1)));
+        }
+        contract.setPeriodMonths(months);
+        contract.setHeadcountPerMonth(request.headcountPerMonth());
+        BigDecimal totalManMonths = request.headcountPerMonth() == null || months == null
+                ? BigDecimal.ZERO.setScale(2)
+                : request.headcountPerMonth().multiply(BigDecimal.valueOf(months)).setScale(2, RoundingMode.HALF_UP);
+        contract.setTotalManMonths(totalManMonths);
+        BigDecimal value = request.contractValue() == null ? BigDecimal.ZERO : request.contractValue();
+        BigDecimal taxRate = request.commercialTaxRate() == null ? new BigDecimal("5.00") : request.commercialTaxRate();
+        contract.setContractValue(value);
+        contract.setCommercialTaxRate(taxRate);
+        contract.setCommercialTaxAmount(value.multiply(taxRate).divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP));
+        contract.setClientIncharge(trimToNull(request.clientIncharge()));
+        contract.setPaymentRisk("LOW");
+        contract.setRenewalRisk("LOW");
+    }
+
+    private MasterContractStatus findDraftStatus() {
+        return statusRepository.findAll().stream()
+                .filter(status -> "DRAFT".equalsIgnoreCase(status.getCode()))
+                .findFirst()
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                        "Draft status is missing. Apply the latest database migration."));
+    }
+
+    private void addAttachments(Contract contract, List<MultipartFile> files, User actor) {
+        if (files == null) return;
+        boolean added = false;
+        for (MultipartFile file : files) {
+            if (file == null || file.isEmpty()) continue;
+            FileStorageService.StoredFile stored = fileStorageService.storeFile(file, "contracts/" + contract.getContractId());
+            ContractAttachment attachment = new ContractAttachment();
+            attachment.setContract(contract);
+            attachment.setFileName(stored.originalFileName());
+            attachment.setFilePath("/uploads/" + stored.relativePath());
+            attachment.setFileSize(stored.size());
+            attachment.setMimeType(stored.mimeType());
+            attachment.setUploadedBy(actor);
+            attachment.setUploadedAt(LocalDateTime.now());
+            contractAttachmentRepository.save(attachment);
+            added = true;
+        }
+        if (added) {
+            contract.setMissingAttachment("NO");
+            contractRepository.save(contract);
+        }
     }
 
     @Transactional(readOnly = true)
-    public List<AttachmentResponse> getAttachmentResponses(Long contractId) {
-        return getAttachmentsByContractId(contractId).stream()
+    public List<ContractAttachment> getAttachmentsByContractId(Long contractId, String employeeCode) {
+        getContractForUser(contractId, employeeCode);
+        return contractAttachmentRepository.findWithUploaderByContractId(contractId);
+    }
+
+    @Transactional(readOnly = true)
+    public List<AttachmentResponse> getAttachmentResponses(Long contractId, String employeeCode) {
+        return getAttachmentsByContractId(contractId, employeeCode).stream()
                 .map(this::toAttachmentResponse)
                 .toList();
     }
@@ -187,7 +315,7 @@ public class ContractService {
 
     @Transactional
     public AttachmentResponse addAttachment(Long contractId, MultipartFile file, String employeeCode) {
-        Contract contract = getContract(contractId);
+        Contract contract = getContractForUser(contractId, employeeCode);
         User actor = getUserByEmployeeCode(employeeCode);
 
         FileStorageService.StoredFile stored = fileStorageService.storeFile(file, "contracts/" + contract.getContractId());
@@ -223,7 +351,7 @@ public class ContractService {
                 uploadedByName);
     }
 
-    private void applyRequest(Contract contract, ContractRequest request, String contractNo) {
+    private void applyRequest(Contract contract, ContractRequest request, String contractNo, String employeeCode) {
         if (request.endDate().isBefore(request.startDate())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "End date must be on or after start date");
         }
@@ -258,7 +386,7 @@ public class ContractService {
         contract.setProject(optionalProject(request.projectId()));
         contract.setProjectIncharge(optionalUser(request.projectInchargeId(), "Project in-charge"));
         contract.setContractManager(optionalUser(request.contractManagerId(), "Contract manager"));
-        contract.setRenewedFrom(request.renewedFromId() == null ? null : getContract(request.renewedFromId()));
+        contract.setRenewedFrom(request.renewedFromId() == null ? null : getContractForUser(request.renewedFromId(), employeeCode));
         contract.setDescription(request.description().trim());
         contract.setSignedDate(request.signedDate());
         contract.setRegisterDate(request.registerDate() == null ? LocalDate.now() : request.registerDate());
@@ -277,14 +405,15 @@ public class ContractService {
     }
 
     private ContractResponse toResponse(Contract contract) {
-        long remainingDays = Math.max(0, ChronoUnit.DAYS.between(LocalDate.now(), contract.getEndDate()));
+        long remainingDays = contract.getEndDate() == null ? 0
+                : Math.max(0, ChronoUnit.DAYS.between(LocalDate.now(), contract.getEndDate()));
         return new ContractResponse(
                 contract.getContractId(),
                 contract.getContractNo(),
                 contract.getContractPoNo(),
                 contract.getPoNoRef(),
                 contract.getFiscalYear(),
-                contract.getParty().getPartyName(),
+                contract.getParty() == null ? null : contract.getParty().getPartyName(),
                 contract.getDescription(),
                 contract.getSignedDate(),
                 contract.getRegisterDate(),
@@ -297,14 +426,18 @@ public class ContractService {
                 contract.getContractValue(),
                 contract.getCommercialTaxRate(),
                 contract.getCommercialTaxAmount(),
-                contract.getCurrency().getCode(),
+                contract.getCurrency() == null ? null : contract.getCurrency().getCode(),
                 contract.getStatus().getCode(),
                 contract.getStatus().getName(),
-                contract.getClientIncharge());
+                contract.getClientIncharge(),
+                contract.getProject() == null ? null : contract.getProject().getProjectCode(),
+                contract.getCategory() == null ? null : contract.getCategory().getName(),
+                contract.getDepartment() == null ? null : contract.getDepartment().getDeptName());
     }
 
     private String normalizeContractNo(ContractRequest request) {
         String contractNo = request.contractNo() == null || request.contractNo().isBlank()
+                || request.contractNo().startsWith("DR-")
                 ? request.contractPoNo().trim()
                 : request.contractNo().trim();
         if (contractNo.length() > 30) {
@@ -317,6 +450,25 @@ public class ContractService {
     public Contract getContract(Long id) {
         return contractRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Contract not found"));
+    }
+
+    @Transactional(readOnly = true)
+    public Contract getContractForUser(Long id, String employeeCode) {
+        Contract contract = getContract(id);
+        if (isDraft(contract) && !isCreatedBy(contract, employeeCode)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Contract not found");
+        }
+        return contract;
+    }
+
+    private boolean isDraft(Contract contract) {
+        return contract.getStatus() != null && "DRAFT".equalsIgnoreCase(contract.getStatus().getCode());
+    }
+
+    private boolean isCreatedBy(Contract contract, String employeeCode) {
+        return contract.getCreatedBy() != null
+                && employeeCode != null
+                && employeeCode.equalsIgnoreCase(contract.getCreatedBy().getEmployeeCode());
     }
 
     private User getUserByEmployeeCode(String employeeCode) {

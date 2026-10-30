@@ -22,16 +22,16 @@ public class Contract {
     @Column(name = "contract_no", length=30, nullable=false, unique=true)
     private String contractNo;
 
-    @Column(name = "fiscal_year", length=10, nullable=false)
+    @Column(name = "fiscal_year", length=10, nullable=true)
     private String fiscalYear;
 
-    @Column(name = "contract_po_no", length=40, nullable=false)
+    @Column(name = "contract_po_no", length=40, nullable=true)
     private String contractPoNo;
 
     @Column(name = "po_no_ref", length=40)
     private String poNoRef;
 
-    @Column(name = "description", columnDefinition="text", nullable=false)
+    @Column(name = "description", columnDefinition="text", nullable=true)
     private String description;
 
     @Column(name = "signed_date")
@@ -40,10 +40,10 @@ public class Contract {
     @Column(name = "register_date", nullable=false)
     private LocalDate registerDate;
 
-    @Column(name = "start_date", nullable=false)
+    @Column(name = "start_date", nullable=true)
     private LocalDate startDate;
 
-    @Column(name = "end_date", nullable=false)
+    @Column(name = "end_date", nullable=true)
     private LocalDate endDate;
 
     @Column(name = "period_months")
@@ -87,19 +87,19 @@ public class Contract {
     private Contract renewedFrom;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "agreement_for_id", nullable = false)
+    @JoinColumn(name = "agreement_for_id")
     private MasterAgreementFor agreementFor;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "category_id", nullable = false)
+    @JoinColumn(name = "category_id")
     private MasterContractCategory category;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "contract_type_id", nullable = false)
+    @JoinColumn(name = "contract_type_id")
     private MasterContractType contractType;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "payment_type_id", nullable = false)
+    @JoinColumn(name = "payment_type_id")
     private MasterPaymentType paymentType;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -107,7 +107,7 @@ public class Contract {
     private MasterContractStatus status;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "department_id", nullable = false)
+    @JoinColumn(name = "department_id")
     private Department department;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -115,11 +115,11 @@ public class Contract {
     private Project project;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "party_id", nullable = false)
+    @JoinColumn(name = "party_id")
     private CustomerSupplier party;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "currency_id", nullable = false)
+    @JoinColumn(name = "currency_id")
     private MasterCurrency currency;
 
     @ManyToOne(fetch = FetchType.LAZY)
