@@ -43,6 +43,7 @@ public class SecurityConfig {
                 .requestMatchers("/audit", "/audit/**").hasRole("ADMIN")
                 .requestMatchers("/uploads/**").denyAll()
                 .requestMatchers("/", "/login", "/css/**", "/js/**", "/images/**").permitAll() 
+                .requestMatchers("/admin/**").hasRole("ADMIN")
                 .anyRequest().authenticated() 
             )
             .formLogin(form -> form

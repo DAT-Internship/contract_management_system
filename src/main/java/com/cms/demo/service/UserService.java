@@ -23,7 +23,8 @@ public class UserService {
     private final RoleRepository roleRepository;
     private final DepartmentRepository departmentRepository; // 🔴 ဒါလေး ထည့်ပြီ
     private final PasswordEncoder passwordEncoder;
-
+    // 🔴 ဒီနေရာမှာ Password အသစ်ကို ထည့်ပါ
+    public static final String DEFAULT_PASSWORD = "DAT@2526"; 
     // 🔴 Constructor ထဲမှာ DepartmentRepository ကို ထည့်ပြီ
     public UserService(UserRepository userRepository, RoleRepository roleRepository, 
                        DepartmentRepository departmentRepository, PasswordEncoder passwordEncoder) {
@@ -60,7 +61,7 @@ public class UserService {
         // ၃။ Password ကို Hash လုပ်ခြင်း (Admin က ပို့ပေးတဲ့ Password ကို သုံးမယ်)
         // (မှတ်ချက် - Controller က password ကို လက်ခံပြီး Hash လုပ်ပေးထားပြီးသားဆိုရင် ဒါကို ပြင်ရမယ်)
         if(user.getPasswordHash() == null || user.getPasswordHash().isEmpty()){
-             user.setPasswordHash(passwordEncoder.encode("admin123")); 
+            user.setPasswordHash(passwordEncoder.encode(DEFAULT_PASSWORD)); 
         }
         
         user.setIsActive(true);

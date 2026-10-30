@@ -8,128 +8,46 @@
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v7.3.1/css/all.css" />
     
     <style>
-        body {
-            background-color: #f0f2f5;
-            height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        .login-container {
-            background: #ffffff;
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-            width: 100%;
-            max-width: 900px;
-            display: flex;
-            flex-wrap: wrap;
-        }
-
-        /* ဘယ်ဘက် Brand Side */
-        .brand-side {
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-            color: white;
-            padding: 40px;
-            flex: 1;
-            min-width: 300px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-        }
-
-        .brand-side img {
-            max-width: 180px;
-            margin-bottom: 20px;
-            background: white;
-            padding: 10px;
-            border-radius: 10px;
-        }
-
-        .brand-side h3 {
-            font-weight: 700;
-            margin-bottom: 10px;
-        }
-        
-        .brand-side p {
-            font-size: 0.9rem;
-            opacity: 0.8;
-        }
-
-        /* ညာဘက် Form Side */
-        .form-side {
-            padding: 50px 40px;
-            flex: 1;
-            min-width: 300px;
-        }
-
-        .form-side h4 {
-            color: #1e3c72;
-            font-weight: 700;
-            margin-bottom: 30px;
-        }
-
-        .form-control {
-            border-radius: 8px;
-            padding: 12px;
-            border: 1px solid #ced4da;
-        }
-
-        .form-control:focus {
-            box-shadow: 0 0 0 0.25rem rgba(30, 60, 114, 0.25);
-            border-color: #1e3c72;
-        }
-
-        .btn-primary {
-            background-color: #1e3c72;
-            border: none;
-            border-radius: 8px;
-            padding: 12px;
-            font-weight: 600;
-            transition: all 0.3s;
-        }
-
-        .btn-primary:hover {
-            background-color: #2a5298;
-            transform: translateY(-2px);
-        }
-
-        .input-group-text {
-            background-color: #f8f9fa;
-            border-right: none;
-            border-radius: 8px 0 0 8px;
-        }
+        body { background-color: #f0f2f5; height: 100vh; display: flex; align-items: center; justify-content: center; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .login-container { background: #ffffff; border-radius: 20px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); overflow: hidden; width: 100%; max-width: 900px; display: flex; flex-wrap: wrap; }
+        .brand-side { background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); color: white; padding: 40px; flex: 1; min-width: 300px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
+        .brand-side img { max-width: 180px; margin-bottom: 20px; background: white; padding: 10px; border-radius: 10px; }
+        .brand-side h3 { font-weight: 700; margin-bottom: 10px; }
+        .brand-side p { font-size: 0.9rem; opacity: 0.8; }
+        .form-side { padding: 50px 40px; flex: 1; min-width: 300px; }
+        .form-side h4 { color: #1e3c72; font-weight: 700; margin-bottom: 30px; }
+        .form-control { border-radius: 8px; padding: 12px; border: 1px solid #ced4da; }
+        .form-control:focus { box-shadow: 0 0 0 0.25rem rgba(30, 60, 114, 0.25); border-color: #1e3c72; }
+        .btn-primary { background-color: #1e3c72; border: none; border-radius: 8px; padding: 12px; font-weight: 600; transition: all 0.3s; }
+        .btn-primary:hover { background-color: #2a5298; transform: translateY(-2px); }
+        .input-group-text { background-color: #f8f9fa; border-right: none; border-radius: 8px 0 0 8px; }
     </style>
 </head>
 <body>
 
 <div class="login-container m-3">
-    <!-- ဘယ်ဘက် Logo နဲ့ အချက်အလက် -->
     <div class="brand-side">
         <img th:src="@{/images/dat-logo.png}" alt="DAT Logo">
         <h3>Contract Management</h3>
         <p>Enterprise CMS Solution</p>
     </div>
 
-    <!-- ညာဘက် Login Form -->
     <div class="form-side">
         <h4>Welcome Back</h4>
         <p class="text-muted mb-4" style="font-size: 0.9rem;">Please sign in to continue.</p>
 
-        <!-- Error Message -->
+        <!-- Success/Error Messages -->
         <div th:if="${param.error}" class="alert alert-danger d-flex align-items-center" role="alert">
             <i class="fa-solid fa-circle-exclamation me-2"></i>
             <div>Invalid Staff ID or Password.</div>
         </div>
-        
-        <!-- Logout Message -->
         <div th:if="${param.logout}" class="alert alert-success d-flex align-items-center" role="alert">
             <i class="fa-solid fa-circle-check me-2"></i>
             <div>You have been logged out successfully.</div>
+        </div>
+        <div th:if="${param.success}" class="alert alert-success d-flex align-items-center" role="alert">
+            <i class="fa-solid fa-circle-check me-2"></i>
+            <div>Request submitted! Admin will review it soon.</div>
         </div>
 
         <form th:action="@{/login}" method="post">
@@ -149,7 +67,6 @@
                 </div>
             </div>
 
-            <!-- 🔴 ဒီနေရာမှာ Forgot Password လင့်ခ် ထည့်ထားပါတယ် -->
             <div class="d-flex justify-content-end mb-3">
                 <a href="#" class="text-decoration-none" style="color: #1e3c72; font-size: 0.9rem;" data-bs-toggle="modal" data-bs-target="#forgotPasswordModal">
                     Forgot Password?
@@ -163,7 +80,7 @@
     </div>
 </div>
 
-<!-- 🔴 Forgot Password အတွက် Modal (Popup) -->
+<!-- Forgot Password Modal -->
 <div class="modal fade" id="forgotPasswordModal" tabindex="-1" aria-labelledby="forgotPasswordModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -171,46 +88,47 @@
                 <h5 class="modal-title" id="forgotPasswordModalLabel"><i class="fa-solid fa-key me-2"></i>Password Reset Request</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body">
-                <div class="alert alert-info py-2" style="font-size: 0.9rem;">
-                    Please enter your Staff ID and select a reason. An administrator will review your request.
-                </div>
-                
-                <!-- UI သက်သက်သာ ဖြစ်လို့ Action မပါဘူး -->
-                <form>
+            
+            <!-- 🔴 Form ကို Backend (/forgot-password) နဲ့ ချိတ်ဆက်လိုက်ပါပြီ -->
+            <form th:action="@{/forgot-password}" method="post">
+                <div class="modal-body">
+                    <div class="alert alert-info py-2" style="font-size: 0.9rem;">
+                        Please enter your Staff ID and select a reason. An administrator will review your request.
+                    </div>
+                    
                     <div class="mb-3">
                         <label class="form-label fw-bold">Staff ID</label>
-                        <input type="text" class="form-control" placeholder="e.g., 25-00001" required>
+                        <!-- name="employeeCode" ကို Entity နဲ့ ကိုက်ညီအောင် ပေးထားတယ် -->
+                        <input type="text" name="employeeCode" class="form-control" placeholder="e.g., 25-00001" required>
                     </div>
                     
                     <div class="mb-3">
                         <label class="form-label fw-bold">Reason for Reset</label>
-                        <select class="form-select" required>
+                        <select name="reason" class="form-select" required>
                             <option value="" selected disabled>-- Select a reason --</option>
-                            <option value="forgot">I forgot my password</option>
-                            <option value="compromised">My account was compromised</option>
-                            <option value="expired">My password expired</option>
-                            <option value="other">Other (Please specify below)</option>
+                            <option value="Forgot Password">I forgot my password</option>
+                            <option value="Account Compromised">My account was compromised</option>
+                            <option value="Password Expired">My password expired</option>
+                            <option value="Other">Other</option>
                         </select>
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label fw-bold">Additional Details (Optional)</label>
-                        <textarea class="form-control" rows="3" placeholder="Type any additional information here..."></textarea>
+                        <textarea name="details" class="form-control" rows="3" placeholder="Type any additional information here..."></textarea>
                     </div>
-                </form>
-            </div>
-            <div class="modal-footer bg-light">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" onclick="alert('This is UI only. Backend integration is required to send the request.')">
-                    Submit Request
-                </button>
-            </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <!-- 🔴 submit button ကို အလုပ်လုပ်အောင် ပြင်ထားတယ် -->
+                    <button type="submit" class="btn btn-primary">Submit Request</button>
+                </div>
+            </form>
+
         </div>
     </div>
 </div>
 
-<!-- Bootstrap JS ကို ခေါ်ဖို့ လိုပါတယ် (Modal အလုပ်လုပ်ဖို့) -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
