@@ -8,7 +8,20 @@ uploads/
 # Local application configuration and credentials
 /src/main/resources/application.properties
 
-### STS ###
+# Logs
+*.log
+
+### Eclipse / STS ###
+.metadata/
+bin/
+tmp/
+*.tmp
+*.bak
+*.swp
+*~.nib
+local.properties
+.loadpath
+.recommenders
 .apt_generated
 .classpath
 .factorypath
