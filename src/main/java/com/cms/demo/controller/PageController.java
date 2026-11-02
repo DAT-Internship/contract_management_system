@@ -1,23 +1,28 @@
 package com.cms.demo.controller;
 
-import com.cms.demo.service.UserService; // 🔴 ဒါလေး ထည့်ပါ
+import com.cms.demo.entity.PasswordResetRequest; // 🔴 Import လုပ်ပါ
+import com.cms.demo.service.PasswordResetService; // 🔴 Import လုပ်ပါ
+import com.cms.demo.service.UserService; 
 import java.security.Principal;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ModelAttribute; // 🔴 Import လုပ်ပါ
 import org.springframework.ui.Model;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 public class PageController {
 
-    private final UserService userService; // 🔴 Variable ကြေညာပါ
+    private final UserService userService;
+    private final PasswordResetService passwordResetService; // 🔴 Variable ကြေညာပါ
 
-    // 🔴 Constructor မှာ UserService ကို လက်ခံပါ
-    public PageController(UserService userService) {
+    // 🔴 Constructor မှာ နှစ်ခုလုံးကို လက်ခံပါ
+    public PageController(UserService userService, PasswordResetService passwordResetService) {
         this.userService = userService;
+        this.passwordResetService = passwordResetService;
     }
 
     // Login Page ကို ပြဖို့
@@ -26,7 +31,7 @@ public class PageController {
         return "auth/login";
     }
 
-    // ၃။ Dashboard ကို ပြဖို့
+    // Dashboard ကို ပြဖို့
     @GetMapping("/dashboard")
     public String showDashboard() {
         return "dashboard";
@@ -66,5 +71,17 @@ public class PageController {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
             return "redirect:/change-password";
         }
+    }
+    
+    // 🔴 Login Page က Forgot Password Form လက်ခံဖို့
+    @PostMapping("/forgot-password")
+    public String submitForgotPassword(@ModelAttribute PasswordResetRequest request, RedirectAttributes redirectAttributes) {
+        try {
+            passwordResetService.submitRequest(request);
+            redirectAttributes.addFlashAttribute("success", "Request submitted! Admin will review it.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/login";
     }
 }
