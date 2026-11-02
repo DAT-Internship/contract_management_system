@@ -66,7 +66,9 @@ public class AuditLogInterceptor implements HandlerInterceptor {
                 || path.equals("/error") || path.equals("/login")
                 || path.equals("/favicon.ico") || path.startsWith("/css/")
                 || path.startsWith("/js/") || path.startsWith("/images/")
-                || path.startsWith("/uploads/");
+                || path.startsWith("/uploads/")
+                // Payment writes record detailed INVOICE audit entries in PaymentService.
+                || path.equals("/payments") || path.startsWith("/payments/");
     }
 
     private String entityType(String path) {

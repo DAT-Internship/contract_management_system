@@ -65,3 +65,55 @@ contract_management_system/
 - `src/test/` contains automated tests.
 
 The `config/`, `controller/`, `dto/`, `exception/`, `repository/`, `security/`, and `service/` packages contain `.gitkeep` placeholders so Git preserves them until application files are added.
+
+## Payment workspace
+
+The payment module is a Thymeleaf workspace under `/payments`. All pages require an authenticated session.
+
+### Pages
+
+| Method | Path | Purpose |
+| --- | --- | --- |
+| `GET` | `/payments` | Payment KPI overview and contract payment list. Optional query params: `q`, `status`, `paymentTypeId`, `categoryId` |
+| `GET` | `/payments/{contractId}` | Contract payment summary, invoices, and audit history |
+| `POST` | `/payments/{contractId}/invoices/save` | Create or update an invoice from the invoice modal |
+| `POST` | `/payments/{contractId}/payment` | Record a cumulative payment for an invoice |
+
+The invoice and payment forms are Bootstrap modals on the contract payment detail page. The sidebar `Payments` link and the `Payments` action on a contract detail page open the workspace.
+
+### Invoice form
+
+- `description` and `dueDate` are required.
+- `invoiceNo` is optional and must be unique.
+- `amount` is the amount before tax.
+- If `taxAmount` is omitted, the contract commercial tax rate is applied.
+- If `currencyId` is omitted, the contract currency is used.
+
+### Payment form
+
+`paidAmount` is the cumulative amount received, not the amount of one transaction. For example, after receiving 300 and then another 200 on a 1,000 invoice, submit `500`.
+
+### Status rules
+
+- `PAID`: cumulative paid amount covers the invoice total.
+- `OVERDUE`: unpaid or partially paid and the due date has passed.
+- `PARTIALLY_PAID`: some amount received, due date not passed.
+- `PENDING`: no payment received, due date not passed.
+- Contract-level status is `NO_INVOICES`, `OVERDUE`, `PAID`, `PARTIALLY_PAID`, or `PENDING`, derived from its invoices and contract value.
+
+### Permissions and audit
+
+- Only `FINANCE` users can create invoices, update invoices, and record payments. Other authenticated users have read-only access.
+- All authenticated users can read payment data for contracts visible to them.
+- Every write records an `audit_logs` row with `entity_type = 'INVOICE'` and `old_value` / `new_value` JSON (`CREATED`, `INVOICE_UPDATED`, `PAYMENT_UPDATED`, `STATUS_CHANGED`).
+- A daily scheduler (`app.payment.overdue-cron`, default `0 5 0 * * *`) persists `OVERDUE` status and records a `STATUS_CHANGED` audit entry.
+
+Database migrations contain schema changes only (`V1`–`V8`). Master data is not seeded by Flyway.
+
+A ready-to-run seed is provided at `src/main/resources/db/seed/master-data.sql`. It contains all master data plus the `FINANCE`, `APPROVER`, and `OPERATOR` roles, the PMO department, and the correct currency codes. It is idempotent and can be re-run:
+
+```bash
+mariadb --skip-ssl -ucmsuser -proot cms_system < src/main/resources/db/seed/master-data.sql
+```
+
+The application initializer creates only the default `ADMIN` role and user. Payment statuses must be named `Pending`, `Paid`, `Overdue`, and `Partially Paid` (any code is accepted; the service looks up by code first, then by name).

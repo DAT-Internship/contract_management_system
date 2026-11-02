@@ -2,6 +2,7 @@ package com.cms.demo.service;
 
 import com.cms.demo.dto.AuditLogEntry;
 import com.cms.demo.entity.AuditLog;
+import com.cms.demo.entity.User;
 import com.cms.demo.repository.AuditLogRepository;
 import com.cms.demo.repository.UserRepository;
 import java.time.LocalDate;
@@ -9,21 +10,26 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import tools.jackson.databind.ObjectMapper;
 
 @Service
 public class AuditLogService {
     private final AuditLogRepository auditLogRepository;
     private final UserRepository userRepository;
+    private final ObjectMapper objectMapper;
 
-    public AuditLogService(AuditLogRepository auditLogRepository, UserRepository userRepository) {
+    public AuditLogService(AuditLogRepository auditLogRepository, UserRepository userRepository,
+            ObjectMapper objectMapper) {
         this.auditLogRepository = auditLogRepository;
         this.userRepository = userRepository;
+        this.objectMapper = objectMapper;
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -42,6 +48,21 @@ public class AuditLogService {
         log.setCreatedAt(LocalDateTime.now());
         log.setNewValue("{\"method\":\"" + jsonEscape(method) + "\",\"path\":\""
                 + jsonEscape(path) + "\",\"responseStatus\":" + responseStatus + "}");
+        auditLogRepository.save(log);
+    }
+
+    
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void recordEvent(User actor, String entityType, Long entityId, String action,
+            Map<String, Object> oldValue, Map<String, Object> newValue) {
+        AuditLog log = new AuditLog();
+        log.setActor(actor);
+        log.setEntityType(entityType);
+        log.setEntityId(entityId);
+        log.setAction(action);
+        log.setCreatedAt(LocalDateTime.now());
+        log.setOldValue(oldValue == null ? null : objectMapper.writeValueAsString(oldValue));
+        log.setNewValue(newValue == null ? null : objectMapper.writeValueAsString(newValue));
         auditLogRepository.save(log);
     }
 

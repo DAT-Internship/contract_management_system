@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Payments')}"></head>
+<body>
+<aside th:replace="~{fragments/layout :: sidebar}"></aside>
+<div class="main-area">
+    <header th:replace="~{fragments/layout :: topbar}"></header>
+    <main class="page-content contract-list-page payment-page">
+        <div th:replace="~{fragments/layout :: alerts}"></div>
+
+        <div class="page-heading contract-heading">
+            <div>
+                <div class="eyebrow">WORKSPACE / PAYMENTS</div>
+                <h1>Payments</h1>
+                <p>Track invoiced amounts, received payments, and overdue balances across contracts.</p>
+            </div>
+            <div class="d-flex gap-2">
+                <a class="btn btn-outline-primary" th:href="@{/contracts}">
+                    <i class="fa-solid fa-file-contract me-2"></i>Contracts
+                </a>
+            </div>
+        </div>
+
+        <div class="row row-cols-1 row-cols-md-2 row-cols-xl-4 g-3 mb-3">
+            <div class="col">
+                <div class="card border-0 shadow-sm p-3 h-100 payment-kpi">
+                    <span class="payment-kpi-label">Contracts tracked</span>
+                    <strong class="payment-kpi-value" th:text="${overview.contractsTracked}">0</strong>
+                    <small class="payment-kpi-note">Active payment records</small>
+                </div>
+            </div>
+            <div class="col">
+                <div class="card border-0 shadow-sm p-3 h-100 payment-kpi">
+                    <span class="payment-kpi-label">Invoices</span>
+                    <strong class="payment-kpi-value" th:text="${overview.totalInvoices}">0</strong>
+                    <small class="payment-kpi-note">
+                        <span th:text="${overview.overdueInvoiceCount}">0</span> overdue
+                    </small>
+                </div>
+            </div>
+            <div class="col">
+                <div class="card border-0 shadow-sm p-3 h-100 payment-kpi">
+                    <span class="payment-kpi-label">Overdue contracts</span>
+                    <strong class="payment-kpi-value text-danger" th:text="${overview.overdueContracts}">0</strong>
+                    <small class="payment-kpi-note">Need follow-up</small>
+                </div>
+            </div>
+            <div class="col">
+                <div class="card border-0 shadow-sm p-3 h-100 payment-kpi">
+                    <span class="payment-kpi-label">Outstanding</span>
+                    <div th:if="${overview.outstandingByCurrency.isEmpty()}" class="payment-kpi-value">0.00</div>
+                    <div th:each="entry : ${overview.outstandingByCurrency}" class="payment-kpi-currency">
+                        <strong th:text="${#numbers.formatDecimal(entry.value, 1, 2)}">0.00</strong>
+                        <span th:text="${entry.key}">USD</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <form class="card border-0 shadow-sm rounded-3 p-3 p-lg-4 mb-3 contract-filter-card" method="get" th:action="@{/payments}">
+            <div class="contract-filter-heading">
+                <div>
+                    <h2>Find a contract</h2>
+                    <p>Search by contract, customer, or project and refine by payment state.</p>
+                </div>
+            </div>
+            <div class="row g-2 align-items-end contract-filter-row">
+                <div class="col-12 col-lg-4">
+                    <label class="form-label small fw-semibold text-secondary" for="q">Contract / Customer / Project</label>
+                    <input class="form-control" id="q" name="q" th:value="${query}" placeholder="Enter a contract, customer, or project">
+                </div>
+                <div class="col-6 col-lg-2">
+                    <label class="form-label small fw-semibold text-secondary" for="status">Payment status</label>
+                    <select class="form-select" id="status" name="status">
+                        <option value="">All statuses</option>
+                        <option th:each="option : ${statusOptions}" th:value="${option.code}" th:text="${option.name}"
+                                th:selected="${status == option.code}"></option>
+                    </select>
+                </div>
+                <div class="col-6 col-lg-2">
+                    <label class="form-label small fw-semibold text-secondary" for="paymentTypeId">Payment type</label>
+                    <select class="form-select" id="paymentTypeId" name="paymentTypeId">
+                        <option value="">All types</option>
+                        <option th:each="item : ${paymentTypes}" th:value="${item.id}" th:text="${item.name}"
+                                th:selected="${paymentTypeId != null and paymentTypeId == item.id}"></option>
+                    </select>
+                </div>
+                <div class="col-6 col-lg-2">
+                    <label class="form-label small fw-semibold text-secondary" for="categoryId">Category</label>
+                    <select class="form-select" id="categoryId" name="categoryId">
+                        <option value="">All categories</option>
+                        <option th:each="item : ${categories}" th:value="${item.id}" th:text="${item.name}"
+                                th:selected="${categoryId != null and categoryId == item.id}"></option>
+                    </select>
+                </div>
+                <div class="col-6 col-lg-2 d-flex gap-2">
+                    <a class="btn btn-outline-secondary flex-fill" th:href="@{/payments}">Reset</a>
+                    <button class="btn btn-primary flex-fill" type="submit">Search</button>
+                </div>
+            </div>
+        </form>
+
+        <div class="card border-0 shadow-sm rounded-3 overflow-hidden contract-table-card">
+            <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                    <thead>
+                    <tr>
+                        <th>CONTRACT</th>
+                        <th>CUSTOMER</th>
+                        <th>PAYMENT TYPE</th>
+                        <th>CONTRACT GROSS</th>
+                        <th>INVOICED</th>
+                        <th>PAID</th>
+                        <th>OUTSTANDING</th>
+                        <th>PROGRESS</th>
+                        <th>STATUS</th>
+                        <th>ACTION</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="contract : ${contracts}">
+                        <td>
+                            <a class="contract-number-link" th:href="@{/payments/{id}(id=${contract.contractId})}"
+                               th:text="${contract.contractNo}">Contract</a>
+                            <small class="d-block text-muted" th:text="${contract.contractPoNo ?: 'No PO'}">PO</small>
+                        </td>
+                        <td th:text="${contract.partyName ?: '-'}">Customer</td>
+                        <td th:text="${contract.paymentTypeName ?: '-'}">Payment type</td>
+                        <td class="text-nowrap">
+                            <span th:text="${contract.currencyCode ?: ''}">USD</span>
+                            <span th:text="${#numbers.formatDecimal(contract.contractGross, 1, 2)}">0.00</span>
+                        </td>
+                        <td class="text-nowrap" th:text="${#numbers.formatDecimal(contract.totalInvoiced, 1, 2)}">0.00</td>
+                        <td class="text-nowrap text-success fw-semibold"
+                            th:text="${#numbers.formatDecimal(contract.totalPaid, 1, 2)}">0.00</td>
+                        <td class="text-nowrap fw-semibold"
+                            th:classappend="${contract.outstandingAmount != null and contract.outstandingAmount.signum() > 0} ? ' text-warning' : ' text-success'"
+                            th:text="${#numbers.formatDecimal(contract.outstandingAmount, 1, 2)}">0.00</td>
+                        <td style="min-width: 120px">
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="progress flex-grow-1 payment-progress" role="progressbar"
+                                     th:attr="aria-valuenow=${contract.paymentProgressPercent}"
+                                     aria-valuemin="0" aria-valuemax="100">
+                                    <div class="progress-bar" th:style="|width:${contract.paymentProgressPercent}%|"></div>
+                                </div>
+                                <small class="text-muted" th:text="${contract.paymentProgressPercent + '%'}">0%</small>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="status-badge"
+                                  th:classappend="${' status-' + #strings.replace(#strings.toLowerCase(contract.paymentStatus), '_', '-')}"
+                                  th:text="${contract.paymentStatusName}">Pending</span>
+                        </td>
+                        <td>
+                            <a class="btn btn-sm btn-outline-primary" th:href="@{/payments/{id}(id=${contract.contractId})}">
+                                <i class="fa-solid fa-arrow-up-right-from-square me-1"></i>View
+                            </a>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(contracts)}">
+                        <td colspan="10" class="empty-state text-center">
+                            <div class="empty-icon"><i class="fa-regular fa-folder-open"></i></div>
+                            <strong>No matching payment records</strong>
+                            <span>Try changing or clearing your filters.</span>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="p-3 border-top text-muted small">
+                Showing <span th:text="${#lists.size(contracts)}">0</span> contract(s)
+            </div>
+        </div>
+    </main>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>
