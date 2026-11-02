@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Email Monitoring')}"></head>
+<body>
+
+<aside th:replace="~{fragments/layout :: sidebar}"></aside>
+
+<div class="main-area">
+  <header th:replace="~{fragments/layout :: topbar}"></header>
+
+  <main class="page-content">
+    <div th:replace="~{fragments/layout :: alerts}"></div>
+
+    <div class="ne-page">
+
+      <div class="ne-heading">
+        <div>
+          <h1>Email Monitoring</h1>
+          <p>Track email delivery and quickly resolve failed messages.</p>
+        </div>
+        <div class="d-flex gap-2">
+          <button type="button" class="btn-ne-outline" onclick="location.reload()">
+            <i class="fa-solid fa-rotate me-1"></i> Refresh
+          </button>
+        </div>
+      </div>
+
+      <!-- Stats : Total = Sent + Pending + Failed -->
+      <div class="ne-stats">
+        <div class="ne-stat">
+          <div class="ne-stat-icon blue"><i class="fa-solid fa-envelope"></i></div>
+          <div>
+            <p class="ne-stat-label">Total Emails</p>
+            <p class="ne-stat-value" th:text="${totalCount}">0</p>
+          </div>
+        </div>
+        <div class="ne-stat">
+          <div class="ne-stat-icon green"><i class="fa-solid fa-check"></i></div>
+          <div>
+            <p class="ne-stat-label">Sent</p>
+            <p class="ne-stat-value" th:text="${sentCount}">0</p>
+          </div>
+        </div>
+        <div class="ne-stat">
+          <div class="ne-stat-icon amber"><i class="fa-regular fa-clock"></i></div>
+          <div>
+            <p class="ne-stat-label">Pending</p>
+            <p class="ne-stat-value" th:text="${pendingCount}">0</p>
+          </div>
+        </div>
+        <div class="ne-stat">
+          <div class="ne-stat-icon red"><i class="fa-solid fa-triangle-exclamation"></i></div>
+          <div>
+            <p class="ne-stat-label">Failed</p>
+            <p class="ne-stat-value" th:text="${failedCount}">0</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="ne-panel">
+        <div class="ne-tabs" id="emailTabs">
+          <button type="button" class="ne-tab active" data-group="">
+            All emails <span class="pill blue" th:text="${totalCount}">0</span>
+          </button>
+          <button type="button" class="ne-tab" data-group="SENT">
+            Sent <span class="pill green" th:text="${sentCount}">0</span>
+          </button>
+          <button type="button" class="ne-tab" data-group="PENDING">
+            Pending <span class="pill amber" th:text="${pendingCount}">0</span>
+          </button>
+          <button type="button" class="ne-tab" data-group="FAILED">
+            Failed <span class="pill red" th:text="${failedCount}">0</span>
+          </button>
+        </div>
+
+        <div class="ne-toolbar">
+          <div class="ne-search">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="search" id="emailSearch" placeholder="Search by recipient, subject..." autocomplete="off">
+          </div>
+          <select id="emailTypeFilter">
+            <option value="">All types</option>
+            <option value="PASSWORD_RESET_REQUEST">Password Reset</option>
+            <option value="APPROVAL">Approval</option>
+            <option value="PAYMENT_DUE">Payment Due</option>
+          </select>
+        </div>
+
+        <div class="ne-table-wrap">
+          <table class="ne-table" id="emailTable">
+            <thead>
+              <tr>
+                <th>Recipient</th>
+                <th>Subject</th>
+                <th>Type</th>
+                <th>Status</th>
+                <th>Attempts</th>
+                <th>Created</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr th:each="e : ${emailLogs}"
+                  th:classappend="${e.status == 'SENT_UNREAD' or e.status == 'SENT'} ? ' row-unread'"
+                  th:attr="data-status=${e.status},data-type=${e.emailType},
+                           data-group=${e.status == 'FAILED' ? 'FAILED' : (e.status == 'PENDING' ? 'PENDING' : 'SENT')}">
+                <td th:text="${e.recipientEmail}">email</td>
+                <td th:text="${e.subject}">subject</td>
+                <td th:text="${e.emailType}">type</td>
+                <td>
+                  <span class="status-pill"
+                        th:classappend="${e.status == 'SENT_READ'} ? ' sent'
+                                      : (${e.status == 'SENT_UNREAD' or e.status == 'SENT'} ? ' unread'
+                                      : (${e.status == 'PENDING'} ? ' pending' : ' failed'))"
+                        th:text="${e.status == 'SENT_READ'} ? 'Read'
+                               : (${e.status == 'SENT_UNREAD' or e.status == 'SENT'} ? 'Unread'
+                               : (${e.status == 'PENDING'} ? 'Pending' : 'Failed'))">Unread</span>
+                </td>
+                <td th:text="${e.attemptCount}">1</td>
+                <td th:text="${e.createdAt}">date</td>
+                <td>
+                  <button type="button" class="btn-ne-sm btn-view-email"
+                          th:attr="data-id=${e.emailLogId}">View details</button>
+                </td>
+              </tr>
+              <tr th:if="${#lists.isEmpty(emailLogs)}">
+                <td colspan="7" class="ne-empty">No email records found.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="ne-footer" th:if="${!#lists.isEmpty(emailLogs)}">
+          <span>Showing <span th:text="${totalCount}">0</span> emails</span>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Email Details Modal -->
+  <div class="modal fade" id="emailDetailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content" style="border-radius:16px;border:0;box-shadow:0 10px 40px rgba(15,23,42,.12);">
+        <div class="modal-header border-0 pb-0">
+          <h5 class="modal-title fw-bold">Email details</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <dl class="row mb-0" style="font-size:.9rem;">
+            <dt class="col-4 text-muted">Email ID</dt><dd class="col-8" id="edId">—</dd>
+            <dt class="col-4 text-muted">Recipient</dt><dd class="col-8" id="edRecipient">—</dd>
+            <dt class="col-4 text-muted">Subject</dt><dd class="col-8" id="edSubject">—</dd>
+            <dt class="col-4 text-muted">Type</dt><dd class="col-8" id="edType">—</dd>
+            <dt class="col-4 text-muted">Status</dt>
+            <dd class="col-8"><span class="status-pill" id="edStatus">—</span></dd>
+            <dt class="col-4 text-muted">Attempts</dt><dd class="col-8" id="edAttempts">—</dd>
+            <dt class="col-4 text-muted">Created</dt><dd class="col-8" id="edCreated">—</dd>
+            <dt class="col-4 text-muted">Sent at</dt><dd class="col-8" id="edSent">—</dd>
+            <dt class="col-4 text-muted">Error</dt><dd class="col-8 text-danger" id="edError">—</dd>
+          </dl>
+        </div>
+        <div class="modal-footer border-0 pt-0">
+          <button type="button" class="btn-ne-outline" data-bs-dismiss="modal">Close</button>
+          <button type="button" class="btn-ne-primary" id="btnMarkEmailRead" style="display:none;">
+            <i class="fa-solid fa-check me-1"></i> Mark as read
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+
+<script>
+(function () {
+  // ---------- Filters (tabs by group: SENT includes read + unread) ----------
+  var tabs = document.querySelectorAll('#emailTabs .ne-tab');
+  var search = document.getElementById('emailSearch');
+  var typeFilter = document.getElementById('emailTypeFilter');
+  var currentGroup = '';
+
+  function applyFilter() {
+    var q = (search && search.value || '').toLowerCase();
+    var tp = typeFilter ? typeFilter.value : '';
+    document.querySelectorAll('#emailTable tbody tr[data-group]').forEach(function (row) {
+      var ok = true;
+      if (currentGroup && row.getAttribute('data-group') !== currentGroup) ok = false;
+      if (tp && row.getAttribute('data-type') !== tp) ok = false;
+      if (q && row.textContent.toLowerCase().indexOf(q) < 0) ok = false;
+      row.style.display = ok ? '' : 'none';
+    });
+  }
+  tabs.forEach(function (tab) {
+    tab.addEventListener('click', function () {
+      tabs.forEach(function (t) { t.classList.remove('active'); });
+      tab.classList.add('active');
+      currentGroup = tab.getAttribute('data-group') || '';
+      applyFilter();
+    });
+  });
+  if (search) search.addEventListener('input', applyFilter);
+  if (typeFilter) typeFilter.addEventListener('change', applyFilter);
+
+  // ---------- Details modal + Mark as read button ----------
+  var currentId = null;
+  var modalEl = document.getElementById('emailDetailModal');
+  var modal = modalEl ? new bootstrap.Modal(modalEl) : null;
+  var markBtn = document.getElementById('btnMarkEmailRead');
+
+  function isUnread(st) {
+    st = (st || '').toUpperCase();
+    return st === 'SENT_UNREAD' || st === 'SENT';
+  }
+  function label(st) {
+    st = (st || '').toUpperCase();
+    if (st === 'SENT_READ') return 'Read';
+    if (isUnread(st)) return 'Unread';
+    if (st === 'PENDING') return 'Pending';
+    return 'Failed';
+  }
+  function cls(st) {
+    st = (st || '').toUpperCase();
+    if (st === 'SENT_READ') return 'sent';
+    if (isUnread(st)) return 'unread';
+    if (st === 'PENDING') return 'pending';
+    return 'failed';
+  }
+  function setPill(el, st) {
+    el.textContent = label(st);
+    el.className = 'status-pill ' + cls(st);
+  }
+  function setBadge(n) {
+    var b = document.getElementById('navEmailCount');
+    if (!b) return;
+    n = Number(n) || 0;
+    b.textContent = n > 99 ? '99+' : String(n);
+    b.style.display = n > 0 ? 'inline-block' : 'none';
+  }
+
+  function fillModal(d) {
+    currentId = d.emailLogId;
+    document.getElementById('edId').textContent = '#' + d.emailLogId;
+    document.getElementById('edRecipient').textContent = d.recipientEmail || '—';
+    document.getElementById('edSubject').textContent = d.subject || '—';
+    document.getElementById('edType').textContent = d.emailType || '—';
+    setPill(document.getElementById('edStatus'), d.status);
+    document.getElementById('edAttempts').textContent = d.attemptCount;
+    document.getElementById('edCreated').textContent = d.createdAt || '—';
+    document.getElementById('edSent').textContent = d.sentAt || '—';
+    document.getElementById('edError').textContent = d.errorMessage || '—';
+
+    // Show "Mark as read" only while the email is Unread
+    markBtn.style.display = isUnread(d.status) ? 'inline-block' : 'none';
+    markBtn.disabled = false;
+  }
+
+  // View details = view only (status does not change)
+  document.querySelectorAll('.btn-view-email').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var id = btn.getAttribute('data-id');
+      fetch('/api/emails/' + id, { credentials: 'same-origin' })
+        .then(function (r) { return r.ok ? r.json() : Promise.reject(); })
+        .then(function (data) { fillModal(data); modal.show(); })
+        .catch(function () { alert('Could not load email details'); });
+    });
+  });
+
+  // Status becomes Read only when this button is clicked
+  markBtn.addEventListener('click', function () {
+    if (!currentId) return;
+    markBtn.disabled = true;
+    fetch('/api/emails/' + currentId + '/mark-read', {
+      method: 'POST',
+      credentials: 'same-origin'
+    })
+      .then(function (r) { return r.ok ? r.json() : Promise.reject(); })
+      .then(function (res) {
+        setBadge(res.count);                                   // sidebar badge decreases / disappears
+        setPill(document.getElementById('edStatus'), res.status);
+        markBtn.style.display = 'none';
+
+        document.querySelectorAll('.btn-view-email[data-id="' + currentId + '"]').forEach(function (b) {
+          var row = b.closest('tr');
+          if (!row) return;
+          row.setAttribute('data-status', res.status);
+          row.classList.remove('row-unread');
+          var pill = row.querySelector('.status-pill');
+          if (pill) setPill(pill, res.status);
+        });
+      })
+      .catch(function () {
+        markBtn.disabled = false;
+        alert('Mark as read failed');
+      });
+  });
+})();
+</script>
+</body>
+</html>

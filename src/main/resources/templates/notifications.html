@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Notifications')}"></head>
+<body>
+
+<aside th:replace="~{fragments/layout :: sidebar}"></aside>
+
+<div class="main-area">
+  <header th:replace="~{fragments/layout :: topbar}"></header>
+
+  <main class="page-content">
+    <div th:replace="~{fragments/layout :: alerts}"></div>
+
+    <div class="ne-page">
+
+      <div class="ne-heading">
+        <div>
+          <h1>Notifications</h1>
+          <p>Stay updated on contracts, approvals, and payments.</p>
+        </div>
+        <button type="button" class="btn-ne-primary" id="btnMarkAllRead">
+          <i class="fa-solid fa-check me-1"></i> Mark all as read
+        </button>
+      </div>
+
+      <!-- Summary cards -->
+      <div class="ne-stats">
+        <div class="ne-stat">
+          <div class="ne-stat-icon blue"><i class="fa-solid fa-bell"></i></div>
+          <div>
+            <p class="ne-stat-label">Total Notifications</p>
+            <p class="ne-stat-value" th:text="${#lists.size(notifications)}">0</p>
+          </div>
+        </div>
+
+        <!-- Unread: isRead null is also counted as unread -->
+        <div class="ne-stat">
+          <div class="ne-stat-icon indigo"><i class="fa-solid fa-envelope-open"></i></div>
+          <div>
+            <p class="ne-stat-label">Unread</p>
+            <p class="ne-stat-value"
+               th:text="${#lists.size(notifications.?[isRead == null or !isRead])}">0</p>
+          </div>
+        </div>
+
+        <!-- Approval Requests: APPROVAL_* only (password reset is NOT counted here) -->
+        <div class="ne-stat">
+          <div class="ne-stat-icon green"><i class="fa-solid fa-circle-check"></i></div>
+          <div>
+            <p class="ne-stat-label">Approval Requests</p>
+            <p class="ne-stat-value"
+               th:text="${#lists.size(notifications.?[type != null and type.startsWith('APPROVAL')])}">0</p>
+          </div>
+        </div>
+
+        <!-- Payment Alerts: PAYMENT_DUE / PAYMENT_OVERDUE / any PAYMENT_* -->
+        <div class="ne-stat">
+          <div class="ne-stat-icon pink"><i class="fa-solid fa-credit-card"></i></div>
+          <div>
+            <p class="ne-stat-label">Payment Alerts</p>
+            <p class="ne-stat-value"
+               th:text="${#lists.size(notifications.?[type != null and type.startsWith('PAYMENT')])}">0</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="ne-panel">
+        <!-- Tabs -->
+        <div class="ne-tabs" id="notifTabs">
+          <button type="button" class="ne-tab active" data-filter="all">All</button>
+          <button type="button" class="ne-tab" data-filter="APPROVAL">Approvals</button>
+          <button type="button" class="ne-tab" data-filter="PASSWORD_RESET_REQUEST">Password Requests</button>
+          <button type="button" class="ne-tab" data-filter="CONTRACT">Contracts</button>
+          <button type="button" class="ne-tab" data-filter="PAYMENT">Payments</button>
+          <button type="button" class="ne-tab" data-filter="EXPIRY">Expiry Alerts</button>
+        </div>
+
+        <div class="ne-toolbar">
+          <div class="ne-search">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="search" id="notifSearch" placeholder="Search notifications..." autocomplete="off">
+          </div>
+          <select id="notifStatus">
+            <option value="">All status</option>
+            <option value="unread">Unread</option>
+            <option value="read">Read</option>
+          </select>
+          <select id="notifType">
+            <option value="">All types</option>
+            <option value="PASSWORD_RESET_REQUEST">Password Reset</option>
+            <option value="APPROVAL_REQ">Approval</option>
+            <option value="PAYMENT_DUE">Payment</option>
+          </select>
+        </div>
+
+        <ul class="ne-list" id="notifList">
+          <li class="ne-item"
+              th:each="n : ${notifications}"
+              th:classappend="${n.isRead == null or !n.isRead} ? ' unread'"
+              th:attr="data-id=${n.notificationId},data-type=${n.type},data-read=${n.isRead != null and n.isRead}">
+
+            <span class="ne-dot"
+                  th:classappend="${n.isRead != null and n.isRead} ? ' read'"></span>
+
+            <div class="ne-icon info"
+                 th:classappend="${n.type == 'APPROVAL_REQ'} ? ' approval'
+                               : (${n.type == 'PAYMENT_DUE' or n.type == 'PAYMENT_OVERDUE'} ? ' payment'
+                               : (${n.severity == 'WARNING' or n.severity == 'CRITICAL'} ? ' warning' : ' info'))">
+              <i class="fa-solid"
+                 th:classappend="${n.type == 'APPROVAL_REQ'} ? ' fa-file-lines'
+                               : (${n.type == 'PASSWORD_RESET_REQUEST'} ? ' fa-key'
+                               : (${n.type == 'PAYMENT_DUE'} ? ' fa-credit-card' : ' fa-bell'))"></i>
+            </div>
+
+            <div class="ne-body">
+              <p class="ne-title" th:text="${n.title}">Title</p>
+              <p class="ne-msg" th:text="${n.message}">Message</p>
+              <a class="ne-link"
+                 th:if="${n.actionUrl != null and !#strings.isEmpty(n.actionUrl)}"
+                 th:href="@{${n.actionUrl}}">
+                Open <i class="fa-solid fa-arrow-right"></i>
+              </a>
+            </div>
+
+            <div class="ne-meta">
+              <span class="ne-badge info"
+                    th:text="${n.type != null ? n.type : 'Info'}">Info</span>
+              <span class="ne-time" th:text="${n.createdAt}">Date</span>
+              <button type="button" class="btn-ne-sm btn-mark-read"
+                      th:if="${n.isRead == null or !n.isRead}"
+                      th:attr="data-id=${n.notificationId}">
+                Mark read
+              </button>
+            </div>
+          </li>
+
+          <li class="ne-empty" th:if="${#lists.isEmpty(notifications)}">
+            No notifications found.
+          </li>
+        </ul>
+
+        <div class="ne-footer" th:if="${!#lists.isEmpty(notifications)}">
+          <span>
+            Showing
+            <span th:text="${#lists.size(notifications)}">0</span>
+            notifications
+          </span>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+<script>
+(function () {
+  // ---------- Mark read ----------
+  document.getElementById('btnMarkAllRead')?.addEventListener('click', function () {
+    if (window.cmsMarkAllNotificationsRead) {
+      cmsMarkAllNotificationsRead().then(function () { location.reload(); });
+    }
+  });
+  document.querySelectorAll('.btn-mark-read').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var id = btn.getAttribute('data-id');
+      if (window.cmsMarkNotificationRead) {
+        cmsMarkNotificationRead(id).then(function () { location.reload(); });
+      }
+    });
+  });
+
+  // ---------- Filters (tab + search + status + type work together) ----------
+  var search = document.getElementById('notifSearch');
+  var status = document.getElementById('notifStatus');
+  var type = document.getElementById('notifType');
+  var tabs = document.querySelectorAll('#notifTabs .ne-tab');
+  var currentTab = 'all';
+
+  function matchTab(t) {
+    t = (t || '').toUpperCase();
+    switch (currentTab) {
+      case 'all': return true;
+      case 'APPROVAL': return t.indexOf('APPROVAL') === 0;
+      case 'PASSWORD_RESET_REQUEST': return t === 'PASSWORD_RESET_REQUEST';
+      case 'CONTRACT': return t.indexOf('CONTRACT') >= 0;
+      case 'PAYMENT': return t.indexOf('PAYMENT') === 0;
+      case 'EXPIRY': return t.indexOf('EXPIRY') >= 0;
+      default: return true;
+    }
+  }
+
+  function filterList() {
+    var q = (search && search.value || '').toLowerCase();
+    var st = status ? status.value : '';
+    var tp = type ? type.value : '';
+    document.querySelectorAll('#notifList .ne-item').forEach(function (row) {
+      var read = row.getAttribute('data-read') === 'true';
+      var t = row.getAttribute('data-type') || '';
+      var ok = true;
+      if (!matchTab(t)) ok = false;
+      if (q && row.textContent.toLowerCase().indexOf(q) < 0) ok = false;
+      if (st === 'unread' && read) ok = false;
+      if (st === 'read' && !read) ok = false;
+      if (tp && t !== tp) ok = false;
+      row.style.display = ok ? '' : 'none';
+    });
+  }
+
+  tabs.forEach(function (tab) {
+    tab.addEventListener('click', function () {
+      tabs.forEach(function (t) { t.classList.remove('active'); });
+      tab.classList.add('active');
+      currentTab = tab.getAttribute('data-filter') || 'all';
+      filterList();
+    });
+  });
+  if (search) search.addEventListener('input', filterList);
+  if (status) status.addEventListener('change', filterList);
+  if (type) type.addEventListener('change', filterList);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,148 @@
+/* ===== Shared CMS Notification / Email UI ===== */
+.ne-page { max-width: 1200px; margin: 0 auto; }
+.ne-heading { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 1rem; margin-bottom: 1.5rem; }
+.ne-heading h1 { font-size: 1.75rem; font-weight: 700; color: #0f172a; margin: 0 0 .25rem; }
+.ne-heading p { color: #64748b; margin: 0; font-size: .95rem; }
+
+.ne-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
+@media (max-width: 992px) { .ne-stats { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 576px) { .ne-stats { grid-template-columns: 1fr; } }
+
+.ne-stat {
+  background: #fff; border: 1px solid #e2e8f0; border-radius: 16px;
+  padding: 1.1rem 1.25rem; display: flex; align-items: center; gap: 1rem;
+  box-shadow: 0 1px 2px rgba(15,23,42,.04);
+}
+.ne-stat-icon {
+  width: 48px; height: 48px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center; font-size: 1.25rem; flex-shrink: 0;
+}
+.ne-stat-icon.blue { background: #eff6ff; color: #2563eb; }
+.ne-stat-icon.indigo { background: #eef2ff; color: #4f46e5; }
+.ne-stat-icon.green { background: #ecfdf5; color: #059669; }
+.ne-stat-icon.pink { background: #fdf2f8; color: #db2777; }
+.ne-stat-icon.amber { background: #fffbeb; color: #d97706; }
+.ne-stat-icon.red { background: #fef2f2; color: #dc2626; }
+.ne-stat-label { font-size: .8rem; color: #64748b; margin: 0; }
+.ne-stat-value { font-size: 1.5rem; font-weight: 700; color: #0f172a; margin: 0; line-height: 1.2; }
+
+.ne-panel {
+  background: #fff; border: 1px solid #e2e8f0; border-radius: 16px;
+  box-shadow: 0 1px 2px rgba(15,23,42,.04); overflow: hidden;
+}
+
+.ne-tabs { display: flex; flex-wrap: wrap; gap: .25rem; padding: .75rem 1rem 0; border-bottom: 1px solid #e2e8f0; }
+.ne-tab {
+  border: 0; background: transparent; padding: .65rem 1rem; font-size: .9rem;
+  color: #64748b; border-bottom: 2px solid transparent; cursor: pointer; font-weight: 500;
+}
+.ne-tab:hover { color: #0f172a; }
+.ne-tab.active { color: #2563eb; border-bottom-color: #2563eb; }
+.ne-tab .pill {
+  display: inline-block; margin-left: .35rem; padding: .1rem .45rem; border-radius: 999px;
+  font-size: .7rem; font-weight: 600;
+}
+.ne-tab .pill.blue { background: #dbeafe; color: #1d4ed8; }
+.ne-tab .pill.green { background: #d1fae5; color: #047857; }
+.ne-tab .pill.amber { background: #fef3c7; color: #b45309; }
+.ne-tab .pill.red { background: #fee2e2; color: #b91c1c; }
+
+.ne-toolbar { display: flex; flex-wrap: wrap; gap: .75rem; padding: 1rem; align-items: center; }
+.ne-search {
+  flex: 1; min-width: 200px; position: relative;
+}
+.ne-search i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; }
+.ne-search input {
+  width: 100%; border: 1px solid #e2e8f0; border-radius: 10px; padding: .55rem .75rem .55rem 2.25rem;
+  font-size: .9rem; outline: none;
+}
+.ne-search input:focus { border-color: #93c5fd; box-shadow: 0 0 0 3px rgba(37,99,235,.12); }
+.ne-toolbar select {
+  border: 1px solid #e2e8f0; border-radius: 10px; padding: .55rem .75rem; font-size: .85rem; color: #334155; background: #fff;
+}
+
+/* Notification list */
+.ne-list { list-style: none; margin: 0; padding: 0; }
+.ne-item {
+  display: flex; gap: 1rem; padding: 1rem 1.25rem; border-top: 1px solid #f1f5f9;
+  align-items: flex-start; transition: background .15s;
+}
+.ne-item:hover { background: #f8fafc; }
+.ne-item.unread { background: #f0f7ff; }
+.ne-item.unread:hover { background: #e8f1fc; }
+.ne-dot { width: 8px; height: 8px; border-radius: 50%; background: #2563eb; margin-top: .55rem; flex-shrink: 0; }
+.ne-dot.read { background: transparent; }
+.ne-icon {
+  width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; font-size: 1rem;
+}
+.ne-icon.approval { background: #eff6ff; color: #2563eb; }
+.ne-icon.contract { background: #ecfdf5; color: #059669; }
+.ne-icon.payment { background: #fdf2f8; color: #db2777; }
+.ne-icon.warning { background: #fffbeb; color: #d97706; }
+.ne-icon.info { background: #eef2ff; color: #4f46e5; }
+.ne-body { flex: 1; min-width: 0; }
+.ne-title { font-weight: 600; color: #0f172a; margin: 0 0 .2rem; font-size: .95rem; }
+.ne-msg { color: #64748b; font-size: .85rem; margin: 0; white-space: pre-line; }
+.ne-link { font-size: .85rem; color: #2563eb; text-decoration: none; font-weight: 500; }
+.ne-link:hover { text-decoration: underline; }
+.ne-meta { display: flex; flex-direction: column; align-items: flex-end; gap: .35rem; flex-shrink: 0; }
+.ne-badge {
+  display: inline-block; padding: .2rem .55rem; border-radius: 999px; font-size: .7rem; font-weight: 600;
+}
+.ne-badge.info { background: #dbeafe; color: #1d4ed8; }
+.ne-badge.approval { background: #ede9fe; color: #6d28d9; }
+.ne-badge.contract { background: #d1fae5; color: #047857; }
+.ne-badge.payment { background: #fce7f3; color: #be185d; }
+.ne-badge.warning { background: #fef3c7; color: #b45309; }
+.ne-time { font-size: .75rem; color: #94a3b8; }
+
+/* Email table */
+.ne-table-wrap { overflow-x: auto; }
+.ne-table { width: 100%; border-collapse: collapse; font-size: .875rem; }
+.ne-table th {
+  text-align: left; padding: .75rem 1rem; color: #64748b; font-weight: 600;
+  border-bottom: 1px solid #e2e8f0; background: #f8fafc; white-space: nowrap;
+}
+.ne-table td { padding: .85rem 1rem; border-bottom: 1px solid #f1f5f9; color: #334155; vertical-align: middle; }
+.ne-table tr:hover td { background: #f8fafc; }
+.ne-table tr.failed td:first-child { box-shadow: inset 3px 0 0 #ef4444; }
+.status-pill {
+  display: inline-flex; align-items: center; gap: .35rem;
+  padding: .2rem .55rem; border-radius: 999px; font-size: .72rem; font-weight: 600;
+}
+.status-pill.sent { background: #d1fae5; color: #047857; }
+.status-pill.pending { background: #fef3c7; color: #b45309; }
+.status-pill.failed { background: #fee2e2; color: #b91c1c; }
+.status-pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+.ne-footer {
+  display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center;
+  gap: .75rem; padding: .85rem 1.25rem; border-top: 1px solid #e2e8f0; color: #64748b; font-size: .85rem;
+}
+.ne-empty { text-align: center; padding: 3rem 1rem; color: #94a3b8; }
+
+.btn-ne-primary {
+  background: #2563eb; color: #fff; border: 0; border-radius: 10px;
+  padding: .55rem 1rem; font-size: .875rem; font-weight: 600; cursor: pointer;
+}
+.btn-ne-primary:hover { background: #1d4ed8; color: #fff; }
+.btn-ne-outline {
+  background: #fff; color: #334155; border: 1px solid #e2e8f0; border-radius: 10px;
+  padding: .55rem 1rem; font-size: .875rem; font-weight: 500; cursor: pointer;
+}
+.btn-ne-outline:hover { background: #f8fafc; }
+.btn-ne-sm {
+  border: 1px solid #e2e8f0; background: #fff; border-radius: 8px;
+  padding: .3rem .65rem; font-size: .8rem; color: #334155; cursor: pointer;
+}
+.btn-ne-sm:hover { background: #f1f5f9; }
+.btn-ne-retry { color: #2563eb; border-color: #bfdbfe; }
+
+
+.status-pill.sent { background: #d1fae5; color: #047857; }      /* SENT / SENT_READ = green */
+.status-pill.pending { background: #fef3c7; color: #b45309; }  /* PENDING / SENT_UNREAD */
+.status-pill.failed { background: #fee2e2; color: #b91c1c; }
+/* Unread email (received but not opened yet) */
+.status-pill.unread { background: #dbeafe; color: #1d4ed8; }
+.ne-table tr.row-unread td { font-weight: 600; background: #f8fbff; }

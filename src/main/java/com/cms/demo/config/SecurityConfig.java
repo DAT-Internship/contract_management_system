@@ -40,10 +40,17 @@ public class SecurityConfig {
         http
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/audit", "/audit/**").hasRole("ADMIN")
+//                .requestMatchers("/audit", "/audit/**").hasRole("ADMIN")
                 .requestMatchers("/uploads/**").denyAll()
-                .requestMatchers("/", "/login", "/css/**", "/js/**", "/images/**").permitAll() 
-                .anyRequest().authenticated() 
+                .requestMatchers(
+                        "/login",
+                        "/forgot-password",
+                        "/css/**",
+                        "/js/**",
+                        "/images/**"
+                ).permitAll()
+                .requestMatchers("/ws/**").authenticated()  // login ဝင်မှ WebSocket
+                .anyRequest().authenticated()
             )
             .formLogin(form -> form
                 .loginPage("/login")
