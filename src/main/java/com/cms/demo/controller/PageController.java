@@ -28,8 +28,7 @@ public class PageController {
 
     // ၃။ Dashboard ကို ပြဖို့
     @GetMapping("/dashboard")
-    public String showDashboard(Model model) {
-        model.addAttribute("page", "dashboard");
+    public String showDashboard() {
         return "dashboard";
     }
 
