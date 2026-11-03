@@ -310,6 +310,7 @@
 .approval-step-icon { width: 14px; height: 14px; flex: 0 0 14px; margin-top: 3px; border: 3px solid #9aabbe; border-radius: 50%; background: #fff; }
 .approval-step-icon.approved { border-color: #079669; background: #079669; box-shadow: 0 0 0 4px #e5f6f0; }
 .approval-step-icon.rejected { border-color: #dc3545; background: #dc3545; box-shadow: 0 0 0 4px #fff0f1; }
+.approval-step-icon.completed, .approval-step-icon.created.completed { border-color: #0875ba; background: #0875ba; box-shadow: none; }
 .approval-step-icon.waiting, .approval-step-icon.created { border-color: #9aabbe; background: #fff; }
 .approval-dot { position: relative; z-index: 1; width: 11px; height: 11px; margin-top: 4px; border: 2px solid #9aa9bb; border-radius: 50%; background: #fff; flex: 0 0 11px; }
 .approval-dot.approved { border-color: #16804a; background: #16804a; box-shadow: 0 0 0 3px #e4f5ec; }

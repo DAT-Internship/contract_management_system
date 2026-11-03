@@ -16,9 +16,9 @@
 
 <link rel="stylesheet" th:href="@{/css/app.css}">
 <link rel="stylesheet" th:if="${page == 'master-setup'}" th:href="@{/css/master-setup.css}">
-<link rel="stylesheet" th:if="${page == 'contracts' or page == 'import-batches'}" th:href="@{/css/contracts.css}">
+<link rel="stylesheet" th:if="${page == 'contracts' or page == 'import-batches'}" th:href="@{/css/contracts.css(v='20261103-timeline-blue')}">
 <link rel="stylesheet" th:if="${page == 'audit'}" th:href="@{/css/audit.css}">
-<link rel="stylesheet" th:if="${page == 'approvals'}" th:href="@{/css/approvals.css}">
+<link rel="stylesheet" th:if="${page == 'approvals'}" th:href="@{/css/approvals.css(v='20261103-history-columns')}">
 </head>
 <body>
 	<th:block th:fragment="scripts">

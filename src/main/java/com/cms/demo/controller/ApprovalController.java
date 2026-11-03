@@ -5,6 +5,7 @@ import com.cms.demo.repository.ApprovalStepRepository;
 import com.cms.demo.repository.ContractRepository;
 import com.cms.demo.repository.ContractStatusRepository;
 import com.cms.demo.repository.UserRepository;
+import com.cms.demo.service.AuditLogService;
 import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -29,13 +30,16 @@ public class ApprovalController {
     private final UserRepository userRepository;
     private final ContractRepository contractRepository;
     private final ContractStatusRepository contractStatusRepository;
+    private final AuditLogService auditLogService;
 
     public ApprovalController(ApprovalStepRepository approvalRepository, UserRepository userRepository,
-            ContractRepository contractRepository, ContractStatusRepository contractStatusRepository) {
+            ContractRepository contractRepository, ContractStatusRepository contractStatusRepository,
+            AuditLogService auditLogService) {
         this.approvalRepository = approvalRepository;
         this.userRepository = userRepository;
         this.contractRepository = contractRepository;
         this.contractStatusRepository = contractStatusRepository;
+        this.auditLogService = auditLogService;
     }
 
     @GetMapping
@@ -76,6 +80,8 @@ public class ApprovalController {
         String roleCode = user.getRole() == null ? "" : user.getRole().getRoleCode();
         var step = approvalRepository.findById(stepId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         var contract = step.getContract();
+        String previousStatus = step.getStatus();
+        String approvalStage = step.getCurrentApproval();
         String normalized = decision.toUpperCase(Locale.ROOT);
         if (!"APPROVED".equals(normalized) && !"REJECTED".equals(normalized))
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid approval decision");
@@ -126,6 +132,10 @@ public class ApprovalController {
             contract.setUpdatedBy(user);
             contractRepository.save(contract);
         }
+        auditLogService.record(principal.getName(), "APPROVAL", contract.getContractId(), "UPDATE",
+                "{\"status\":\"" + auditValue(previousStatus) + "\",\"stage\":\"" + auditValue(approvalStage) + "\"}",
+                "{\"status\":\"" + normalized + "\",\"stage\":\"" + auditValue(approvalStage)
+                        + "\",\"comment\":\"" + auditValue(comment == null ? "" : comment.trim()) + "\"}");
         if ("APPROVED".equals(normalized)) flash.addFlashAttribute("success", "Contract approved.");
         return "redirect:/approvals";
     }
@@ -135,6 +145,11 @@ public class ApprovalController {
             if (acceptedCode.equalsIgnoreCase(roleCode == null ? "" : roleCode.trim())) return true;
         }
         return false;
+    }
+
+    private String auditValue(String value) {
+        return value == null ? "" : value.replace("\\", "\\\\").replace("\"", "\\\"")
+                .replace("\r", "\\r").replace("\n", "\\n");
     }
 
     private boolean contains(String q, String... fields) {

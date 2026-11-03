@@ -5,6 +5,7 @@ import com.cms.demo.entity.ContractAttachment;
 import com.cms.demo.entity.MasterContractStatus;
 import com.cms.demo.service.ContractService;
 import com.cms.demo.service.FileStorageService;
+import com.cms.demo.service.AuditLogService;
 import com.cms.demo.repository.AgreementForRepository;
 import com.cms.demo.repository.ContractCategoryRepository;
 import com.cms.demo.repository.ContractStatusRepository;
@@ -68,6 +69,7 @@ public class ContractPageController {
     private final UserRepository userRepository;
     private final ApprovalStepRepository approvalStepRepository;
     private final Validator validator;
+    private final AuditLogService auditLogService;
 
     public ContractPageController(
             ContractService contractService,
@@ -83,7 +85,8 @@ public class ContractPageController {
             ProjectRepository projectRepository,
             UserRepository userRepository,
             ApprovalStepRepository approvalStepRepository,
-            Validator validator) {
+            Validator validator,
+            AuditLogService auditLogService) {
         this.contractService = contractService;
         this.fileStorageService = fileStorageService;
         this.agreementForRepository = agreementForRepository;
@@ -98,6 +101,7 @@ public class ContractPageController {
         this.userRepository = userRepository;
         this.approvalStepRepository = approvalStepRepository;
         this.validator = validator;
+        this.auditLogService = auditLogService;
     }
 
     @GetMapping
@@ -138,12 +142,17 @@ public class ContractPageController {
     }
 
     @GetMapping("/{contractId}")
-    public String detail(@PathVariable Long contractId, Model model, Principal principal) {
+    public String detail(@PathVariable Long contractId, Model model, Principal principal,
+            @RequestParam(required = false) String source,
+            @RequestParam(required = false) String q) {
         var contract = contractService.getContractForUser(contractId, principal.getName());
         if (contract.getStatus() != null && "DRAFT".equalsIgnoreCase(contract.getStatus().getCode())) {
             return "redirect:/contracts/" + contractId + "/edit";
         }
         model.addAttribute("page", "contracts");
+        boolean returnFromApprovals = "approvals".equalsIgnoreCase(source);
+        model.addAttribute("returnFromApprovals", returnFromApprovals);
+        model.addAttribute("approvalQuery", q);
         model.addAttribute("contract", contract);
         model.addAttribute("attachments", contractService.getAttachmentResponses(contractId, principal.getName()));
         // Temporary customer-wide payment-summary sample data; replace with party-level aggregates when payment reporting is connected.
@@ -162,7 +171,11 @@ public class ContractPageController {
             default -> currencyCode;
         };
         model.addAttribute("paymentCurrencySymbol", currencySymbol);
-        model.addAttribute("approvalSteps", approvalStepRepository.findByContractContractIdOrderByCreatedAtDesc(contractId));
+        model.addAttribute("approvalSteps", approvalStepRepository.findByContractContractIdOrderByCreatedAtDesc(contractId)
+                .stream()
+                .sorted(Comparator.comparing((ApprovalStep step) -> step.getUpdatedAt() != null
+                        ? step.getUpdatedAt() : step.getCreatedAt(), Comparator.nullsLast(Comparator.reverseOrder())))
+                .toList());
         return "contracts/detail";
     }
 
@@ -313,6 +326,7 @@ public class ContractPageController {
         step.setCreatedAt(LocalDateTime.now());
         step.setUpdatedAt(LocalDateTime.now());
         approvalStepRepository.save(step);
+        recordApprovalChange(employeeCode, contractId, "", "PENDING", step.getCurrentApproval(), "");
     }
 
     private void createPaymentUpdatedHistory(Long contractId, String employeeCode) {
@@ -330,6 +344,7 @@ public class ContractPageController {
         event.setCreatedAt(LocalDateTime.now());
         event.setUpdatedAt(LocalDateTime.now());
         approvalStepRepository.save(event);
+        recordApprovalChange(employeeCode, contractId, "", "PAYMENT_UPDATED", event.getCurrentApproval(), event.getComment());
     }
 
     private void ensureSinglePendingApproval(Long contractId, String employeeCode) {
@@ -361,9 +376,23 @@ public class ContractPageController {
             step.setCurrentApproval("Resubmitted by " + reviserName);
             step.setUpdatedAt(LocalDateTime.now());
             approvalStepRepository.save(step);
+            recordApprovalChange(employeeCode, contractId, "RETURNED", "PENDING", step.getCurrentApproval(), "");
         } else {
             createApprovalStep(contractId, employeeCode);
         }
+    }
+
+    private void recordApprovalChange(String employeeCode, Long contractId, String oldStatus,
+            String newStatus, String stage, String comment) {
+        auditLogService.record(employeeCode, "APPROVAL", contractId, "UPDATE",
+                "{\"status\":\"" + auditJsonValue(oldStatus) + "\",\"stage\":\"" + auditJsonValue(stage) + "\"}",
+                "{\"status\":\"" + auditJsonValue(newStatus) + "\",\"stage\":\"" + auditJsonValue(stage)
+                        + "\",\"comment\":\"" + auditJsonValue(comment) + "\"}");
+    }
+
+    private String auditJsonValue(String value) {
+        return value == null ? "" : value.replace("\\", "\\\\").replace("\"", "\\\"")
+                .replace("\r", "\\r").replace("\n", "\\n");
     }
 
     @GetMapping("/{contractId}/attachments/{attachmentId}/download")

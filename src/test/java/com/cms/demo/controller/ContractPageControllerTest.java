@@ -5,6 +5,7 @@ import com.cms.demo.entity.MasterContractStatus;
 import com.cms.demo.repository.*;
 import com.cms.demo.service.ContractService;
 import com.cms.demo.service.FileStorageService;
+import com.cms.demo.service.AuditLogService;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import org.junit.jupiter.api.BeforeEach;
@@ -60,7 +61,8 @@ class ContractPageControllerTest {
                 repositoryProxy(ProjectRepository.class, (m, a) -> List.of()),
                 repositoryProxy(UserRepository.class, (m, a) -> List.of()),
                 mock(ApprovalStepRepository.class),
-                defaultValidator());
+                defaultValidator(),
+                mock(AuditLogService.class));
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
     }
 
