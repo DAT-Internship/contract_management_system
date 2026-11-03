@@ -74,20 +74,38 @@ The payment module is a Thymeleaf workspace under `/payments`. All pages require
 
 | Method | Path | Purpose |
 | --- | --- | --- |
-| `GET` | `/payments` | Payment KPI overview and contract payment list. Optional query params: `q`, `status`, `paymentTypeId`, `categoryId` |
+| `GET` | `/payments` | Payment KPI overview and paginated contract payment list. Optional query params: `q`, `status`, `paymentTypeId`, `categoryId`, `page`, `pageSize` |
 | `GET` | `/payments/{contractId}` | Contract payment summary, invoices, and audit history |
 | `POST` | `/payments/{contractId}/invoices/save` | Create or update an invoice from the invoice modal |
 | `POST` | `/payments/{contractId}/payment` | Record a cumulative payment for an invoice |
 
-The invoice and payment forms are Bootstrap modals on the contract payment detail page. The sidebar `Payments` link and the `Payments` action on a contract detail page open the workspace.
+The invoice and payment forms are Bootstrap modals on the contract payment detail page. The sidebar `Payments` link and the `Payments` action on a contract detail page open the workspace. Finance users can add invoices from the `Add Invoice` button on a payments list row or the `Add Invoice` button on the payment detail page.
+
+The payments list renders each contract across two rows. The first row shows the contract figures; the second row contains only the `View` and `Add Invoice` actions.
+
+Each invoice row has `View` and `Pay` actions. `View` is available to all authenticated users; `Pay` is limited to Finance users.
+
+### Default users
+
+The application initializer creates these users when they do not already exist:
+
+| Role | Employee code | Password |
+| --- | --- | --- |
+| `ADMIN` | `25-00001` | `admin123` |
+| `FINANCE` | `25-00002` | `finance123` |
+
+Existing users are not modified. Use the Finance account to add invoices and record payments.
 
 ### Invoice form
 
-- `description` and `dueDate` are required.
+- `description` is required.
 - `invoiceNo` is optional and must be unique.
+- `invoiceDate` defaults to the current date.
+- `dueDate` is optional. When omitted, it defaults to the invoice date plus the backend payment term (30 days).
 - `amount` is the amount before tax.
-- If `taxAmount` is omitted, the contract commercial tax rate is applied.
+- If `taxAmount` is omitted, the contract commercial tax rate is applied. The form also recalculates tax from the amount and contract rate as you type.
 - If `currencyId` is omitted, the contract currency is used.
+- `paymentStatusId` is optional. Leave it blank to derive the status automatically from the paid amount and due date, or select a master payment status explicitly.
 
 ### Payment form
 
@@ -99,6 +117,7 @@ The invoice and payment forms are Bootstrap modals on the contract payment detai
 - `OVERDUE`: unpaid or partially paid and the due date has passed.
 - `PARTIALLY_PAID`: some amount received, due date not passed.
 - `PENDING`: no payment received, due date not passed.
+- When no payment status is selected in the invoice form, the invoice status is derived using the rules above.
 - Contract-level status is `NO_INVOICES`, `OVERDUE`, `PAID`, `PARTIALLY_PAID`, or `PENDING`, derived from its invoices and contract value.
 
 ### Permissions and audit
@@ -116,4 +135,4 @@ A ready-to-run seed is provided at `src/main/resources/db/seed/master-data.sql`.
 mariadb --skip-ssl -ucmsuser -proot cms_system < src/main/resources/db/seed/master-data.sql
 ```
 
-The application initializer creates only the default `ADMIN` role and user. Payment statuses must be named `Pending`, `Paid`, `Overdue`, and `Partially Paid` (any code is accepted; the service looks up by code first, then by name).
+The application initializer creates the default `ADMIN` and `FINANCE` roles and users listed above. Payment statuses must be named `Pending`, `Paid`, `Overdue`, and `Partially Paid` (any code is accepted; the service looks up by code first, then by name).

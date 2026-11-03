@@ -15,7 +15,8 @@ public interface InvoiceRepository extends JpaRepository<Invoice, Long> {
     @Query("""
             select i from Invoice i
             where i.contract.contractId = :contractId
-            order by i.dueDate asc, i.invoiceId asc
+            order by case when i.invoiceDate is null then 1 else 0 end,
+                     i.invoiceDate asc, i.invoiceId asc
             """)
     List<Invoice> findByContractId(@Param("contractId") Long contractId);
 
@@ -23,7 +24,8 @@ public interface InvoiceRepository extends JpaRepository<Invoice, Long> {
     @Query("""
             select i from Invoice i
             where i.contract.contractId in :contractIds
-            order by i.dueDate asc, i.invoiceId asc
+            order by case when i.invoiceDate is null then 1 else 0 end,
+                     i.invoiceDate asc, i.invoiceId asc
             """)
     List<Invoice> findByContractIdIn(@Param("contractIds") Collection<Long> contractIds);
 

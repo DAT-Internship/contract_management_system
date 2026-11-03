@@ -24,6 +24,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -103,6 +104,9 @@ public class PaymentService {
                 .filter(summary -> normalizedStatus == null
                         || normalizedStatus.equals(summary.paymentStatus()))
                 .filter(summary -> normalizedQuery.isEmpty() || matchesQuery(summary, normalizedQuery))
+                .sorted(Comparator.comparing(
+                        ContractPaymentSummaryResponse::contractNo,
+                        Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER)))
                 .toList();
     }
 
@@ -204,7 +208,8 @@ public class PaymentService {
 
         LocalDate today = LocalDate.now();
         LocalDate invoiceDate = request.invoiceDate() == null ? today : request.invoiceDate();
-        validateDates(invoiceDate, request.dueDate());
+        LocalDate dueDate = resolveDueDate(contract, invoiceDate, request.dueDate());
+        validateDates(invoiceDate, dueDate);
 
         MasterCurrency currency = resolveCurrency(request.currencyId(), contract.getCurrency());
         if (currency == null) {
@@ -227,7 +232,7 @@ public class PaymentService {
         invoice.setInvoiceNo(invoiceNo);
         invoice.setDescription(request.description().trim());
         invoice.setInvoiceDate(invoiceDate);
-        invoice.setDueDate(request.dueDate());
+        invoice.setDueDate(dueDate);
         invoice.setAmount(amount);
         invoice.setTaxAmount(tax);
         invoice.setTotalAmount(total);
@@ -236,8 +241,9 @@ public class PaymentService {
         invoice.setContract(contract);
         invoice.setParty(contract.getParty());
         invoice.setCurrency(currency);
-        invoice.setStatus(resolveStatus(PaymentCalculator.deriveInvoiceStatus(
-                total, BigDecimal.ZERO, request.dueDate(), today)));
+        String derivedStatus = PaymentCalculator.deriveInvoiceStatus(
+                total, BigDecimal.ZERO, dueDate, today);
+        invoice.setStatus(resolveSelectedStatus(request.paymentStatusId(), derivedStatus));
         invoice.setUpdatedBy(actor);
         invoice.setCreatedAt(now);
         invoice.setUpdatedAt(now);
@@ -261,7 +267,9 @@ public class PaymentService {
         LocalDate invoiceDate = request.invoiceDate() == null
                 ? (invoice.getInvoiceDate() == null ? today : invoice.getInvoiceDate())
                 : request.invoiceDate();
-        validateDates(invoiceDate, request.dueDate());
+        LocalDate dueDate = resolveDueDate(contract, invoiceDate,
+                request.dueDate() != null ? request.dueDate() : invoice.getDueDate());
+        validateDates(invoiceDate, dueDate);
 
         BigDecimal amount = PaymentCalculator.money(request.amount());
         BigDecimal tax = request.taxAmount() == null
@@ -290,13 +298,14 @@ public class PaymentService {
         invoice.setInvoiceNo(invoiceNo);
         invoice.setDescription(request.description().trim());
         invoice.setInvoiceDate(invoiceDate);
-        invoice.setDueDate(request.dueDate());
+        invoice.setDueDate(dueDate);
         invoice.setAmount(amount);
         invoice.setTaxAmount(tax);
         invoice.setTotalAmount(total);
         invoice.setCurrency(currency);
-        invoice.setStatus(resolveStatus(PaymentCalculator.deriveInvoiceStatus(
-                total, paid, request.dueDate(), today)));
+        String derivedStatus = PaymentCalculator.deriveInvoiceStatus(
+                total, paid, dueDate, today);
+        invoice.setStatus(resolveSelectedStatus(request.paymentStatusId(), derivedStatus));
         invoice.setUpdatedBy(actor);
         invoice.setUpdatedAt(LocalDateTime.now());
 
@@ -459,11 +468,30 @@ public class PaymentService {
                 remainingDays);
     }
 
+    private String effectiveStatusCode(Invoice invoice) {
+        String stored = storedInvoiceStatus(invoice.getStatus());
+        if (stored != null) {
+            return stored;
+        }
+        return PaymentCalculator.deriveInvoiceStatus(
+                PaymentCalculator.money(invoice.getTotalAmount()),
+                PaymentCalculator.money(invoice.getPaidAmount()),
+                invoice.getDueDate(),
+                LocalDate.now());
+    }
+
+    private String effectiveStatusName(Invoice invoice, String statusCode) {
+        String storedName = invoice.getStatus() == null ? null : invoice.getStatus().getName();
+        return storedName == null || storedName.isBlank()
+                ? paymentStatusName(statusCode)
+                : storedName;
+    }
+
     private InvoiceResponse toInvoiceResponse(Invoice invoice) {
         BigDecimal total = PaymentCalculator.money(invoice.getTotalAmount());
         BigDecimal paid = PaymentCalculator.money(invoice.getPaidAmount());
-        String statusCode = PaymentCalculator.deriveInvoiceStatus(
-                total, paid, invoice.getDueDate(), LocalDate.now());
+        String statusCode = effectiveStatusCode(invoice);
+        String statusName = effectiveStatusName(invoice, statusCode);
         boolean overdue = PaymentCalculator.OVERDUE.equals(statusCode);
 
         return new InvoiceResponse(
@@ -483,11 +511,12 @@ public class PaymentService {
                 PaymentCalculator.outstanding(total, paid),
                 invoice.getPaidDate(),
                 statusCode,
-                paymentStatusName(statusCode),
+                statusName,
                 overdue,
                 invoice.getCreatedAt(),
                 invoice.getUpdatedAt(),
-                invoice.getUpdatedBy() == null ? null : invoice.getUpdatedBy().getFullName());
+                invoice.getUpdatedBy() == null ? null : invoice.getUpdatedBy().getFullName(),
+                invoice.getStatus() == null ? null : invoice.getStatus().getId());
     }
 
     private List<PaymentHistoryEntry> toHistory(List<Invoice> invoices) {
@@ -537,8 +566,7 @@ public class PaymentService {
     private Map<String, Object> invoiceSnapshot(Invoice invoice) {
         BigDecimal total = PaymentCalculator.money(invoice.getTotalAmount());
         BigDecimal paid = PaymentCalculator.money(invoice.getPaidAmount());
-        String status = PaymentCalculator.deriveInvoiceStatus(
-                total, paid, invoice.getDueDate(), LocalDate.now());
+        String status = effectiveStatusCode(invoice);
 
         Map<String, Object> snapshot = new LinkedHashMap<>();
         snapshot.put("invoice_no", invoice.getInvoiceNo() == null ? "Unbilled" : invoice.getInvoiceNo());
@@ -551,23 +579,21 @@ public class PaymentService {
         snapshot.put("paid_amount", paid);
         snapshot.put("paid_date", dateString(invoice.getPaidDate()));
         snapshot.put("status", status);
-        snapshot.put("status_name", paymentStatusName(status));
+        snapshot.put("status_name", effectiveStatusName(invoice, status));
         snapshot.put("status_code", invoice.getStatus() == null ? null : invoice.getStatus().getCode());
         return snapshot;
     }
 
     private Map<String, Object> paymentSnapshot(Invoice invoice) {
-        BigDecimal total = PaymentCalculator.money(invoice.getTotalAmount());
         BigDecimal paid = PaymentCalculator.money(invoice.getPaidAmount());
-        String status = PaymentCalculator.deriveInvoiceStatus(
-                total, paid, invoice.getDueDate(), LocalDate.now());
+        String status = effectiveStatusCode(invoice);
 
         Map<String, Object> snapshot = new LinkedHashMap<>();
         snapshot.put("invoice_no", invoice.getInvoiceNo() == null ? "Unbilled" : invoice.getInvoiceNo());
         snapshot.put("paid_amount", paid);
         snapshot.put("paid_date", dateString(invoice.getPaidDate()));
         snapshot.put("status", status);
-        snapshot.put("status_name", paymentStatusName(status));
+        snapshot.put("status_name", effectiveStatusName(invoice, status));
         snapshot.put("status_code", invoice.getStatus() == null ? null : invoice.getStatus().getCode());
         return snapshot;
     }
@@ -658,7 +684,26 @@ public class PaymentService {
                 .divide(HUNDRED, 2, RoundingMode.HALF_UP));
     }
 
+    private LocalDate resolveDueDate(Contract contract, LocalDate invoiceDate, LocalDate dueDate) {
+        String paymentType = contract.getPaymentType() == null || contract.getPaymentType().getName() == null
+                ? "" : contract.getPaymentType().getName().trim().toLowerCase(java.util.Locale.ROOT);
+        return switch (paymentType) {
+            case "monthly" -> invoiceDate.plusMonths(1);
+            case "quarterly" -> invoiceDate.plusMonths(3);
+            case "semi-annual" -> invoiceDate.plusMonths(6);
+            case "annual" -> invoiceDate.plusMonths(12);
+            case "lump sum" -> invoiceDate;
+            case "milestone-based" -> dueDate;
+            default -> dueDate != null ? dueDate
+                    : invoiceDate.plusDays(PaymentCalculator.DEFAULT_PAYMENT_TERM_DAYS);
+        };
+    }
+
     private void validateDates(LocalDate invoiceDate, LocalDate dueDate) {
+        if (dueDate == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Due date is required for milestone-based payments");
+        }
         if (dueDate.isBefore(invoiceDate)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "Due date must be on or after the invoice date");
@@ -671,6 +716,15 @@ public class PaymentService {
         }
         return currencyRepository.findById(currencyId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Currency not found"));
+    }
+
+    private MasterPaymentStatus resolveSelectedStatus(Integer paymentStatusId, String fallbackCode) {
+        if (paymentStatusId == null) {
+            return resolveStatus(fallbackCode);
+        }
+        return paymentStatusRepository.findById(paymentStatusId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "Selected payment status was not found"));
     }
 
     private MasterPaymentStatus resolveStatus(String code) {

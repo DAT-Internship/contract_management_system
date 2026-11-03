@@ -29,7 +29,6 @@ public class InvoiceForm {
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     private LocalDate invoiceDate;
 
-    @NotNull
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     private LocalDate dueDate;
 
@@ -42,12 +41,14 @@ public class InvoiceForm {
 
     private Integer currencyId;
 
+    private Integer paymentStatusId;
+
     @Size(max = 500)
     private String note;
 
     public InvoiceRequest toRequest() {
         return new InvoiceRequest(
                 description, invoiceNo, invoiceDate, dueDate,
-                amount, taxAmount, currencyId, note);
+                amount, taxAmount, currencyId, paymentStatusId, note);
     }
 }

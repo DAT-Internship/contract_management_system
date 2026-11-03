@@ -168,6 +168,21 @@
     white-space: nowrap;
 }
 
+.payment-table-footer {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: .75rem 1rem;
+}
+
+.payment-table-footer .payment-pagination {
+    justify-self: center;
+}
+
+.payment-table-footer .payment-page-size {
+    justify-self: end;
+}
+
 .payment-detail-page .modal-content {
     border: 0;
     border-radius: 14px;
@@ -208,8 +223,79 @@
     font-size: 10px;
 }
 
+.payment-contract-row td {
+    border-bottom: 0;
+}
+
+.payment-actions-row td {
+    padding-top: 0;
+    padding-bottom: 14px;
+    border-bottom: 1px solid #eef2f7;
+    background: #fbfdff;
+}
+
+.payment-actions-row .payment-action-btn {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 8px;
+    border-radius: 7px;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.4;
+    white-space: nowrap;
+}
+
+.payment-invoice-actions .btn {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.4;
+    white-space: nowrap;
+}
+
+.payment-invoice-table,
+.contract-table-card .table-responsive {
+    scrollbar-width: thin;
+    scrollbar-color: #c7d3e1 #f2f5f9;
+}
+
+.payment-invoice-table::-webkit-scrollbar,
+.contract-table-card .table-responsive::-webkit-scrollbar {
+    width: 3px;
+    height: 5px;
+}
+
+.payment-invoice-table::-webkit-scrollbar-thumb,
+.contract-table-card .table-responsive::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: #c7d3e1;
+}
+
+.payment-invoice-table::-webkit-scrollbar-track,
+.contract-table-card .table-responsive::-webkit-scrollbar-track {
+    border-radius: 999px;
+    background: #f2f5f9;
+}
+
+.payment-actions-row:last-of-type td {
+    border-bottom: 0;
+}
+
 @media (max-width: 767.98px) {
     .payment-invoice-description {
         max-width: 150px;
+    }
+
+    .payment-table-footer {
+        grid-template-columns: 1fr;
+        justify-items: center;
+        text-align: center;
+    }
+
+    .payment-table-footer .payment-page-size {
+        justify-self: center;
     }
 }

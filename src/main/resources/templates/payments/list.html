@@ -1,5 +1,6 @@
 <!doctype html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head th:replace="~{fragments/layout :: head('Payments')}"></head>
 <body>
 <aside th:replace="~{fragments/layout :: sidebar}"></aside>
@@ -64,6 +65,7 @@
                     <p>Search by contract, customer, or project and refine by payment state.</p>
                 </div>
             </div>
+            <input type="hidden" name="page" value="1">
             <div class="row g-2 align-items-end contract-filter-row">
                 <div class="col-12 col-lg-4">
                     <label class="form-label small fw-semibold text-secondary" for="q">Contract / Customer / Project</label>
@@ -109,56 +111,65 @@
                         <th>CUSTOMER</th>
                         <th>PAYMENT TYPE</th>
                         <th>CONTRACT GROSS</th>
-                        <th>INVOICED</th>
+                        <th>TOTAL AMOUNT</th>
                         <th>PAID</th>
                         <th>OUTSTANDING</th>
                         <th>PROGRESS</th>
                         <th>STATUS</th>
-                        <th>ACTION</th>
                     </tr>
                     </thead>
                     <tbody>
-                    <tr th:each="contract : ${contracts}">
-                        <td>
-                            <a class="contract-number-link" th:href="@{/payments/{id}(id=${contract.contractId})}"
-                               th:text="${contract.contractNo}">Contract</a>
-                            <small class="d-block text-muted" th:text="${contract.contractPoNo ?: 'No PO'}">PO</small>
-                        </td>
-                        <td th:text="${contract.partyName ?: '-'}">Customer</td>
-                        <td th:text="${contract.paymentTypeName ?: '-'}">Payment type</td>
-                        <td class="text-nowrap">
-                            <span th:text="${contract.currencyCode ?: ''}">USD</span>
-                            <span th:text="${#numbers.formatDecimal(contract.contractGross, 1, 2)}">0.00</span>
-                        </td>
-                        <td class="text-nowrap" th:text="${#numbers.formatDecimal(contract.totalInvoiced, 1, 2)}">0.00</td>
-                        <td class="text-nowrap text-success fw-semibold"
-                            th:text="${#numbers.formatDecimal(contract.totalPaid, 1, 2)}">0.00</td>
-                        <td class="text-nowrap fw-semibold"
-                            th:classappend="${contract.outstandingAmount != null and contract.outstandingAmount.signum() > 0} ? ' text-warning' : ' text-success'"
-                            th:text="${#numbers.formatDecimal(contract.outstandingAmount, 1, 2)}">0.00</td>
-                        <td style="min-width: 120px">
-                            <div class="d-flex align-items-center gap-2">
-                                <div class="progress flex-grow-1 payment-progress" role="progressbar"
-                                     th:attr="aria-valuenow=${contract.paymentProgressPercent}"
-                                     aria-valuemin="0" aria-valuemax="100">
-                                    <div class="progress-bar" th:style="|width:${contract.paymentProgressPercent}%|"></div>
+                    <th:block th:each="contract : ${contracts}">
+                        <tr class="payment-contract-row">
+                            <td class="text-nowrap">
+                                <a class="contract-number-link" th:href="@{/payments/{id}(id=${contract.contractId})}"
+                                   th:text="${contract.contractNo}">Contract</a>
+                            </td>
+                            <td th:text="${contract.partyName ?: '-'}">Customer</td>
+                            <td th:text="${contract.paymentTypeName ?: '-'}">Payment type</td>
+                            <td class="text-nowrap">
+                                <span th:text="${contract.currencyCode ?: ''}">USD</span>
+                                <span th:text="${#numbers.formatDecimal(contract.contractGross, 1, 2)}">0.00</span>
+                            </td>
+                            <td class="text-nowrap" th:text="${#numbers.formatDecimal(contract.totalInvoiced, 1, 2)}">0.00</td>
+                            <td class="text-nowrap text-success fw-semibold"
+                                th:text="${#numbers.formatDecimal(contract.totalPaid, 1, 2)}">0.00</td>
+                            <td class="text-nowrap fw-semibold"
+                                th:classappend="${contract.outstandingAmount != null and contract.outstandingAmount.signum() > 0} ? ' text-warning' : ' text-success'"
+                                th:text="${#numbers.formatDecimal(contract.outstandingAmount, 1, 2)}">0.00</td>
+                            <td style="min-width: 120px">
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="progress flex-grow-1 payment-progress" role="progressbar"
+                                         th:attr="aria-valuenow=${contract.paymentProgressPercent}"
+                                         aria-valuemin="0" aria-valuemax="100">
+                                        <div class="progress-bar" th:style="|width:${contract.paymentProgressPercent}%|"></div>
+                                    </div>
+                                    <small class="text-muted" th:text="${contract.paymentProgressPercent + '%'}">0%</small>
                                 </div>
-                                <small class="text-muted" th:text="${contract.paymentProgressPercent + '%'}">0%</small>
-                            </div>
-                        </td>
-                        <td>
-                            <span class="status-badge"
-                                  th:classappend="${' status-' + #strings.replace(#strings.toLowerCase(contract.paymentStatus), '_', '-')}"
-                                  th:text="${contract.paymentStatusName}">Pending</span>
-                        </td>
-                        <td>
-                            <a class="btn btn-sm btn-outline-primary" th:href="@{/payments/{id}(id=${contract.contractId})}">
-                                <i class="fa-solid fa-arrow-up-right-from-square me-1"></i>View
-                            </a>
-                        </td>
-                    </tr>
+                            </td>
+                            <td>
+                                <span class="status-badge"
+                                      th:classappend="${' status-' + #strings.replace(#strings.toLowerCase(contract.paymentStatus), '_', '-')}"
+                                      th:text="${contract.paymentStatusName}">Pending</span>
+                            </td>
+                        </tr>
+                        <tr class="payment-actions-row">
+                            <td colspan="9" class="text-end">
+                                <div class="d-inline-flex gap-1">
+                                    <a class="btn btn-sm btn-outline-primary payment-action-btn"
+                                       th:href="@{/payments/{id}(id=${contract.contractId})}">
+                                        <i class="fa-solid fa-eye me-1"></i>View
+                                    </a>
+                                    <a class="btn btn-primary btn-sm payment-action-btn" sec:authorize="hasRole('FINANCE')"
+                                       th:href="@{/payments/{id}(id=${contract.contractId},addInvoice=true)}">
+                                        <i class="fa-solid fa-plus me-1"></i>Add Invoice
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    </th:block>
                     <tr th:if="${#lists.isEmpty(contracts)}">
-                        <td colspan="10" class="empty-state text-center">
+                        <td colspan="9" class="empty-state text-center">
                             <div class="empty-icon"><i class="fa-regular fa-folder-open"></i></div>
                             <strong>No matching payment records</strong>
                             <span>Try changing or clearing your filters.</span>
@@ -167,8 +178,35 @@
                     </tbody>
                 </table>
             </div>
-            <div class="p-3 border-top text-muted small">
-                Showing <span th:text="${#lists.size(contracts)}">0</span> contract(s)
+            <div class="payment-table-footer p-3 border-top">
+                <span class="text-muted small"
+                      th:text="${'Showing ' + showingStart + '-' + showingEnd + ' of ' + total + ' contract(s)'}">Showing 0-0 of 0 contract(s)</span>
+                <nav class="payment-pagination" aria-label="Payment pages">
+                    <ul class="pagination pagination-sm mb-0">
+                        <li class="page-item" th:classappend="${pageNumber <= 1} ? ' disabled'">
+                            <a class="page-link"
+                               th:href="@{/payments(page=${pageNumber - 1},pageSize=${pageSize},q=${query},status=${status},paymentTypeId=${paymentTypeId},categoryId=${categoryId})}">Previous</a>
+                        </li>
+                        <li class="page-item" th:each="p : ${#numbers.sequence(1,totalPages)}"
+                            th:classappend="${p == pageNumber} ? ' active'">
+                            <a class="page-link"
+                               th:href="@{/payments(page=${p},pageSize=${pageSize},q=${query},status=${status},paymentTypeId=${paymentTypeId},categoryId=${categoryId})}"
+                               th:text="${p}">1</a>
+                        </li>
+                        <li class="page-item" th:classappend="${pageNumber >= totalPages} ? ' disabled'">
+                            <a class="page-link"
+                               th:href="@{/payments(page=${pageNumber + 1},pageSize=${pageSize},q=${query},status=${status},paymentTypeId=${paymentTypeId},categoryId=${categoryId})}">Next</a>
+                        </li>
+                    </ul>
+                </nav>
+                <div class="payment-page-size d-flex align-items-center gap-2">
+                    <label class="small text-muted mb-0" for="pageSize">Rows per page</label>
+                    <select class="form-select form-select-sm" style="width:auto" id="pageSize"
+                            onchange="const u=new URL(location);u.searchParams.set('pageSize',this.value);u.searchParams.set('page','1');location.href=u">
+                        <option th:each="size : ${pageSizes}" th:value="${size}" th:text="${size}"
+                                th:selected="${pageSize == size}"></option>
+                    </select>
+                </div>
             </div>
         </div>
     </main>

@@ -134,7 +134,7 @@ class PaymentServiceTest {
 
         var response = paymentService.createInvoice(1L,
                 new InvoiceRequest("Phase 1", "INV-1", LocalDate.now(), LocalDate.now().plusDays(30),
-                        new BigDecimal("100.00"), null, null, "Created"),
+                        new BigDecimal("100.00"), null, null, null, "Created"),
                 "U001");
 
         assertEquals(new BigDecimal("5.00"), response.taxAmount());
@@ -143,6 +143,55 @@ class PaymentServiceTest {
         assertEquals("INV-1", response.invoiceNo());
         verify(auditLogService).recordEvent(eq(financeUser), eq("INVOICE"), any(),
                 eq("CREATED"), eq(null), any(Map.class));
+    }
+
+    @Test
+    void creatingInvoiceDefaultsDueDateFromPaymentTerm() {
+        Contract contract = contract(1L, "ACTIVE");
+        contract.setCommercialTaxRate(new BigDecimal("5.00"));
+        contract.setCurrency(currency("MMK"));
+        contract.setParty(party());
+
+        LocalDate invoiceDate = LocalDate.now().plusDays(1);
+
+        when(userRepository.findByEmployeeCode("U001")).thenReturn(Optional.of(financeUser));
+        when(contractService.getContractForUser(1L, "U001")).thenReturn(contract);
+        when(paymentStatusRepository.findByCodeIgnoreCase(PaymentCalculator.PENDING))
+                .thenReturn(Optional.of(status(PaymentCalculator.PENDING, "Pending")));
+        when(invoiceRepository.save(any(Invoice.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        var response = paymentService.createInvoice(1L,
+                new InvoiceRequest("Phase 1", null, invoiceDate, null,
+                        new BigDecimal("100.00"), null, null, null, "Created"),
+                "U001");
+
+        assertEquals(invoiceDate.plusDays(PaymentCalculator.DEFAULT_PAYMENT_TERM_DAYS),
+                response.dueDate());
+    }
+
+    @Test
+    void creatingInvoiceUsesSelectedPaymentStatus() {
+        Contract contract = contract(1L, "ACTIVE");
+        contract.setCommercialTaxRate(new BigDecimal("5.00"));
+        contract.setCurrency(currency("MMK"));
+        contract.setParty(party());
+
+        MasterPaymentStatus paidStatus = status(PaymentCalculator.PAID, "Paid");
+        paidStatus.setId(7);
+
+        when(userRepository.findByEmployeeCode("U001")).thenReturn(Optional.of(financeUser));
+        when(contractService.getContractForUser(1L, "U001")).thenReturn(contract);
+        when(paymentStatusRepository.findById(7)).thenReturn(Optional.of(paidStatus));
+        when(invoiceRepository.save(any(Invoice.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        var response = paymentService.createInvoice(1L,
+                new InvoiceRequest("Phase 1", null, LocalDate.now(), LocalDate.now().plusDays(30),
+                        new BigDecimal("100.00"), null, null, 7, "Manual status"),
+                "U001");
+
+        assertEquals(PaymentCalculator.PAID, response.statusCode());
+        assertEquals("Paid", response.statusName());
+        assertEquals(7, response.paymentStatusId());
     }
 
     @Test

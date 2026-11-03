@@ -1,12 +1,14 @@
 package com.cms.demo.controller;
 
 import com.cms.demo.dto.ContractPaymentDetailResponse;
+import com.cms.demo.dto.ContractPaymentSummaryResponse;
 import com.cms.demo.dto.InvoiceForm;
 import com.cms.demo.dto.InvoiceResponse;
 import com.cms.demo.dto.PaymentForm;
 import com.cms.demo.dto.PaymentOverviewResponse;
 import com.cms.demo.repository.ContractCategoryRepository;
 import com.cms.demo.repository.CurrencyRepository;
+import com.cms.demo.repository.PaymentStatusRepository;
 import com.cms.demo.repository.PaymentTypeRepository;
 import com.cms.demo.service.PaymentCalculator;
 import com.cms.demo.service.PaymentService;
@@ -38,16 +40,19 @@ public class PaymentController {
     private final PaymentTypeRepository paymentTypeRepository;
     private final ContractCategoryRepository categoryRepository;
     private final CurrencyRepository currencyRepository;
+    private final PaymentStatusRepository paymentStatusRepository;
 
     public PaymentController(
             PaymentService paymentService,
             PaymentTypeRepository paymentTypeRepository,
             ContractCategoryRepository categoryRepository,
-            CurrencyRepository currencyRepository) {
+            CurrencyRepository currencyRepository,
+            PaymentStatusRepository paymentStatusRepository) {
         this.paymentService = paymentService;
         this.paymentTypeRepository = paymentTypeRepository;
         this.categoryRepository = categoryRepository;
         this.currencyRepository = currencyRepository;
+        this.paymentStatusRepository = paymentStatusRepository;
     }
 
     @GetMapping
@@ -57,6 +62,8 @@ public class PaymentController {
             @RequestParam(required = false) Integer paymentTypeId,
             @RequestParam(required = false) Integer categoryId,
             @RequestParam(required = false) Long contractId,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int pageSize,
             Model model,
             Principal principal) {
         if (contractId != null) {
@@ -64,10 +71,26 @@ public class PaymentController {
         }
 
         PaymentOverviewResponse overview = paymentService.getOverview(principal.getName());
+        List<ContractPaymentSummaryResponse> filteredContracts = paymentService.findContractSummaries(
+                principal.getName(), query, status, paymentTypeId, categoryId);
+
+        pageSize = List.of(10, 25, 50, 100).contains(pageSize) ? pageSize : 25;
+        int total = filteredContracts.size();
+        int totalPages = Math.max(1, (int) Math.ceil(total / (double) pageSize));
+        page = Math.max(1, Math.min(page, totalPages));
+        int fromIndex = Math.min((page - 1) * pageSize, total);
+        int toIndex = Math.min(page * pageSize, total);
+
         model.addAttribute("page", "payments");
         model.addAttribute("overview", overview);
-        model.addAttribute("contracts", paymentService.findContractSummaries(
-                principal.getName(), query, status, paymentTypeId, categoryId));
+        model.addAttribute("contracts", filteredContracts.subList(fromIndex, toIndex));
+        model.addAttribute("total", total);
+        model.addAttribute("pageNumber", page);
+        model.addAttribute("pageSize", pageSize);
+        model.addAttribute("showingStart", total == 0 ? 0 : fromIndex + 1);
+        model.addAttribute("showingEnd", toIndex);
+        model.addAttribute("totalPages", totalPages);
+        model.addAttribute("pageSizes", List.of(10, 25, 50, 100));
         model.addAttribute("statusOptions", statusOptions());
         model.addAttribute("paymentTypes",
                 paymentTypeRepository.findAll(Sort.by("sortOrder", "id")));
@@ -83,9 +106,13 @@ public class PaymentController {
     @GetMapping("/{contractId}")
     public String detail(
             @PathVariable Long contractId,
+            @RequestParam(name = "addInvoice", defaultValue = "false") boolean addInvoice,
             Model model,
             Principal principal) {
         addDetailModel(model, contractId, principal.getName(), newInvoiceForm(), newPaymentForm());
+        if (addInvoice) {
+            model.addAttribute("openInvoiceModal", true);
+        }
         return "payments/detail";
     }
 
@@ -136,7 +163,7 @@ public class PaymentController {
             ensureInvoiceBelongsToContract(paymentForm.getInvoiceId(), contractId, principal.getName());
             paymentService.recordPayment(
                     paymentForm.getInvoiceId(), paymentForm.toRequest(), principal.getName());
-            redirectAttributes.addFlashAttribute("success", "Payment updated successfully.");
+            redirectAttributes.addFlashAttribute("success", "Payment recorded successfully.");
         } catch (ResponseStatusException ex) {
             redirectAttributes.addFlashAttribute("error", errorMessage(ex));
         }
@@ -154,6 +181,9 @@ public class PaymentController {
         model.addAttribute("invoiceForm", invoiceForm);
         model.addAttribute("paymentForm", paymentForm);
         model.addAttribute("currencies", currencyRepository.findAll(Sort.by("sortOrder", "code")));
+        model.addAttribute("paymentStatuses",
+                paymentStatusRepository.findAll(Sort.by("sortOrder", "id")));
+        model.addAttribute("defaultDueDays", PaymentCalculator.DEFAULT_PAYMENT_TERM_DAYS);
     }
 
     private void ensureInvoiceBelongsToContract(Long invoiceId, Long contractId, String employeeCode) {
@@ -166,7 +196,7 @@ public class PaymentController {
     private InvoiceForm newInvoiceForm() {
         InvoiceForm form = new InvoiceForm();
         form.setInvoiceDate(LocalDate.now());
-        form.setDueDate(LocalDate.now().plusDays(30));
+        form.setDueDate(LocalDate.now().plusDays(PaymentCalculator.DEFAULT_PAYMENT_TERM_DAYS));
         return form;
     }
 

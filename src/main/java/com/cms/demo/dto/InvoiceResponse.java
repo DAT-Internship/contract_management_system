@@ -25,5 +25,6 @@ public record InvoiceResponse(
         boolean overdue,
         LocalDateTime createdAt,
         LocalDateTime updatedAt,
-        String updatedBy) {
+        String updatedBy,
+        Integer paymentStatusId) {
 }

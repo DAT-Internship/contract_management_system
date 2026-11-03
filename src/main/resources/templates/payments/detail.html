@@ -27,9 +27,6 @@
             <span class="status-badge"
                   th:classappend="${' status-' + #strings.replace(#strings.toLowerCase(contract.paymentStatus), '_', '-')}"
                   th:text="${contract.paymentStatusName}">Pending</span>
-            <a class="btn btn-outline-secondary btn-sm" th:href="@{/contracts/{id}(id=${contract.contractId})}">
-                Contract
-            </a>
             <button class="btn btn-primary btn-sm js-add-invoice" type="button" sec:authorize="hasRole('FINANCE')">
                 <i class="fa-solid fa-plus me-1"></i>Add Invoice
             </button>
@@ -111,10 +108,6 @@
                                 </span>
                             </p>
                         </div>
-                        <button class="btn btn-sm btn-primary js-add-invoice" type="button"
-                                sec:authorize="hasRole('FINANCE')">
-                            <i class="fa-solid fa-plus me-1"></i>Add
-                        </button>
                     </div>
 
                     <div class="table-responsive payment-invoice-table">
@@ -152,24 +145,35 @@
                                           th:text="${invoice.statusName}">Pending</span>
                                 </td>
                                 <td class="text-end">
-                                    <div class="d-inline-flex gap-1" sec:authorize="hasRole('FINANCE')">
-                                        <button class="btn btn-sm btn-outline-success js-pay-invoice" type="button"
-                                                th:attr="data-invoice-id=${invoice.invoiceId},
-                                                         data-invoice-no=${invoice.invoiceNo != null ? invoice.invoiceNo : 'Unbilled'},
-                                                         data-paid-amount=${invoice.paidAmount},
-                                                         data-total-amount=${invoice.totalAmount}">
-                                            <i class="fa-solid fa-money-bill-transfer me-1"></i>Pay
-                                        </button>
-                                        <button class="btn btn-sm btn-outline-secondary js-edit-invoice" type="button"
-                                                th:attr="data-invoice-id=${invoice.invoiceId},
-                                                         data-invoice-no=${invoice.invoiceNo},
+                                    <div class="d-inline-flex gap-1 payment-invoice-actions">
+                                        <button class="btn btn-sm btn-outline-primary js-view-invoice" type="button"
+                                                title="View invoice"
+                                                th:attr="data-invoice-no=${invoice.invoiceNo != null ? invoice.invoiceNo : 'Unbilled'},
                                                          data-description=${invoice.description},
-                                                         data-invoice-date=${invoice.invoiceDate},
-                                                         data-due-date=${invoice.dueDate},
-                                                         data-amount=${invoice.amount},
-                                                         data-tax-amount=${invoice.taxAmount}">
-                                            <i class="fa-solid fa-pen"></i>
+                                                         data-invoice-date=${invoice.invoiceDate != null ? #temporals.format(invoice.invoiceDate, 'dd MMM yyyy') : '-'},
+                                                         data-due-date=${invoice.dueDate != null ? #temporals.format(invoice.dueDate, 'dd MMM yyyy') : '-'},
+                                                         data-currency=${invoice.currencyCode ?: '-'},
+                                                         data-amount=${#numbers.formatDecimal(invoice.amount, 1, 2)},
+                                                         data-tax-amount=${#numbers.formatDecimal(invoice.taxAmount, 1, 2)},
+                                                         data-total-amount=${#numbers.formatDecimal(invoice.totalAmount, 1, 2)},
+                                                         data-paid-amount=${#numbers.formatDecimal(invoice.paidAmount, 1, 2)},
+                                                         data-outstanding-amount=${#numbers.formatDecimal(invoice.outstandingAmount, 1, 2)},
+                                                         data-paid-date=${invoice.paidDate != null ? #temporals.format(invoice.paidDate, 'dd MMM yyyy') : '-'},
+                                                         data-status-code=${invoice.statusCode},
+                                                         data-status-name=${invoice.statusName},
+                                                         data-updated-at=${invoice.updatedAt != null ? #temporals.format(invoice.updatedAt, 'dd MMM yyyy HH:mm') : '-'},
+                                                         data-updated-by=${invoice.updatedBy ?: '-'}">
+                                            <i class="fa-solid fa-eye me-1"></i>View
                                         </button>
+                                        <div class="d-inline-flex gap-1" sec:authorize="hasRole('FINANCE')">
+                                            <button class="btn btn-sm btn-outline-success js-pay-invoice" type="button"
+                                                    th:attr="data-invoice-id=${invoice.invoiceId},
+                                                             data-invoice-no=${invoice.invoiceNo != null ? invoice.invoiceNo : 'Unbilled'},
+                                                             data-paid-amount=${invoice.paidAmount},
+                                                             data-total-amount=${invoice.totalAmount}">
+                                                <i class="fa-solid fa-arrows-rotate me-1"></i>Update
+                                            </button>
+                                        </div>
                                     </div>
                                 </td>
                             </tr>
@@ -256,7 +260,10 @@
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
             <form id="invoiceForm" th:action="@{/payments/{id}/invoices/save(id=${contract.contractId})}"
-                  th:object="${invoiceForm}" method="post">
+                  th:object="${invoiceForm}" method="post"
+                  th:attr="data-tax-rate=${contract.commercialTaxRate != null ? contract.commercialTaxRate : 0},
+                           data-default-due-days=${defaultDueDays},
+                           data-payment-type=${contract.paymentTypeName}">
                 <div class="modal-header">
                     <h2 class="modal-title fs-5" id="invoiceModalTitle">Add invoice</h2>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -319,6 +326,15 @@
                             <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('taxAmount')}"
                                  th:errors="*{taxAmount}"></div>
                         </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="paymentStatusId">Payment status</label>
+                            <select class="form-select" id="paymentStatusId" th:field="*{paymentStatusId}">
+                                <option value="">Automatic (based on amounts and due date)</option>
+                                <option th:each="status : ${paymentStatuses}" th:value="${status.id}"
+                                        th:text="${status.name}"></option>
+                            </select>
+                            <div class="form-text">Leave automatic to derive the status from the paid amount and due date.</div>
+                        </div>
                         <div class="col-12">
                             <label class="form-label" for="note">Note</label>
                             <textarea class="form-control" id="note" rows="2" th:field="*{note}"
@@ -336,6 +352,80 @@
                     <button type="submit" class="btn btn-primary">Save invoice</button>
                 </div>
             </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="invoiceViewModal" tabindex="-1" aria-labelledby="invoiceViewModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title fs-5" id="invoiceViewModalTitle">Invoice details</h2>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="detail-label">Invoice number</div>
+                        <div class="detail-value" id="viewInvoiceNo">-</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-label">Payment status</div>
+                        <div><span class="status-badge" id="viewInvoiceStatus">Pending</span></div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-label">Invoice date</div>
+                        <div class="detail-value" id="viewInvoiceDate">-</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-label">Due date</div>
+                        <div class="detail-value" id="viewInvoiceDueDate">-</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-label">Currency</div>
+                        <div class="detail-value" id="viewInvoiceCurrency">-</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-label">Amount before tax</div>
+                        <div class="detail-value" id="viewInvoiceAmount">-</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-label">Tax amount</div>
+                        <div class="detail-value" id="viewInvoiceTaxAmount">-</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-label">Total amount</div>
+                        <div class="detail-value" id="viewInvoiceTotalAmount">-</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-label">Paid amount</div>
+                        <div class="detail-value" id="viewInvoicePaidAmount">-</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-label">Outstanding amount</div>
+                        <div class="detail-value" id="viewInvoiceOutstandingAmount">-</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-label">Paid date</div>
+                        <div class="detail-value" id="viewInvoicePaidDate">-</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-label">Last updated</div>
+                        <div class="detail-value" id="viewInvoiceUpdatedAt">-</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-label">Updated by</div>
+                        <div class="detail-value" id="viewInvoiceUpdatedBy">-</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-label">Description</div>
+                        <div class="detail-value" id="viewInvoiceDescription">-</div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
         </div>
     </div>
 </div>
@@ -394,8 +484,10 @@
 <script th:inline="javascript">
     (() => {
         const invoiceModalElement = document.getElementById('invoiceModal');
+        const invoiceViewModalElement = document.getElementById('invoiceViewModal');
         const paymentModalElement = document.getElementById('paymentModal');
         const invoiceModal = invoiceModalElement ? new bootstrap.Modal(invoiceModalElement) : null;
+        const invoiceViewModal = invoiceViewModalElement ? new bootstrap.Modal(invoiceViewModalElement) : null;
         const paymentModal = paymentModalElement ? new bootstrap.Modal(paymentModalElement) : null;
         const invoiceForm = document.getElementById('invoiceForm');
         const paymentForm = document.getElementById('paymentForm');
@@ -407,11 +499,68 @@
             if (form && form.elements[name]) form.elements[name].value = value ?? '';
         };
 
+        const taxRate = parseFloat(invoiceForm?.dataset.taxRate) || 0;
+        const defaultDueDays = parseInt(invoiceForm?.dataset.defaultDueDays, 10) || 30;
+        let taxManuallyEdited = false;
+        const paymentType = (invoiceForm?.dataset.paymentType || '').trim().toLowerCase();
+        const isMilestone = paymentType === 'milestone-based';
+
+        const addDays = (isoDate, days) => {
+            const base = isoDate ? new Date(isoDate + 'T00:00:00') : new Date();
+            if (Number.isNaN(base.getTime())) return '';
+            base.setDate(base.getDate() + days);
+            return formatLocalDate(base);
+        };
+
+        const formatLocalDate = date => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+
+        const recalculateTax = () => {
+            if (!invoiceForm || taxManuallyEdited) return;
+            const amount = parseFloat(invoiceForm.elements['amount']?.value);
+            if (Number.isNaN(amount)) return;
+            const tax = Math.round(amount * taxRate) / 100;
+            setValue(invoiceForm, 'taxAmount', tax.toFixed(2));
+        };
+
+        const recalculateDueDate = () => {
+            if (!invoiceForm || isMilestone) return;
+            const invoiceDate = invoiceForm.elements['invoiceDate']?.value;
+            if (!invoiceDate) return;
+            const months = { 'monthly': 1, 'quarterly': 3, 'semi-annual': 6, 'annual': 12 }[paymentType];
+            let next = '';
+            if (paymentType === 'lump sum') next = invoiceDate;
+            else if (months) {
+                const date = new Date(invoiceDate + 'T00:00:00');
+                const day = date.getDate();
+                date.setDate(1);
+                date.setMonth(date.getMonth() + months);
+                const lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+                date.setDate(Math.min(day, lastDay));
+                next = formatLocalDate(date);
+            } else next = addDays(invoiceDate, defaultDueDays);
+            if (next) setValue(invoiceForm, 'dueDate', next);
+        };
+
+        if (invoiceForm?.elements['dueDate']) {
+            invoiceForm.elements['dueDate'].readOnly = !isMilestone;
+        }
+
+        if (invoiceForm) {
+            invoiceForm.elements['amount']?.addEventListener('input', recalculateTax);
+            invoiceForm.elements['taxAmount']?.addEventListener('input', () => {
+                taxManuallyEdited = true;
+            });
+            invoiceForm.elements['invoiceDate']?.addEventListener('change', recalculateDueDate);
+        }
+
         const resetInvoiceForm = () => {
             if (!invoiceForm) return;
             invoiceForm.reset();
             setValue(invoiceForm, 'invoiceId', '');
+            taxManuallyEdited = false;
             if (invoiceTitle) invoiceTitle.textContent = 'Add invoice';
+            if (isMilestone) setValue(invoiceForm, 'dueDate', '');
+            recalculateDueDate();
         };
 
         document.querySelectorAll('.js-add-invoice').forEach((button) => {
@@ -421,17 +570,35 @@
             });
         });
 
-        document.querySelectorAll('.js-edit-invoice').forEach((button) => {
+        document.querySelectorAll('.js-view-invoice').forEach((button) => {
             button.addEventListener('click', () => {
-                setValue(invoiceForm, 'invoiceId', button.dataset.invoiceId);
-                setValue(invoiceForm, 'invoiceNo', button.dataset.invoiceNo);
-                setValue(invoiceForm, 'description', button.dataset.description);
-                setValue(invoiceForm, 'invoiceDate', button.dataset.invoiceDate);
-                setValue(invoiceForm, 'dueDate', button.dataset.dueDate);
-                setValue(invoiceForm, 'amount', button.dataset.amount);
-                setValue(invoiceForm, 'taxAmount', button.dataset.taxAmount);
-                if (invoiceTitle) invoiceTitle.textContent = 'Edit invoice';
-                invoiceModal?.show();
+                const setText = (id, value) => {
+                    const element = document.getElementById(id);
+                    if (element) element.textContent = value || '-';
+                };
+
+                setText('viewInvoiceNo', button.dataset.invoiceNo);
+                setText('viewInvoiceDescription', button.dataset.description);
+                setText('viewInvoiceDate', button.dataset.invoiceDate);
+                setText('viewInvoiceDueDate', button.dataset.dueDate);
+                setText('viewInvoiceCurrency', button.dataset.currency);
+                setText('viewInvoiceAmount', button.dataset.amount);
+                setText('viewInvoiceTaxAmount', button.dataset.taxAmount);
+                setText('viewInvoiceTotalAmount', button.dataset.totalAmount);
+                setText('viewInvoicePaidAmount', button.dataset.paidAmount);
+                setText('viewInvoiceOutstandingAmount', button.dataset.outstandingAmount);
+                setText('viewInvoicePaidDate', button.dataset.paidDate);
+                setText('viewInvoiceUpdatedAt', button.dataset.updatedAt);
+                setText('viewInvoiceUpdatedBy', button.dataset.updatedBy);
+
+                const status = document.getElementById('viewInvoiceStatus');
+                if (status) {
+                    const code = (button.dataset.statusCode || '').toLowerCase().replace(/_/g, '-');
+                    status.textContent = button.dataset.statusName || '-';
+                    status.className = 'status-badge' + (code ? ' status-' + code : '');
+                }
+
+                invoiceViewModal?.show();
             });
         });
 
@@ -450,7 +617,7 @@
         const openInvoiceOnLoad = /*[[${openInvoiceModal != null and openInvoiceModal}]]*/ false;
         const openPaymentOnLoad = /*[[${openPaymentModal != null and openPaymentModal}]]*/ false;
         if (openInvoiceOnLoad) {
-            if (invoiceTitle) invoiceTitle.textContent = invoiceForm?.elements['invoiceId']?.value ? 'Edit invoice' : 'Add invoice';
+            if (invoiceTitle) invoiceTitle.textContent = 'Add invoice';
             invoiceModal?.show();
         }
         if (openPaymentOnLoad) {

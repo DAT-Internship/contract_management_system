@@ -14,6 +14,7 @@ public final class PaymentCalculator {
     public static final String PAID = "PAID";
     public static final String OVERDUE = "OVERDUE";
     public static final String NO_INVOICES = "NO_INVOICES";
+    public static final int DEFAULT_PAYMENT_TERM_DAYS = 30;
 
     private static final BigDecimal HUNDRED = new BigDecimal("100");
 

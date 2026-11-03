@@ -11,9 +11,10 @@ public record InvoiceRequest(
         @NotBlank @Size(max = 4000) String description,
         @Size(max = 40) String invoiceNo,
         LocalDate invoiceDate,
-        @NotNull LocalDate dueDate,
+        LocalDate dueDate,
         @NotNull @DecimalMin(value = "0.00") BigDecimal amount,
         @DecimalMin(value = "0.00") BigDecimal taxAmount,
         Integer currencyId,
+        Integer paymentStatusId,
         @Size(max = 500) String note) {
 }
