@@ -1,6 +1,6 @@
 package com.cms.demo.security;
 
-import com.cms.demo.entity.Role;
+
 // ✅ မင်း ရဲ့ Entity ကို Import လုပ်ထားတယ်
 import com.cms.demo.entity.User;
 import com.cms.demo.repository.UserRepository;

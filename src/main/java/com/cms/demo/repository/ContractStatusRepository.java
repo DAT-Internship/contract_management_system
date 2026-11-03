@@ -1,7 +1,6 @@
 package com.cms.demo.repository;
 
 import com.cms.demo.entity.MasterContractStatus;
-import com.cms.demo.entity.MasterContractType;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface ContractStatusRepository
