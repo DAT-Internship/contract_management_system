@@ -221,6 +221,7 @@ public class PaymentService {
                 ? calculateTax(amount, contract.getCommercialTaxRate())
                 : PaymentCalculator.money(request.taxAmount());
         BigDecimal total = PaymentCalculator.money(amount.add(tax));
+        validateContractGrossLimit(contract, total, null);
 
         String invoiceNo = trimToNull(request.invoiceNo());
         if (invoiceNo != null && invoiceRepository.existsByInvoiceNo(invoiceNo)) {
@@ -276,6 +277,7 @@ public class PaymentService {
                 ? calculateTax(amount, contract.getCommercialTaxRate())
                 : PaymentCalculator.money(request.taxAmount());
         BigDecimal total = PaymentCalculator.money(amount.add(tax));
+        validateContractGrossLimit(contract, total, invoice.getInvoiceId());
         BigDecimal paid = PaymentCalculator.money(invoice.getPaidAmount());
         if (paid.compareTo(total) > 0) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
@@ -692,8 +694,7 @@ public class PaymentService {
             case "quarterly" -> invoiceDate.plusMonths(3);
             case "semi-annual" -> invoiceDate.plusMonths(6);
             case "annual" -> invoiceDate.plusMonths(12);
-            case "lump sum" -> invoiceDate;
-            case "milestone-based" -> dueDate;
+            case "lump sum", "milestone-based" -> dueDate;
             default -> dueDate != null ? dueDate
                     : invoiceDate.plusDays(PaymentCalculator.DEFAULT_PAYMENT_TERM_DAYS);
         };
@@ -702,11 +703,26 @@ public class PaymentService {
     private void validateDates(LocalDate invoiceDate, LocalDate dueDate) {
         if (dueDate == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "Due date is required for milestone-based payments");
+                    "Due date is required for lump sum and milestone-based payments");
         }
         if (dueDate.isBefore(invoiceDate)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "Due date must be on or after the invoice date");
+        }
+    }
+
+    private void validateContractGrossLimit(Contract contract, BigDecimal newInvoiceTotal, Long excludedInvoiceId) {
+        BigDecimal invoiced = invoiceRepository.findByContractId(contract.getContractId()).stream()
+                .filter(invoice -> excludedInvoiceId == null
+                        || !excludedInvoiceId.equals(invoice.getInvoiceId()))
+                .map(invoice -> PaymentCalculator.money(invoice.getTotalAmount()))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal gross = PaymentCalculator.grossWithTax(
+                contract.getContractValue(), contract.getCommercialTaxRate());
+        if (invoiced.add(newInvoiceTotal).compareTo(gross) > 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Total invoiced amount cannot exceed the contract gross amount of "
+                            + PaymentCalculator.money(gross));
         }
     }
 

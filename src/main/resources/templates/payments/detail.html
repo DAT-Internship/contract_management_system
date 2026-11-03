@@ -263,7 +263,9 @@
                   th:object="${invoiceForm}" method="post"
                   th:attr="data-tax-rate=${contract.commercialTaxRate != null ? contract.commercialTaxRate : 0},
                            data-default-due-days=${defaultDueDays},
-                           data-payment-type=${contract.paymentTypeName}">
+                           data-payment-type=${contract.paymentTypeName},
+                           data-contract-gross=${contract.contractGross},
+                           data-total-invoiced=${contract.totalInvoiced}">
                 <div class="modal-header">
                     <h2 class="modal-title fs-5" id="invoiceModalTitle">Add invoice</h2>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -316,6 +318,8 @@
                                    th:classappend="${#fields.hasErrors('amount')} ? ' is-invalid'">
                             <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('amount')}"
                                  th:errors="*{amount}"></div>
+                            <div class="form-text" id="amountLimitHelp">Invoice total including tax cannot exceed the remaining contract gross.</div>
+                            <div class="invalid-feedback d-block" id="amountLimitError" aria-live="polite"></div>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label" for="taxAmount">Tax amount</label>
@@ -503,7 +507,9 @@
         const defaultDueDays = parseInt(invoiceForm?.dataset.defaultDueDays, 10) || 30;
         let taxManuallyEdited = false;
         const paymentType = (invoiceForm?.dataset.paymentType || '').trim().toLowerCase();
-        const isMilestone = paymentType === 'milestone-based';
+        const isManualDueDate = paymentType === 'milestone-based' || paymentType === 'lump sum';
+        const contractGross = parseFloat(invoiceForm?.dataset.contractGross) || 0;
+        const totalInvoiced = parseFloat(invoiceForm?.dataset.totalInvoiced) || 0;
 
         const addDays = (isoDate, days) => {
             const base = isoDate ? new Date(isoDate + 'T00:00:00') : new Date();
@@ -523,7 +529,7 @@
         };
 
         const recalculateDueDate = () => {
-            if (!invoiceForm || isMilestone) return;
+            if (!invoiceForm || isManualDueDate) return;
             const invoiceDate = invoiceForm.elements['invoiceDate']?.value;
             if (!invoiceDate) return;
             const months = { 'monthly': 1, 'quarterly': 3, 'semi-annual': 6, 'annual': 12 }[paymentType];
@@ -542,15 +548,42 @@
         };
 
         if (invoiceForm?.elements['dueDate']) {
-            invoiceForm.elements['dueDate'].readOnly = !isMilestone;
+            invoiceForm.elements['dueDate'].readOnly = !isManualDueDate;
         }
+
+        const validateInvoiceTotal = () => {
+            if (!invoiceForm) return true;
+            const amount = parseFloat(invoiceForm.elements['amount']?.value) || 0;
+            const taxInput = invoiceForm.elements['taxAmount']?.value;
+            const tax = taxInput === '' || taxInput == null
+                ? Math.round(amount * taxRate) / 100
+                : (parseFloat(taxInput) || 0);
+            const invoiceId = invoiceForm.elements['invoiceId']?.value;
+            const currentTotal = invoiceId
+                ? (parseFloat(document.querySelector(`[data-invoice-id="${invoiceId}"]`)?.dataset.totalAmount) || 0)
+                : 0;
+            const available = Math.max(0, contractGross - totalInvoiced + currentTotal);
+            const exceeds = amount + tax > available + 0.001;
+            const amountField = invoiceForm.elements['amount'];
+            const error = document.getElementById('amountLimitError');
+            amountField?.setCustomValidity(exceeds
+                ? `Invoice total including tax exceeds the remaining contract gross of ${available.toFixed(2)}.`
+                : '');
+            if (error) error.textContent = exceeds
+                ? `Invoice total including tax exceeds the remaining contract gross (${available.toFixed(2)}).`
+                : '';
+            return !exceeds;
+        };
 
         if (invoiceForm) {
             invoiceForm.elements['amount']?.addEventListener('input', recalculateTax);
+            invoiceForm.elements['amount']?.addEventListener('input', validateInvoiceTotal);
             invoiceForm.elements['taxAmount']?.addEventListener('input', () => {
                 taxManuallyEdited = true;
+                validateInvoiceTotal();
             });
             invoiceForm.elements['invoiceDate']?.addEventListener('change', recalculateDueDate);
+            invoiceForm.addEventListener('submit', validateInvoiceTotal);
         }
 
         const resetInvoiceForm = () => {
@@ -559,8 +592,9 @@
             setValue(invoiceForm, 'invoiceId', '');
             taxManuallyEdited = false;
             if (invoiceTitle) invoiceTitle.textContent = 'Add invoice';
-            if (isMilestone) setValue(invoiceForm, 'dueDate', '');
+            if (isManualDueDate) setValue(invoiceForm, 'dueDate', '');
             recalculateDueDate();
+            validateInvoiceTotal();
         };
 
         document.querySelectorAll('.js-add-invoice').forEach((button) => {
