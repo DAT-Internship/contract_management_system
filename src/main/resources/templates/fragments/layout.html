@@ -18,6 +18,7 @@
 <link rel="stylesheet" th:if="${page == 'master-setup'}" th:href="@{/css/master-setup.css}">
 <link rel="stylesheet" th:if="${page == 'contracts' or page == 'import-batches'}" th:href="@{/css/contracts.css}">
 <link rel="stylesheet" th:if="${page == 'audit'}" th:href="@{/css/audit.css}">
+<link rel="stylesheet" th:if="${page == 'approvals'}" th:href="@{/css/approvals.css}">
 </head>
 <body>
 	<th:block th:fragment="scripts">
@@ -41,7 +42,7 @@
 		<a class="side-link" th:classappend="${page == 'dashboard'} ? ' active'" th:href="@{/}"><i class="fa-solid fa-display nav-icon" aria-hidden="true"></i>Dashboard</a>
 		<a class="side-link" th:href="@{/contracts}" th:classappend="${page == 'contracts'} ? ' active'"><i class="fa-solid fa-file-contract nav-icon" aria-hidden="true"></i>Contracts</a>
 		<a class="side-link" href="#"><i class="fa-solid fa-credit-card nav-icon" aria-hidden="true"></i>Payments</a>
-		<a class="side-link" href="#"><i class="fa-solid fa-square-check nav-icon" aria-hidden="true"></i>Approval Queue</a>
+		<a class="side-link" th:href="@{/approvals}" th:classappend="${page == 'approvals'} ? ' active'"><i class="fa-solid fa-square-check nav-icon" aria-hidden="true"></i>Approval Queue</a>
 		<a class="side-link" href="#"><i class="fa-solid fa-envelope nav-icon" aria-hidden="true"></i>Email Monitoring</a>
 		<a class="side-link" href="#"><i class="fa-solid fa-bell nav-icon" aria-hidden="true"></i>Notifications</a>
 		<a class="side-link" href="#"><i class="fa-solid fa-chart-column nav-icon" aria-hidden="true"></i>Reports</a>

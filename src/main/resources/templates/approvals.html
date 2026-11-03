@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Dashboard')}"></head>
+<body>
+	<aside th:replace="~{fragments/layout :: sidebar}"></aside>
+	<div class="main-area">
+		<header th:replace="~{fragments/layout :: topbar}"></header>
+		<main class="page-content">
+			<div th:if="${success}"
+				class="alert alert-success alert-dismissible fade show" role="alert">
+				<span th:text="${success}">Saved</span>
+				<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+			</div>
+			<header class="approval-heading">
+				<h1>Approval Queue</h1>
+				<p>Controlled review queue for Dept Head, PMO and Contract
+					Manager approvals.</p>
+			</header>
+			<form class="approval-search" method="get" th:action="@{/approvals}">
+				<label class="visually-hidden" for="approval-query">Search
+					contract number or party</label><i class="fa-solid fa-magnifying-glass"
+					aria-hidden="true"></i><input id="approval-query" type="search"
+					name="q" th:value="${query}"
+					placeholder="Search by contract number or party...">
+				<button type="submit">Search</button>
+			</form>
+			<section class="approval-panel">
+				<div class="approval-panel-title">
+					<h2>Items Awaiting Review</h2>
+					<span class="pending-count"><i></i><span
+						th:text="${pendingCount} + ' Pending Actions'">0 Pending
+							Actions</span></span>
+				</div>
+				<div class="table-responsive approval-queue-table-wrap">
+					<table class="approval-table approval-queue-table">
+						<thead>
+							<tr>
+								<th>Contract</th>
+								<th>Party</th>
+								<th>Value</th>
+								<th>Submitted by</th>
+								<th>Current step</th>
+								<th>Actions</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr th:each="step : ${queue}">
+								<td><a class="approval-contract-no"
+									th:href="@{/contracts/{id}(id=${step.contract.contractId})}"
+									th:text="${step.contract.contractNo}">Contract no</a><small
+									th:text="${step.contract.description ?: 'Contract review'}">Description</small>
+								</td>
+								<td
+									th:text="${step.contract.party != null ? step.contract.party.partyName : '-'}">Party</td>
+								<td><span
+									th:text="${step.contract.currency != null ? step.contract.currency.code : ''}"></span>
+									<span
+									th:text="${#numbers.formatDecimal(step.contract.contractValue,1,'COMMA',2,'POINT')}">0</span></td>
+								<td
+									th:text="${step.submittedBy != null ? step.submittedBy.fullName : (step.contract.createdBy != null ? step.contract.createdBy.fullName : 'System')}">Submitter</td>
+								<td
+									th:text="${#strings.equalsIgnoreCase(step.status, 'RETURNED') ? 'Return to ' + (step.contract.createdBy != null ? step.contract.createdBy.fullName : 'System') : #strings.replace(step.currentApproval ?: 'Department / PMO review', 'Revision by ', 'Resubmitted by ')}">Review</td>
+								<td><div class="approval-actions">
+										<a class="btn-view"
+											th:href="@{/contracts/{id}(id=${step.contract.contractId})}">View</a>
+										<form class="decision-form" method="post"
+											th:action="@{/approvals/{id}/decision(id=${step.stepId})}"
+											data-decision-label="Approve">
+											<input type="hidden" name="decision" value="APPROVED"><input
+												type="hidden" name="comment">
+											<button class="btn-approve" type="submit">Approve</button>
+										</form>
+										<form class="decision-form" method="post"
+											th:action="@{/approvals/{id}/decision(id=${step.stepId})}"
+											data-decision-label="Reject">
+											<input type="hidden" name="decision" value="REJECTED"><input
+												type="hidden" name="comment">
+											<button class="btn-return" type="submit">Reject</button>
+										</form>
+									</div></td>
+							</tr>
+							<tr th:if="${#lists.isEmpty(queue)}">
+								<td colspan="6" class="approval-empty">No contracts are
+									waiting for your review.</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</section>
+			<section class="approval-panel history-panel">
+				<div class="approval-panel-title">
+					<h2>Approval History</h2>
+					<div class="history-counts">
+						<span class="history-count approved-count"
+							th:text="'Approved: ' + ${approvedCount}">Approved: 0</span><span
+							class="history-count rejected-count"
+							th:text="'Rejected: ' + ${rejectedCount}">Rejected: 0</span>
+					</div>
+				</div>
+				<div class="table-responsive">
+					<table class="approval-table history-table">
+						<thead>
+							<tr>
+								<th>Contract</th>
+								<th>Party</th>
+								<th>Decision</th>
+								<th>Approver</th>
+								<th>Date</th>
+								<th>Comment</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr th:each="step : ${history}">
+								<td th:text="${step.contract.contractNo}">Contract no</td>
+								<td
+									th:text="${step.contract.party != null ? step.contract.party.partyName : '-'}">Party</td>
+								<td><span class="decision-pill"
+									th:classappend="${#strings.equalsIgnoreCase(step.status,'APPROVED')} ? ' decision-approved' : (${#strings.equalsIgnoreCase(step.status,'PAYMENT_UPDATED')} ? ' decision-updated' : ' decision-rejected')"
+									th:text="${#strings.equalsIgnoreCase(step.status,'PAYMENT_UPDATED') ? 'Payment Updated' : #strings.capitalize(#strings.toLowerCase(step.status))}">Approved</span></td>
+								<td
+									th:text="${step.approver != null ? step.approver.fullName : 'System'}">Approver</td>
+								<td
+									th:text="${step.updatedAt != null ? #temporals.format(step.updatedAt,'dd MMM yyyy') : '-'}">Date</td>
+								<td
+									th:text="${step.comment != null and !step.comment.isBlank() ? step.comment : '-'}">Comment</td>
+							</tr>
+							<tr th:if="${#lists.isEmpty(history)}">
+								<td colspan="6" class="approval-empty">No approval
+									decisions yet.</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</section>
+		</main>
+	</div>
+	<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+	<script>
+    document.querySelectorAll('.decision-form').forEach(form => form.addEventListener('submit', event => {
+      event.preventDefault();
+      const comment = form.querySelector('[name="comment"]');
+      const label = form.dataset.decisionLabel;
+      const text = window.prompt(`Enter comment for ${label.toLowerCase()}${label === 'Reject' ? ' (required)' : ' (optional)'}.`, comment.value || '');
+      if (text === null) return;
+      const trimmed = text.trim();
+      if (label === 'Reject' && !trimmed) return;
+      comment.value = trimmed;
+      form.submit();
+    }));
+  </script>
+</body>
+</html>
+
+
+
