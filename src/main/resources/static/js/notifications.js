@@ -227,4 +227,79 @@
 
 })();
 
+function connectWs() {
 
+    if (typeof SockJS === 'undefined' ||
+        typeof Stomp === 'undefined') {
+
+        console.error('[WS] SockJS or STOMP library not found.');
+        return;
+    }
+
+    var code = employeeCode();
+
+    if (!code) {
+        console.warn('[WS] Employee code not found.');
+        return;
+    }
+
+    try {
+
+        console.log('[WS] Connecting to /ws ...');
+
+        var socket = new SockJS('/ws');
+        var client = Stomp.over(socket);
+
+        client.debug = function (message) {
+            console.log('[STOMP]', message);
+        };
+
+        client.connect(
+            {},
+            function (frame) {
+
+                console.log('[WS] Connected successfully:', frame);
+
+                client.subscribe(
+                    '/topic/notifications.' + code,
+                    function (message) {
+
+                        console.log(
+                            '[WS] Notification received:',
+                            message.body
+                        );
+
+                        onMessage(message);
+                    },
+                    function (error) {
+                        console.error(
+                            '[WS] Subscription error:',
+                            error
+                        );
+                    }
+                );
+
+                console.log(
+                    '[WS] Subscribed to:',
+                    '/topic/notifications.' + code
+                );
+
+            },
+            function (error) {
+
+                console.error('[WS] Connection failed:', error);
+
+                setTimeout(function () {
+                    console.log('[WS] Reconnecting...');
+                    connectWs();
+                }, 5000);
+            }
+        );
+
+    } catch (error) {
+
+        console.error('[WS] Error:', error);
+
+        setTimeout(connectWs, 5000);
+    }
+}

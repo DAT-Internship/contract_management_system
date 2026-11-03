@@ -36,25 +36,30 @@ public class PasswordResetRequestController {
             RedirectAttributes redirectAttributes
     ) {
         try {
-            requestService.submitRequest(
+
+            String result = requestService.submitRequest(
                     employeeCode,
                     reason,
                     additionalDetails
             );
+
             redirectAttributes.addFlashAttribute(
                     "success",
-                    "Your request has been submitted successfully."
+                    result
             );
+
         } catch (Exception e) {
+
             redirectAttributes.addFlashAttribute(
                     "error",
-                    e.getMessage()
+                    e.getMessage() == null
+                            ? "Unable to submit your request. Please try again."
+                            : e.getMessage()
             );
         }
-        return "redirect:/login";
-    }
 
-    // All logged-in users: own notifications only
+        return "redirect:/login";
+    }    // All logged-in users: own notifications only
     @GetMapping("/notifications")
     public String notifications(Principal principal, Model model) {
         User currentUser = getCurrentUser(principal);
