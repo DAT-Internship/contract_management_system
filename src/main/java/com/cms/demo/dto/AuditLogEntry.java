@@ -9,7 +9,7 @@ public record AuditLogEntry(
         String action,
         String entityType,
         Long entityId,
-        String details,
-        String ipAddress,
+        String oldValue, // 🔴 သီးသန့် ခွဲထုတ်လိုက်တယ်
+        String newValue, // 🔴 သီးသန့် ခွဲထုတ်လိုက်တယ်
         LocalDateTime createdAt) {
 }

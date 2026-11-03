@@ -3,13 +3,11 @@ package com.cms.demo.service;
 import com.cms.demo.entity.Department;
 import com.cms.demo.entity.Role;
 import com.cms.demo.entity.User;
-import com.cms.demo.repository.DepartmentRepository; // 🔴 ဒါလေး ထည့်ပြီ
+import com.cms.demo.repository.DepartmentRepository;
 import com.cms.demo.repository.RoleRepository;
 import com.cms.demo.repository.UserRepository;
 import com.cms.demo.security.StaffIdValidator;
-
 import jakarta.transaction.Transactional;
-
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -21,35 +19,36 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
-    private final DepartmentRepository departmentRepository; // 🔴 ဒါလေး ထည့်ပြီ
+    private final DepartmentRepository departmentRepository;
     private final PasswordEncoder passwordEncoder;
+    private final AuditLogService auditLogService; // 🔴 Audit Log Service ကို ထည့်ပါ
 
-    // 🔴 Constructor ထဲမှာ DepartmentRepository ကို ထည့်ပြီ
+    public static final String DEFAULT_PASSWORD = "DAT@2526"; 
+
+    // Constructor မှာ AuditLogService ကို ပါ ချိတ်ပါ
     public UserService(UserRepository userRepository, RoleRepository roleRepository, 
-                       DepartmentRepository departmentRepository, PasswordEncoder passwordEncoder) {
+                       DepartmentRepository departmentRepository, PasswordEncoder passwordEncoder,
+                       AuditLogService auditLogService) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.departmentRepository = departmentRepository;
         this.passwordEncoder = passwordEncoder;
+        this.auditLogService = auditLogService;
     }
     
     public User getUserById(Long id) { 
         return userRepository.findById(id).orElseThrow(); 
     }
     
-    // Read (Get All)
     public List<User> getAllUsers() {
         return userRepository.findAll();
     }
 
     // Create
-    public void createUser(User user, Integer roleId) {
-        // ၁။ Staff ID Format စစ်ဆေးခြင်း
+    public void createUser(User user, Integer roleId, String actorCode) { // 🔴 actorCode ထည့်ပါ
         if (!StaffIdValidator.isValid(user.getEmployeeCode())) {
             throw new RuntimeException("Invalid Staff ID format!");
         }
-        
-        // ၂။ ထပ်နေခြင်း ရှိ/မရှိ စစ်ဆေးခြင်း
         if (userRepository.existsByEmployeeCode(user.getEmployeeCode())) {
             throw new RuntimeException("Staff ID already exists!");
         }
@@ -57,73 +56,168 @@ public class UserService {
             throw new RuntimeException("Email already exists!");
         }
 
-        // ၃။ Password ကို Hash လုပ်ခြင်း (Admin က ပို့ပေးတဲ့ Password ကို သုံးမယ်)
-        // (မှတ်ချက် - Controller က password ကို လက်ခံပြီး Hash လုပ်ပေးထားပြီးသားဆိုရင် ဒါကို ပြင်ရမယ်)
         if(user.getPasswordHash() == null || user.getPasswordHash().isEmpty()){
-             user.setPasswordHash(passwordEncoder.encode("admin123")); 
+            user.setPasswordHash(passwordEncoder.encode(DEFAULT_PASSWORD)); 
         }
         
         user.setIsActive(true);
         user.setCreatedAt(LocalDateTime.now());
         user.setUpdatedAt(LocalDateTime.now());
 
-        // ၄။ Role ကို ချိတ်ဆက်ခြင်း
         Role role = roleRepository.findById(roleId)
                 .orElseThrow(() -> new RuntimeException("Role not found"));
         user.setRole(role);
 
         userRepository.save(user);
+
+        // 🔴 Audit Log ထည့်မယ် (Role နဲ့ Department ပါ ထည့်မယ်)
+        String newValue = "{\"name\":\"" + user.getFullName() + 
+                          "\", \"email\":\"" + user.getEmail() + 
+                          "\", \"role\":\"" + role.getRoleName() + 
+                          "\", \"department\":\"" + user.getDepartment().getDeptName() + "\"}";
+
+        auditLogService.record(
+            actorCode, 
+            "USER", 
+            user.getUserId(), 
+            "CREATE", 
+            null, // old value မရှိဘူး
+            newValue  
+        );
     }
 
     // Update
     @Transactional
-    public void updateUser(Long userId, User updatedUser, Integer roleId, Integer departmentId) {
+    public void updateUser(Long userId, User updatedUser, Integer roleId, Integer departmentId, String actorCode) {
         // ၁။ Database ထဲက မူရင်း User ကို ရှာမယ်
         User existingUser = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // ၂။ အချက်အလက်အသစ်တွေ ထည့်မယ် (Staff ID ကို မပြောင်းပါဘူး)
+        // ၂။ Role နဲ့ Department အသစ်တွေကို ရှာမယ်
+        Role newRole = roleRepository.findById(roleId)
+                .orElseThrow(() -> new RuntimeException("Role not found"));
+        Department newDept = departmentRepository.findById(departmentId)
+                .orElseThrow(() -> new RuntimeException("Department not found"));
+
+        // 🔴 ၃။ ပြောင်းလဲမှု ရှိ/မရှိ စစ်ဆေးပြီး JSON String ဆောက်မယ်
+        StringBuilder oldValueBuilder = new StringBuilder();
+        StringBuilder newValueBuilder = new StringBuilder();
+
+        // (က) Full Name စစ်ဆေးခြင်း
+        if (!existingUser.getFullName().equals(updatedUser.getFullName())) {
+            oldValueBuilder.append("\"name\": \"").append(existingUser.getFullName()).append("\", ");
+            newValueBuilder.append("\"name\": \"").append(updatedUser.getFullName()).append("\", ");
+        }
+
+        // (ခ) Email စစ်ဆေးခြင်း
+        if (!existingUser.getEmail().equals(updatedUser.getEmail())) {
+            oldValueBuilder.append("\"email\": \"").append(existingUser.getEmail()).append("\", ");
+            newValueBuilder.append("\"email\": \"").append(updatedUser.getEmail()).append("\", ");
+        }
+
+        // (ဂ) Role စစ်ဆေးခြင်း
+        if (existingUser.getRole() != null && !existingUser.getRole().getRoleId().equals(newRole.getRoleId())) {
+            oldValueBuilder.append("\"role\": \"").append(existingUser.getRole().getRoleName()).append("\", ");
+            newValueBuilder.append("\"role\": \"").append(newRole.getRoleName()).append("\", ");
+        }
+
+        // (ဃ) Department စစ်ဆေးခြင်း
+        if (existingUser.getDepartment() != null && !existingUser.getDepartment().getDepartmentId().equals(newDept.getDepartmentId())) {
+            oldValueBuilder.append("\"department\": \"").append(existingUser.getDepartment().getDeptName()).append("\", ");
+            newValueBuilder.append("\"department\": \"").append(newDept.getDeptName()).append("\", ");
+        }
+
+        // ၄။ JSON String တွေကို သန့်ရှင်းအောင် လုပ်မယ် (အပိုကော်မာတွေ ဖျက်မယ်)
+        String oldValueJson = null;
+        String newValueJson = null;
+
+        if (oldValueBuilder.length() > 0) {
+            // အဆုံးက ", " ကို ဖျက်ပြီး { } ခွက်ထဲ ထည့်မယ်
+            String oldStr = oldValueBuilder.toString();
+            oldStr = oldStr.substring(0, oldStr.length() - 2); 
+            oldValueJson = "{" + oldStr + "}";
+
+            String newStr = newValueBuilder.toString();
+            newStr = newStr.substring(0, newStr.length() - 2);
+            newValueJson = "{" + newStr + "}";
+        }
+
+        // ၅။ User ကို Update လုပ်မယ်
         existingUser.setFullName(updatedUser.getFullName());
         existingUser.setEmail(updatedUser.getEmail());
+        existingUser.setRole(newRole);
+        existingUser.setDepartment(newDept);
         existingUser.setUpdatedAt(LocalDateTime.now());
 
-        // ၃။ Role နဲ့ Department အသစ် ရှာပြီး ချိတ်မယ်
-        Role role = roleRepository.findById(roleId)
-                .orElseThrow(() -> new RuntimeException("Role not found"));
-        existingUser.setRole(role);
-
-        Department dept = departmentRepository.findById(departmentId)
-                .orElseThrow(() -> new RuntimeException("Department not found"));
-        existingUser.setDepartment(dept);
-
-        // ၄။ သိမ်းမယ်
         userRepository.save(existingUser);
+
+        // 🔴 ၆။ ပြောင်းလဲမှု တကယ်ရှိမှ Audit Log ထည့်မယ်
+        if (oldValueJson != null && newValueJson != null) {
+            auditLogService.record(
+                actorCode, 
+                "USER", 
+                userId, 
+                "UPDATE", 
+                oldValueJson, 
+                newValueJson
+            );
+        }
     }
     
     // Delete (Deactivate)
-    public void deactivateUser(Long userId) {
+    public void deactivateUser(Long userId, String actorCode) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
-        user.setIsActive(false); // ဖျက်မပစ်ဘဲ ပိတ်ပစ်မယ်
+        user.setIsActive(false); 
         userRepository.save(user);
+
+        // 🔴 Log ထဲမှာ Active/Inactive လို့ သိမ်းမယ်
+        auditLogService.record(
+            actorCode, "USER", userId, "UPDATE", 
+            "{\"Status\": \"Active\"}",   // Old
+            "{\"Status\": \"Inactive\"}"  // New
+        );
+    }
+
+    // Activate (ပြန်ဖွင့်ခြင်း)
+    @Transactional
+    public void activateUser(Long userId, String actorCode) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        user.setIsActive(true); 
+        userRepository.save(user);
+
+        // 🔴 Log ထဲမှာ Active/Inactive လို့ သိမ်းမယ်
+        auditLogService.record(
+            actorCode, "USER", userId, "UPDATE", 
+            "{\"Status\": \"Inactive\"}", // Old
+            "{\"Status\": \"Active\"}"    // New
+        );
     }
     
- // Password ပြောင်းခြင်း
+    // Change Password
     @Transactional
     public void changePassword(String employeeCode, String currentPassword, String newPassword) {
-        // ၁။ User ကို ရှာမယ်
         User user = userRepository.findByEmployeeCode(employeeCode)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // ၂။ Current Password ကို စစ်မယ် (ရိုက်ထည့်တဲ့ Password နဲ့ Database ထဲက Hash ကို နှိုင်းယှဉ်မယ်)
         if (!passwordEncoder.matches(currentPassword, user.getPasswordHash())) {
             throw new RuntimeException("Current password is incorrect!");
         }
 
-        // ၃။ New Password ကို Hash လုပ်ပြီး သိမ်းမယ်
         user.setPasswordHash(passwordEncoder.encode(newPassword));
-        user.setUpdatedAt(java.time.LocalDateTime.now());
+        user.setUpdatedAt(LocalDateTime.now());
         
         userRepository.save(user);
+
+        // 🔴 Audit Log ထည့်မယ် (Password ကို လုံခြုံရေးအရ မထည့်ပါ)
+        auditLogService.record(
+            employeeCode, 
+            "USER", 
+            user.getUserId(), 
+            "UPDATE", 
+            null, 
+            "{\"action\":\"Password changed\"}" 
+        );
     }
 }
