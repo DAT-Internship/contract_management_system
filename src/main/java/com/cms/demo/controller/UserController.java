@@ -6,7 +6,6 @@ import com.cms.demo.repository.DepartmentRepository;
 import com.cms.demo.repository.RoleRepository;
 import com.cms.demo.service.UserService;
 
-import java.security.Principal;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
