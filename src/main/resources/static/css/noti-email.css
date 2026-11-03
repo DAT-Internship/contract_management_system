@@ -291,3 +291,279 @@ button.ne-link { border: 0; background: transparent; padding: 0; cursor: pointer
     }
 
 }
+/* =========================================
+   NOTIFICATION & EMAIL TYPOGRAPHY
+   Match Contract Management UI
+========================================= */
+
+.ne-page {
+    font-family: inherit;
+    font-size: 13px;
+    color: #1b2b40;
+}
+
+/* Page Heading */
+.ne-heading h1 {
+    font-size: 25px;
+    font-weight: 750;
+    color: #13243a;
+    letter-spacing: -.45px;
+    margin-bottom: 4px;
+}
+
+.ne-heading p {
+    font-size: 12px;
+    color: #718096;
+    margin-bottom: 0;
+}
+
+/* Buttons */
+.btn-ne-primary,
+.btn-ne-outline {
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.btn-ne-sm,
+.btn-ne-retry,
+.ne-view-btn {
+    font-size: 11px;
+    font-weight: 600;
+}
+
+/* Statistics */
+.ne-stat-label {
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.ne-stat-value {
+    font-size: 22px;
+    font-weight: 750;
+}
+
+/* Tabs */
+.ne-tab {
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.ne-tab .pill {
+    font-size: 10px;
+}
+
+/* Search and Filters */
+.ne-search input,
+.ne-field select,
+.ne-field input {
+    font-size: 12px;
+}
+
+.ne-field > label {
+    font-size: 10px;
+}
+
+/* Email Table */
+/* Email Monitoring Table Typography & Alignment */
+.ne-table {
+    width: 100%;
+    font-size: 13px;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.ne-table th {
+    font-size: 12px;
+    font-weight: 700;
+    text-align: center;
+    vertical-align: middle;
+    white-space: nowrap;
+    padding: 13px 12px;
+}
+
+.ne-table td {
+    font-size: 13px;
+    font-weight: 400;
+    text-align: center;
+    vertical-align: middle;
+    padding: 13px 12px;
+}
+
+/* Status Badge */
+.ne-table .status-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    min-width: 65px;
+    padding: 5px 10px;
+    text-align: center;
+}
+
+/* Action Button */
+.ne-table .btn-ne-sm {
+    font-size: 11px;
+    white-space: nowrap;
+}
+
+/* Table Row */
+.ne-table tbody tr {
+    vertical-align: middle;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .ne-table th {
+        font-size: 11px;
+    }
+
+    .ne-table td {
+        font-size: 12px;
+        padding: 10px 8px;
+    }
+}
+/* Bold Email Monitoring Table */
+.ne-table th {
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.ne-table td {
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.ne-table .status-pill {
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.ne-table .btn-ne-sm {
+    font-weight: 700;
+}
+/* Notification List */
+.ne-title {
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.ne-msg {
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.ne-link {
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.ne-time {
+    font-size: 11px;
+}
+
+.ne-badge {
+    font-size: 10px;
+}
+
+/* Pagination */
+.ne-footer,
+.ne-rpp {
+    font-size: 11px;
+}
+
+.ne-rpp select,
+.ne-pages button {
+    font-size: 11px;
+}
+
+/* Email Details Modal */
+.ne-modal-head h5 {
+    font-size: 15px;
+    font-weight: 750;
+}
+
+.ne-subject-text {
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.ne-to {
+    font-size: 11px;
+}
+
+.ne-row {
+    font-size: 12px;
+}
+
+.ne-error-text {
+    font-size: 11px;
+}
+
+.ne-note {
+    font-size: 12px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .ne-heading h1 {
+        font-size: 21px;
+    }
+
+    .ne-stat-value {
+        font-size: 19px;
+    }
+
+    .ne-title {
+        font-size: 12px;
+    }
+
+    .ne-msg {
+        font-size: 11px;
+    }
+}
+/* Clear Filters Button */
+.ne-clear {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+
+    padding: 9px 14px;
+    min-height: 36px;
+
+    background: #f8fafc;
+    color: #475569;
+
+    border: 1px solid #dbe2ea;
+    border-radius: 7px;
+
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+
+    cursor: pointer;
+    white-space: nowrap;
+
+    transition: all 0.2s ease;
+}
+
+.ne-clear:hover {
+    background: #eef2f7;
+    color: #1e293b;
+    border-color: #cbd5e1;
+}
+
+.ne-clear:active {
+    background: #e2e8f0;
+    transform: scale(0.97);
+}
+
+.ne-clear i {
+    font-size: 11px;
+}
+
+.ne-clear:focus-visible {
+    outline: 3px solid rgba(59, 130, 246, 0.2);
+    outline-offset: 2px;
+}

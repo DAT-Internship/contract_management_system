@@ -36,4 +36,6 @@ public interface EmailLogRepository extends JpaRepository<EmailLog, Long> {
           AND e.status IN ('SENT_UNREAD', 'SENT')
         """)
     int markAsRead(@Param("id") Long id, @Param("email") String email);
+    
+    
 }
