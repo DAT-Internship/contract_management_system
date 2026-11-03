@@ -6,6 +6,8 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.security.Principal; // 🔴 Principal ကို Import လုပ်ပါ
+
 @Controller
 @RequestMapping("/admin")
 public class AdminController {
@@ -19,15 +21,18 @@ public class AdminController {
     // ၁။ Request စာရင်း ကြည့်ဖို့ Page
     @GetMapping("/password-resets")
     public String viewPasswordRequests(Model model) {
-        // PENDING ဖြစ်နေတဲ့ Request တွေကိုပဲ ဆွဲထုတ်ပြမယ်
         model.addAttribute("requests", passwordResetService.getPendingRequests());
-        return "auth/password-requests";     }
+        return "auth/password-requests"; 
+    }
 
     // ၂။ Reset ခလုတ် နှိပ်ရင် အလုပ်လုပ်မယ့် Method
     @PostMapping("/password-resets/reset/{id}")
-    public String resetPassword(@PathVariable("id") Long id, RedirectAttributes redirectAttributes) {
+    public String resetPassword(@PathVariable("id") Long id, 
+                                Principal principal, // 🔴 Principal ကို လက်ခံပါ
+                                RedirectAttributes redirectAttributes) {
         try {
-            passwordResetService.resetUserPassword(id);
+            // 🔴 principal.getName() (Admin ရဲ့ Staff ID) ကို Service ဆီ လှမ်းပို့ပါ
+            passwordResetService.resetUserPassword(id, principal.getName());
             redirectAttributes.addFlashAttribute("success", "Password reset to default successfully!");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());

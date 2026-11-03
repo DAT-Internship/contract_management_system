@@ -64,16 +64,16 @@
     <div th:if="${entry.action != 'CREATE' and entry.oldValue != null}">
         
         <!-- Field ၂ ခုအထိ ဆိုရင် တိုက်ရိုက်ပြမယ် -->
-        <ol th:if="${#strings.length(entry.oldValue) - #strings.replace(entry.oldValue, ',', '').length() <= 1}" 
-            class="text-danger small mb-0 ps-3">
-            <li th:each="pair : ${#strings.arraySplit(#strings.replace(#strings.replace(entry.oldValue, '{', ''), '}', ''), ',')}">
-                <!-- 🔴 CSS (text-transform: capitalize) ကို သုံးပြီး ပထမစာလုံး အကြီးပြောင်းမယ် -->
+        <div th:if="${#strings.length(entry.oldValue) - #strings.replace(entry.oldValue, ',', '').length() <= 1}">
+            <!-- 🔴 ul, li တွေ ဖျက်ပြီး span ပဲ သုံးမယ် -->
+            <span th:each="pair : ${#strings.arraySplit(#strings.replace(#strings.replace(entry.oldValue, '{', ''), '}', ''), ',')}" 
+                  class="d-block text-danger small">
                 <strong style="text-transform: capitalize;" 
                         th:text="${#strings.trim(#strings.substringBefore(pair, ':'))}">
                 </strong>: 
                 <span th:text="${#strings.trim(#strings.substringAfter(pair, ':'))}"></span>
-            </li>
-        </ol>
+            </span>
+        </div>
         
         <!-- Field ၃ ခုအထက် ဆိုရင် View More လင့်ခ်ပြမယ် -->
         <a th:if="${#strings.length(entry.oldValue) - #strings.replace(entry.oldValue, ',', '').length() > 1}" 
@@ -86,27 +86,40 @@
 
 <!-- 🔴 NEW VALUE Column -->
 <td>
+    <!-- Delete ဖြစ်ရင် - ပြမယ် -->
     <span th:if="${entry.action == 'DELETE'}" class="text-muted small">-</span>
+    
     <div th:if="${entry.action != 'DELETE' and entry.newValue != null}">
         
-        <!-- Field ၂ ခုအထိ ဆိုရင် တိုက်ရိုက်ပြမယ် -->
-        <ol th:if="${#strings.length(entry.newValue) - #strings.replace(entry.newValue, ',', '').length() <= 1}" 
-            class="text-success small mb-0 ps-3">
-            <li th:each="pair : ${#strings.arraySplit(#strings.replace(#strings.replace(entry.newValue, '{', ''), '}', ''), ',')}">
-                <!-- 🔴 CSS (text-transform: capitalize) ကို သုံးပြီး ပထမစာလုံး အကြီးပြောင်းမယ် -->
-                <strong style="text-transform: capitalize;" 
-                        th:text="${#strings.trim(#strings.substringBefore(pair, ':'))}">
-                </strong>: 
-                <span th:text="${#strings.trim(#strings.substringAfter(pair, ':'))}"></span>
-            </li>
-        </ol>
+        <!-- 🔴 CREATE ဖြစ်ရင် View Details လင့်ခ်ပဲ ပြမယ် (အသစ်ထည့်ထားတယ်) -->
+        <div th:if="${entry.action == 'CREATE'}">
+            <a href="#" class="text-success small fw-bold text-decoration-none" 
+               data-bs-toggle="modal" th:attr="data-bs-target='#newModal'+${entry.id}">
+               View Details
+            </a>
+        </div>
 
-        <!-- Field ၃ ခုအထက် ဆိုရင် View More လင့်ခ်ပြမယ် -->
-        <a th:if="${#strings.length(entry.newValue) - #strings.replace(entry.newValue, ',', '').length() > 1}" 
-           href="#" class="text-success small fw-bold text-decoration-none" 
-           data-bs-toggle="modal" th:attr="data-bs-target='#newModal'+${entry.id}">
-           View More...
-        </a>
+        <!-- 🔴 UPDATE ဖြစ်ရင် မင်း ရဲ့ မူရင်း Code အတိုင်း (Field ၂ ခုအထိ တိုက်ရိုက်ပြ၊ ၃ ခုအထက် View More) -->
+        <div th:if="${entry.action == 'UPDATE'}">
+            <!-- Field ၂ ခုအထိ ဆိုရင် တိုက်ရိုက်ပြမယ် -->
+            <div th:if="${#strings.length(entry.newValue) - #strings.replace(entry.newValue, ',', '').length() <= 1}">
+                <span th:each="pair : ${#strings.arraySplit(#strings.replace(#strings.replace(entry.newValue, '{', ''), '}', ''), ',')}" 
+                      class="d-block text-success small">
+                    <strong style="text-transform: capitalize;" 
+                            th:text="${#strings.trim(#strings.substringBefore(pair, ':'))}">
+                    </strong>: 
+                    <span th:text="${#strings.trim(#strings.substringAfter(pair, ':'))}"></span>
+                </span>
+            </div>
+
+            <!-- Field ၃ ခုအထက် ဆိုရင် View More လင့်ခ်ပြမယ် -->
+            <a th:if="${#strings.length(entry.newValue) - #strings.replace(entry.newValue, ',', '').length() > 1}" 
+               href="#" class="text-success small fw-bold text-decoration-none" 
+               data-bs-toggle="modal" th:attr="data-bs-target='#newModal'+${entry.id}">
+               View More...
+            </a>
+        </div>
+
     </div>
 </td>
 						</tr>

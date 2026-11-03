@@ -70,14 +70,19 @@ public class UserService {
 
         userRepository.save(user);
 
-        // 🔴 Audit Log ထည့်မယ်
+        // 🔴 Audit Log ထည့်မယ် (Role နဲ့ Department ပါ ထည့်မယ်)
+        String newValue = "{\"name\":\"" + user.getFullName() + 
+                          "\", \"email\":\"" + user.getEmail() + 
+                          "\", \"role\":\"" + role.getRoleName() + 
+                          "\", \"department\":\"" + user.getDepartment().getDeptName() + "\"}";
+
         auditLogService.record(
             actorCode, 
             "USER", 
             user.getUserId(), 
             "CREATE", 
             null, // old value မရှိဘူး
-            "{\"name\":\"" + user.getFullName() + "\", \"email\":\"" + user.getEmail() + "\"}" 
+            newValue  
         );
     }
 
@@ -160,20 +165,33 @@ public class UserService {
     }
     
     // Delete (Deactivate)
-    public void deactivateUser(Long userId, String actorCode) { // 🔴 actorCode ထည့်ပါ
+    public void deactivateUser(Long userId, String actorCode) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         user.setIsActive(false); 
         userRepository.save(user);
 
-        // 🔴 Audit Log ထည့်မယ်
+        // 🔴 Log ထဲမှာ Active/Inactive လို့ သိမ်းမယ်
         auditLogService.record(
-            actorCode, 
-            "USER", 
-            userId, 
-            "UPDATE", 
-            "{\"isActive\":true}", 
-            "{\"isActive\":false}"
+            actorCode, "USER", userId, "UPDATE", 
+            "{\"Status\": \"Active\"}",   // Old
+            "{\"Status\": \"Inactive\"}"  // New
+        );
+    }
+
+    // Activate (ပြန်ဖွင့်ခြင်း)
+    @Transactional
+    public void activateUser(Long userId, String actorCode) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        user.setIsActive(true); 
+        userRepository.save(user);
+
+        // 🔴 Log ထဲမှာ Active/Inactive လို့ သိမ်းမယ်
+        auditLogService.record(
+            actorCode, "USER", userId, "UPDATE", 
+            "{\"Status\": \"Inactive\"}", // Old
+            "{\"Status\": \"Active\"}"    // New
         );
     }
     

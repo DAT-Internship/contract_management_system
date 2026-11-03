@@ -55,6 +55,20 @@ public class UserController {
         return "redirect:/users";
     }
 
+    // Activate (ပြန်ဖွင့်ခြင်း)
+    @GetMapping("/activate/{id}")
+    public String activateUser(@PathVariable("id") Long id, 
+                               Principal principal, 
+                               RedirectAttributes redirectAttributes) {
+        try {
+            userService.activateUser(id, principal.getName());
+            redirectAttributes.addFlashAttribute("success", "User activated successfully!");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/users";
+    }
+    
     @GetMapping("/deactivate/{id}")
     public String deactivateUser(@PathVariable("id") Long id, 
                                  Principal principal, // 🔴 Principal ကို လက်ခံပါ
