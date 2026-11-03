@@ -53,10 +53,19 @@
 											Edit
 										</a>
 										
-										<!-- Deactivate ခလုတ် -->
-										<a th:href="@{/users/deactivate/{id}(id=${user.userId})}" 
-										   class="btn btn-sm btn-outline-danger" 
-										   th:if="${user.isActive}">Deactivate</a>
+										<!-- 🔴 Deactivate ခလုတ် (Active ဖြစ်နေရင်ပဲ ပြမယ်) -->
+    <a th:if="${user.isActive}" 
+       th:href="@{/users/deactivate/{id}(id=${user.userId})}" 
+       class="btn btn-sm btn-outline-danger">
+       Deactivate
+    </a>
+
+    <!-- 🔴 Activate ခလုတ် (Inactive ဖြစ်နေရင်ပဲ ပြမယ်) -->
+    <a th:unless="${user.isActive}" 
+       th:href="@{/users/activate/{id}(id=${user.userId})}" 
+       class="btn btn-sm btn-outline-success">
+       Activate
+    </a>
 									</td>
 								</tr>
 							</tbody>
