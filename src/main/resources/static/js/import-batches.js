@@ -28,7 +28,7 @@
 		return 'text-bg-secondary';
 	};
 	const dateText = (value) => {
-		if (!value) return 'â€”';
+		if (!value) return '—';
 		const date = new Date(value);
 		return Number.isNaN(date.getTime()) ? value : date.toLocaleString();
 	};
@@ -61,7 +61,7 @@
 		for (let p = first; p <= Math.min(totalPages, first + 4); p++) add(String(p), p, false, p === state.page);
 		add('Next', state.page + 1, state.page >= totalPages);
 		const firstRecord = state.total ? (state.page - 1) * state.pageSize + 1 : 0;
-		$('batchRange').textContent = `Showing ${firstRecord}â€“${Math.min(state.page * state.pageSize, state.total)} of ${state.total}`;
+		$('batchRange').textContent = `Showing ${firstRecord}–${Math.min(state.page * state.pageSize, state.total)} of ${state.total}`;
 	};
 	const renderRows = (rows) => {
 		const body = $('batchRows'); body.replaceChildren();
@@ -79,7 +79,7 @@
 			const kind = document.createElement('td'); const kindBadge = document.createElement('span'); kindBadge.className = 'badge text-bg-light'; kindBadge.textContent = String(batch.batchType ?? batch.type ?? '').toLowerCase().includes('user') ? 'User Excel' : 'Contract Excel'; kind.append(kindBadge); tr.append(kind);
 			cell(tr, batch.totalRows ?? batch.total ?? 0);
 			const statusCell = document.createElement('td'); const badge = document.createElement('span'); badge.className = `badge ${statusClass(batch.status)}`; badge.textContent = esc(batch.status || 'Pending'); statusCell.append(badge); tr.append(statusCell);
-			cell(tr, batch.uploadedByName ?? batch.uploadedBy ?? 'â€”'); cell(tr, dateText(batch.createdAt ?? batch.uploadedAt));
+			cell(tr, batch.uploadedByName ?? batch.uploadedBy ?? '—'); cell(tr, dateText(batch.createdAt ?? batch.uploadedAt));
 			const actions = document.createElement('td'); actions.className = 'text-nowrap';
 			const addAction = (label, cls, handler, disabled = false) => { const btn = document.createElement('button'); btn.type = 'button'; btn.className = `btn btn-sm ${cls} me-1`; btn.textContent = label; btn.disabled = disabled; btn.addEventListener('click', handler); actions.append(btn); };
 			addAction('View', 'btn-outline-primary', () => showDetails(batch));
@@ -87,7 +87,7 @@
 		});
 	};
 	const loadBatches = async () => {
-		$('batchLoading').textContent = 'Loadingâ€¦';
+		$('batchLoading').textContent = 'Loading—¦';
 		const params = new URLSearchParams({ page: state.page, pageSize: state.pageSize });
 		try {
 			const result = await request(`/api/import-batches?${params}`);
@@ -102,7 +102,7 @@
 	};
 	const showDetails = async (batch) => {
 		const id = batch.batchId ?? batch.id;
-		$('detailBatchSummary').textContent = `Batch #${id} Â· ${batch.status || 'Pending'} Â· ${dateText(batch.createdAt ?? batch.uploadedAt)}`;
+		$('detailBatchSummary').textContent = `Batch #${id} · ${batch.status || 'Pending'} · ${dateText(batch.createdAt ?? batch.uploadedAt)}`;
 		const body = $('batchErrors'); body.replaceChildren();
 		try {
 			const result = await request(`/api/import-batches/${encodeURIComponent(id)}`);
@@ -118,7 +118,16 @@
 		if (!/\.xlsx$/i.test(file.name)) { toast('Unsupported file', 'Choose an .xlsx workbook.'); return; }
 		zone.dataset.fileName = file.name;
 		zone._file = file;
-		const selected = zone.querySelector('.upload-selected'); selected.textContent = `${file.name} Â· ${formatSize(file.size)}`; selected.classList.remove('d-none');
+		const selected = zone.querySelector('.upload-selected');
+		const selectedName = selected.querySelector(
+		    '.upload-selected-name'
+		);
+
+		selectedName.textContent =
+		    `${file.name} · ${formatSize(file.size)}`;
+
+		selected.classList.remove('d-none');
+
 		zone.querySelector('.upload-submit').disabled = false;
 	};
 	const zone = $('importUploadZone');
@@ -127,6 +136,45 @@
 	const chooseType = type => { selectedType = config[type] ? type : 'contract'; const item = config[selectedType]; zone.dataset.kind = selectedType; $('dropTitle').textContent = item.title; $('uploadHelper').textContent = item.helper; $('uploadNote').textContent = item.note; $('templateLink').href = item.template; $('templateLink').textContent = `Download ${item.label} Template`; zone.querySelector('.upload-submit').textContent = `Upload ${item.label}`; document.querySelectorAll('.import-type-button').forEach(button => { const active = button.dataset.kind === selectedType; button.classList.toggle('active',active); button.classList.toggle('btn-primary',active); button.classList.toggle('btn-outline-primary',!active); }); };
 	document.querySelectorAll('.import-type-button').forEach(button => button.addEventListener('click', () => chooseType(button.dataset.kind)));
 	const input = zone.querySelector('.upload-input');
+	const removeFileButton = zone.querySelector(
+	    '.upload-remove-file'
+	);
+
+	const clearSelectedFile = () => {
+	    const selected = zone.querySelector('.upload-selected');
+	    const selectedName = selected.querySelector(
+	        '.upload-selected-name'
+	    );
+
+	    const uploadButton = zone.querySelector('.upload-submit');
+	    const progress = zone.querySelector('.upload-progress');
+	    const progressBar = progress.querySelector('.progress-bar');
+
+	    // Remove the selected file
+	    zone._file = null;
+	    delete zone.dataset.fileName;
+	    input.value = '';
+
+	    // Hide and clear the selected-file row
+	    selectedName.textContent = '';
+	    selected.classList.add('d-none');
+
+	    // Reset upload progress
+	    progress.classList.add('d-none');
+	    progressBar.style.width = '0%';
+	    progressBar.setAttribute('aria-valuenow', '0');
+
+	    // Prevent uploading without another file
+	    uploadButton.disabled = true;
+	    uploadButton.textContent =
+	        `Upload ${config[selectedType].label}`;
+	};
+
+	removeFileButton.addEventListener('click', (event) => {
+	    event.preventDefault();
+	    event.stopPropagation();
+	    clearSelectedFile();
+	});
 	input.addEventListener('change', () => setFile(zone,input.files[0]));
 	zone.addEventListener('dragover', event => { event.preventDefault(); zone.classList.add('drag-over'); });
 	zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
@@ -144,7 +192,11 @@
 		xhr.onerror = () => {progress.classList.add('d-none');button.textContent=`Upload ${config[selectedType].label}`;button.disabled=false;toast('Upload failed','Could not connect to the import service.');}; xhr.send(form);
 	};$('batchPageSize').addEventListener('change', event => { state.pageSize = Number(event.target.value); state.page = 1; loadBatches(); });
 	const initialType = root.dataset.initialType;
-	if (initialType?.toLowerCase().startsWith('user')) chooseType('user');
+	if (initialType?.toLowerCase().startsWith('user')) {
+	    chooseType('user');
+	} else {
+	    chooseType('contract');
+	}
 	loadBatches();
 })();
 

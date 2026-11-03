@@ -1,0 +1,1191 @@
+/* User Management page layout */
+.users-topbar-wrapper {
+    position: fixed;
+    top: 0;
+    right: 0;
+    z-index: 1000;
+    width: calc(100% - 292px);
+    margin-left: 292px;
+}
+
+.users-main-wrapper {
+    width: calc(100% - 292px);
+    min-width: 0;
+    margin-left: 292px;
+    margin-top: 68px;
+    padding: 30px;
+    transition: width 0.22s ease, margin-left 0.22s ease;
+}
+
+/* Move the topbar and content with the collapsed sidebar */
+@media (min-width: 701px) {
+    body.sidebar-collapsed .users-topbar-wrapper,
+    body.sidebar-collapsed .users-main-wrapper {
+        width: calc(100% - 76px);
+        margin-left: 76px;
+    }
+}
+
+/* User Management page heading */
+.user-page-heading {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-width: 0;
+    margin-left: 15px;
+}
+
+.user-page-heading-icon {
+    display: inline-flex;
+    flex: 0 0 46px;
+    align-items: center;
+    justify-content: center;
+    width: 46px;
+    height: 46px;
+    color: #ffffff;
+    font-size: 17px;
+    background-color: #1e3c72;
+    border-radius: 9px;
+    box-shadow: 0 4px 10px rgba(30, 60, 114, 0.16);
+}
+
+.user-page-heading-text {
+    min-width: 0;
+}
+
+.user-page-eyebrow {
+    display: block;
+    margin-bottom: 2px;
+    color: #1e3c72;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.user-page-title {
+    margin: 0;
+    color: #1f2937;
+    font-size: 25px;
+    font-weight: 650;
+    line-height: 1.2;
+}
+
+.user-page-description {
+    margin: 4px 0 0;
+    color: #6b7280;
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+/* Add User Modal */	
+.add-user-modal {
+    overflow: hidden;
+    border: 0;
+    border-radius: 12px;
+    box-shadow: 0 18px 50px rgba(15, 23, 42, 0.16);
+}
+
+/* Header */	
+.add-user-header {
+    align-items: flex-start;
+    padding: 24px 28px;
+    background-color: #ffffff;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.add-user-title {
+    margin: 0;
+    color: #1f2937;
+    font-size: 21px;
+    font-weight: 650;
+}
+
+.add-user-subtitle {
+    margin: 6px 0 0;
+    color: #6b7280;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.add-user-header .btn-close {
+    margin-top: 2px;
+    box-shadow: none;
+}
+
+/* Form body */	
+.add-user-form {
+    background-color: #ffffff;
+}
+
+.add-user-body {
+    padding: 28px;
+}
+
+.add-user-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 22px 24px;
+}
+
+.add-user-field {
+    min-width: 0;
+}
+
+.add-user-field-full {
+    grid-column: 1 / -1;
+}
+
+.add-user-field .form-label {
+    display: block;
+    margin-bottom: 8px;
+    color: #374151;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.required-mark {
+    color: #dc3545;
+}
+
+.add-user-field .form-control,
+.add-user-field .form-select {
+    min-height: 44px;
+    color: #1f2937;
+    font-size: 14px;
+    background-color: #ffffff;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    box-shadow: none;
+
+    transition:
+        border-color 0.18s ease,
+        box-shadow 0.18s ease;
+}
+
+.add-user-field .form-control::placeholder {
+    color: #9ca3af;
+}
+
+.add-user-field .form-control:focus,
+.add-user-field .form-select:focus {
+    border-color: #1e3c72;
+    box-shadow: 0 0 0 3px rgba(30, 60, 114, 0.12);
+}
+
+.add-user-help-text {
+    display: block;
+    margin-top: 6px;
+    color: #6b7280;
+    font-size: 12px;
+}
+
+/* Footer and buttons */	
+.add-user-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 20px 28px;
+    background-color: #ffffff;
+    border-top: 1px solid #e5e7eb;
+}
+
+.add-user-cancel-btn,
+.add-user-submit-btn {
+    min-height: 42px;
+    padding: 9px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: 8px;
+}
+
+.add-user-cancel-btn {
+    color: #374151;
+    background-color: #ffffff;
+    border: 1px solid #d1d5db;
+}
+
+.add-user-cancel-btn:hover,
+.add-user-cancel-btn:focus {
+    color: #111827;
+    background-color: #f3f4f6;
+    border-color: #9ca3af;
+}
+
+.add-user-submit-btn {
+    min-width: 135px;
+    background-color: #1e3c72;
+    border-color: #1e3c72;
+}
+
+.add-user-submit-btn:hover,
+.add-user-submit-btn:focus {
+    background-color: #172f5b;
+    border-color: #172f5b;
+}
+	
+/* User Management Table */
+.user-table-card {
+    width: 100%;
+    overflow: hidden;
+    background-color: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    box-shadow: 0 4px 18px rgba(15, 23, 42, 0.05);
+}
+
+/* Table card header */	
+.user-table-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 22px 24px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.user-table-title {
+    margin: 0;
+    color: #1f2937;
+    font-size: 17px;
+    font-weight: 650;
+}
+
+.user-table-subtitle {
+    margin: 5px 0 0;
+    color: #6b7280;
+    font-size: 13px;
+}
+
+.user-count {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    padding: 7px 12px;
+    color: #1e3c72;
+    font-size: 13px;
+    font-weight: 600;
+    background-color: #eef3fb;
+    border-radius: 20px;
+}
+
+/* Table */	
+.user-table-responsive {
+    width: 100%;
+}
+
+.user-management-table {
+    width: 100%;
+    min-width: 900px;
+    margin-bottom: 0;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.user-management-table thead th {
+    padding: 13px 18px;
+    color: #6b7280;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.045em;
+    text-align: left;
+    text-transform: uppercase;
+    white-space: nowrap;
+    background-color: #f8fafc;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.user-management-table tbody td {
+    padding: 16px 18px;
+    color: #374151;
+    font-size: 13px;
+    text-align: left;
+    vertical-align: middle;
+    border-bottom: 1px solid #edf0f3;
+}
+
+.user-management-table tbody tr {
+    transition: background-color 0.18s ease;
+}
+
+.user-management-table tbody tr:hover {
+    background-color: #f8fafc;
+}
+
+.user-management-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+/* Staff ID */	
+.user-staff-id {
+    display: inline-block;
+    color: #374151;
+    font-family: monospace;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+    background-color: #f3f4f6;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    padding: 5px 8px;
+}
+
+/* User column */	
+.user-name-cell {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    min-width: 170px;
+}
+
+.user-avatar {
+    display: inline-flex;
+    flex: 0 0 38px;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    color: #1e3c72;
+    font-size: 14px;
+    background-color: #eef3fb;
+    border-radius: 50%;
+}
+
+.user-name-info {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.user-full-name {
+    overflow: hidden;
+    color: #1f2937;
+    font-size: 13px;
+    font-weight: 650;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.user-secondary-text {
+    color: #9ca3af;
+    font-size: 11px;
+}
+
+/* Email */	
+.user-email {
+    display: block;
+    max-width: 220px;
+    overflow: hidden;
+    color: #4b5563;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Role badge */	
+.user-role-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 10px;
+    color: #1e3c72;
+    font-size: 11px;
+    font-weight: 650;
+    white-space: nowrap;
+    background-color: #eef3fb;
+    border: 1px solid #dbe6f5;
+    border-radius: 20px;
+}
+
+/* Status */	
+.user-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 5px 10px;
+    font-size: 11px;
+    font-weight: 650;
+    white-space: nowrap;
+    border-radius: 20px;
+}
+
+.user-status-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+}
+
+.user-status-active {
+    color: #157347;
+    background-color: #eaf7f0;
+}
+
+.user-status-active .user-status-dot {
+    background-color: #198754;
+}
+
+.user-status-inactive {
+    color: #b42318;
+    background-color: #fdefef;
+}
+
+.user-status-inactive .user-status-dot {
+    background-color: #dc3545;
+}
+
+/* Action buttons */	
+.user-table-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 7px;
+    min-width: 190px;
+}
+
+.user-action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 34px;
+    padding: 6px 10px;
+    font-size: 11px;
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+    background-color: #ffffff;
+    border: 1px solid transparent;
+    border-radius: 7px;
+    transition:
+        color 0.18s ease,
+        background-color 0.18s ease,
+        border-color 0.18s ease;
+}
+
+.user-edit-btn {
+    color: #1e3c72;
+    border-color: #cbd9ed;
+}
+
+.user-edit-btn:hover {
+    color: #ffffff;
+    background-color: #1e3c72;
+    border-color: #1e3c72;
+}
+
+.user-deactivate-btn {
+    color: #b42318;
+    border-color: #f1c5c2;
+}
+
+.user-deactivate-btn:hover {
+    color: #ffffff;
+    background-color: #b42318;
+    border-color: #b42318;
+}
+
+.user-action-disabled {
+    color: #9ca3af;
+    font-size: 11px;
+}
+
+/* Empty table state */	
+.user-table-empty {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 280px;
+    padding: 40px 20px;
+    text-align: center;
+}
+
+.user-table-empty-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 58px;
+    height: 58px;
+    margin-bottom: 15px;
+    color: #1e3c72;
+    font-size: 21px;
+    background-color: #eef3fb;
+    border-radius: 50%;
+}
+
+.user-table-empty h6 {
+    margin: 0;
+    color: #1f2937;
+    font-size: 16px;
+    font-weight: 650;
+}
+
+.user-table-empty p {
+    margin: 7px 0 18px;
+    color: #6b7280;
+    font-size: 13px;
+}
+
+/* Add User Page Button */	
+.add-user-page-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 11px;
+    min-width: 180px;
+    min-height: 52px;
+    padding: 7px 16px 7px 8px;
+    color: #ffffff;
+    text-align: left;
+    background-color: #1e3c72;
+    border: 1px solid #1e3c72;
+    border-radius: 9px;
+    box-shadow: 0 4px 10px rgba(30, 60, 114, 0.18);
+    margin-right: 10px;
+    transition:
+        background-color 0.18s ease,
+        border-color 0.18s ease,
+        box-shadow 0.18s ease,
+        transform 0.18s ease;
+}
+
+.add-user-button-icon {
+    display: inline-flex;
+    flex: 0 0 38px;
+    align-items: center;
+    justify-content: center;	
+    width: 38px;
+    height: 38px;	
+    color: #1e3c72;
+    font-size: 13px;
+    background-color: #ffffff;
+    border-radius: 7px;
+}
+
+.add-user-button-text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
+}
+
+.add-user-button-text strong {
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 650;
+}
+
+.add-user-button-text small {
+    margin-top: 3px;
+    color: rgba(255, 255, 255, 0.72);
+    font-size: 10px;
+    font-weight: 400;
+}
+
+/* Hover */
+.add-user-page-button:hover {
+    background-color: #172f5b;
+    border-color: #172f5b;
+    box-shadow: 0 6px 14px rgba(30, 60, 114, 0.25);
+    transform: translateY(-1px);
+}
+
+.add-user-page-button:hover .add-user-button-icon {
+    color: #172f5b;
+}
+
+/* =========================================================
+   Complete Responsive User Management Page
+========================================================= */
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    overflow-x: hidden;
+}
+
+img,
+svg {
+    max-width: 100%;
+}
+
+/* Prevent content from exceeding the wrapper */
+.users-main-wrapper,
+.users-main-wrapper .content,
+.user-page-header,
+.user-table-card,
+.user-table-responsive {
+    min-width: 0;
+    max-width: 100%;
+}
+
+/* =========================================================
+   Page header
+========================================================= */
+
+.user-page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    width: 100%;
+}
+
+.user-page-heading,
+.user-page-heading-text {
+    min-width: 0;
+}
+
+.user-page-description {
+    overflow-wrap: anywhere;
+}
+
+/* =========================================================
+   Desktop table
+========================================================= */
+
+.user-table-responsive {
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+}
+
+.user-table-responsive::-webkit-scrollbar {
+    height: 7px;
+}
+
+.user-table-responsive::-webkit-scrollbar-track {
+    background-color: #f3f4f6;
+}
+
+.user-table-responsive::-webkit-scrollbar-thumb {
+    background-color: #cbd5e1;
+    border-radius: 10px;
+}
+
+/* =========================================================
+   Large tablet and small laptop
+========================================================= */
+
+@media (min-width: 992px) and (max-width: 1199px) {
+    .users-main-wrapper {
+        padding: 26px 22px;
+    }
+
+    .user-page-heading {
+        margin-left: 0;
+    }
+
+    .add-user-page-button {
+        margin-right: 0;
+    }
+
+    .user-management-table {
+        min-width: 820px;
+    }
+
+    .user-management-table thead th {
+        padding: 12px 14px;
+    }
+
+    .user-management-table tbody td {
+        padding: 14px;
+    }
+
+    .user-email {
+        max-width: 180px;
+    }
+}
+
+/* =========================================================
+   Tablet
+========================================================= */
+
+@media (min-width: 701px) and (max-width: 991px) {
+    .users-main-wrapper {
+        padding: 22px 18px;
+    }
+
+    .user-page-header {
+        gap: 18px;
+    }
+
+    .user-page-heading {
+        margin-left: 0;
+    }
+
+    .user-page-title {
+        font-size: 23px;
+    }
+
+    .user-page-description {
+        max-width: 400px;
+    }
+
+    .add-user-page-button {
+        flex-shrink: 0;
+        min-width: 165px;
+        margin-right: 0;
+    }
+
+    .user-table-header {
+        padding: 18px 20px;
+    }
+
+    .user-management-table {
+        min-width: 800px;
+    }
+
+    .user-management-table thead th,
+    .user-management-table tbody td {
+        padding-right: 13px;
+        padding-left: 13px;
+    }
+
+    .user-table-actions {
+        min-width: 170px;
+    }
+
+    .add-user-body {
+        padding: 24px;
+    }
+
+    .add-user-form-grid {
+        gap: 20px;
+    }
+}
+
+/* =========================================================
+   Mobile layout
+========================================================= */
+
+@media (max-width: 700px) {
+    /*
+       Full-width topbar and content.
+       Sidebar should behave as an overlay at this breakpoint.
+    */
+    .users-topbar-wrapper {
+        position: fixed;
+        top: 0;
+        right: 0;
+        left: 0;
+        width: 100%;
+        margin-left: 0;
+    }
+
+    .users-main-wrapper,
+    body.sidebar-collapsed .users-main-wrapper {
+        width: 100%;
+        margin-top: 68px;
+        margin-left: 0;
+        padding: 20px 16px;
+    }
+
+    body.sidebar-collapsed .users-topbar-wrapper {
+        width: 100%;
+        margin-left: 0;
+    }
+
+    /* Page header */
+    .user-page-header {
+        align-items: stretch;
+        flex-direction: column;
+        gap: 18px;
+    }
+
+    .user-page-heading {
+        align-items: center;
+        width: 100%;
+        margin-left: 0;
+    }
+
+    .user-page-heading-icon {
+        flex: 0 0 44px;
+        width: 44px;
+        height: 44px;
+        font-size: 16px;
+    }
+
+    .user-page-title {
+        font-size: 22px;
+    }
+
+    .user-page-description {
+        max-width: 100%;
+        font-size: 12px;
+    }
+
+    /* Add User button */
+    .add-user-page-button {
+        justify-content: flex-start;
+        width: 100%;
+        min-width: 0;
+        min-height: 50px;
+        margin-right: 0;
+    }
+
+    /* Table card header */
+    .user-table-header {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 13px;
+        padding: 18px;
+    }
+
+    .user-count {
+        align-self: flex-start;
+    }
+
+    /*
+       Transform the table into mobile cards.
+       No horizontal table scrolling is required.
+    */
+    .user-table-responsive {
+        padding: 14px;
+        overflow: visible;
+        background-color: #f8fafc;
+    }
+
+    .user-management-table {
+        display: block;
+        width: 100%;
+        min-width: 0;
+        background-color: transparent;
+    }
+
+    .user-management-table thead {
+        display: none;
+    }
+
+    .user-management-table tbody {
+        display: grid;
+        gap: 14px;
+        width: 100%;
+    }
+
+    .user-management-table tbody tr {
+        display: block;
+        width: 100%;
+        overflow: hidden;
+        background-color: #ffffff;
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+    }
+
+    .user-management-table tbody tr:hover {
+        background-color: #ffffff;
+    }
+
+    .user-management-table tbody td {
+        display: grid;
+        grid-template-columns: minmax(90px, 35%) minmax(0, 1fr);
+        gap: 12px;
+        width: 100%;
+        padding: 12px 14px;
+        font-size: 12px;
+        text-align: left !important;
+        border-bottom: 1px solid #edf0f3;
+    }
+
+    .user-management-table tbody td:last-child {
+        border-bottom: 0;
+    }
+
+    .user-management-table tbody td::before {
+        align-self: center;
+        color: #6b7280;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        content: attr(data-label);
+        text-transform: uppercase;
+    }
+
+    /* User card content */
+    .user-name-cell {
+        min-width: 0;
+    }
+
+    .user-full-name {
+        white-space: normal;
+        overflow-wrap: anywhere;
+    }
+
+    .user-email {
+        max-width: 100%;
+        white-space: normal;
+        overflow-wrap: anywhere;
+    }
+
+    .user-staff-id,
+    .user-role-badge,
+    .user-status {
+        justify-self: start;
+    }
+
+    /* Mobile action buttons */
+    .user-table-actions {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+        width: 100%;
+        min-width: 0;
+    }
+
+    .user-action-btn {
+        width: 100%;
+        min-height: 38px;
+    }
+
+    .user-action-disabled {
+        align-self: center;
+        grid-column: 1 / -1;
+    }
+
+    /* Empty state must not use card data labels */
+    .user-management-table tbody .user-empty-row {
+        display: block;
+    }
+
+    .user-management-table tbody .user-empty-row td {
+        display: block;
+        padding: 0;
+        border: 0;
+    }
+
+    .user-management-table tbody .user-empty-row td::before {
+        display: none;
+    }
+
+    .user-table-empty {
+        min-height: 250px;
+        padding: 32px 18px;
+    }
+
+    /* Modal */
+    #addUserModal .modal-dialog {
+        width: auto;
+        max-width: none;
+        margin: 12px;
+    }
+
+    .add-user-modal {
+        max-height: calc(100dvh - 24px);
+    }
+
+    .add-user-header {
+        flex-shrink: 0;
+        padding: 20px;
+    }
+
+    .add-user-header > div {
+        min-width: 0;
+        padding-right: 8px;
+    }
+
+    .add-user-title {
+        font-size: 19px;
+    }
+
+    .add-user-subtitle {
+        font-size: 13px;
+        overflow-wrap: anywhere;
+    }
+
+    .add-user-form {
+        display: flex;
+        min-height: 0;
+        flex-direction: column;
+    }
+
+    .add-user-body {
+        min-height: 0;
+        max-height: calc(100dvh - 210px);
+        padding: 20px;
+        overflow-y: auto;
+    }
+
+    .add-user-form-grid {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 18px;
+    }
+
+    .add-user-field-full {
+        grid-column: auto;
+    }
+
+    .add-user-field .form-control,
+    .add-user-field .form-select {
+        width: 100%;
+        min-width: 0;
+        font-size: 16px;
+    }
+
+    .add-user-actions {
+        flex-shrink: 0;
+        padding: 16px 20px;
+    }
+}
+
+/* =========================================================
+   Small mobile
+========================================================= */
+
+@media (max-width: 480px) {
+    .users-main-wrapper,
+    body.sidebar-collapsed .users-main-wrapper {
+        padding: 16px 12px;
+    }
+
+    .user-page-header {
+        gap: 15px;
+    }
+
+    .user-page-heading {
+        align-items: flex-start;
+        gap: 11px;
+    }
+
+    .user-page-heading-icon {
+        flex-basis: 40px;
+        width: 40px;
+        height: 40px;
+        font-size: 15px;
+        border-radius: 8px;
+    }
+
+    .user-page-eyebrow {
+        font-size: 9px;
+    }
+
+    .user-page-title {
+        font-size: 20px;
+    }
+
+    .user-page-description {
+        line-height: 1.45;
+    }
+
+    .add-user-button-text small {
+        font-size: 9px;
+    }
+
+    .user-table-card {
+        border-radius: 10px;
+    }
+
+    .user-table-header {
+        padding: 16px;
+    }
+
+    .user-table-title {
+        font-size: 16px;
+    }
+
+    .user-table-subtitle {
+        font-size: 12px;
+        line-height: 1.45;
+    }
+
+    .user-count {
+        padding: 6px 10px;
+        font-size: 12px;
+    }
+
+    .user-table-responsive {
+        padding: 10px;
+    }
+
+    .user-management-table tbody td {
+        grid-template-columns: 82px minmax(0, 1fr);
+        gap: 9px;
+        padding: 11px 12px;
+    }
+
+    .user-table-actions {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    #addUserModal .modal-dialog {
+        margin: 8px;
+    }
+
+    .add-user-modal {
+        max-height: calc(100dvh - 16px);
+        border-radius: 10px;
+    }
+
+    .add-user-header {
+        padding: 17px 15px;
+    }
+
+    .add-user-title {
+        font-size: 18px;
+    }
+
+    .add-user-body {
+        max-height: calc(100dvh - 205px);
+        padding: 17px 15px;
+    }
+
+    .add-user-actions {
+        flex-direction: column-reverse;
+        gap: 10px;
+        padding: 14px 15px;
+    }
+
+    .add-user-cancel-btn,
+    .add-user-submit-btn {
+        width: 100%;
+        min-width: 0;
+    }
+}
+
+/* =========================================================
+   Very small phones
+========================================================= */
+
+@media (max-width: 360px) {
+    .users-main-wrapper,
+    body.sidebar-collapsed .users-main-wrapper {
+        padding-right: 9px;
+        padding-left: 9px;
+    }
+
+    .user-page-heading-icon {
+        display: none;
+    }
+
+    .user-page-title {
+        font-size: 19px;
+    }
+
+    .user-management-table tbody td {
+        display: flex;
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .user-management-table tbody td::before {
+        align-self: flex-start;
+    }
+
+    .user-table-actions {
+        width: 100%;
+    }
+
+    .user-staff-id,
+    .user-role-badge,
+    .user-status {
+        justify-self: auto;
+    }
+}

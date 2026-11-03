@@ -73,17 +73,26 @@
             margin-bottom: 30px;
         }
 
-        .form-control {
+        .form-control, .form-select {
             border-radius: 8px;
             padding: 12px;
             border: 1px solid #ced4da;
         }
 
-        .form-control:focus {
+        .form-control:focus, .form-select:focus {
             box-shadow: 0 0 0 0.25rem rgba(30, 60, 114, 0.25);
             border-color: #1e3c72;
         }
-
+        
+        .fp-text {
+		    color: #1e3c72;
+		    font-size: 0.9rem;
+		}
+		
+		.fp-text:hover {
+		    text-decoration: underline !important;
+		}
+        
         .btn-primary {
             background-color: #1e3c72;
             border: none;
@@ -93,9 +102,26 @@
             transition: all 0.3s;
         }
 
+        .modal-footer .btn-primary {
+            background-color: #1e3c72;
+            border: none;
+            border-radius: 8px;
+            padding: 7px 12px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
         .btn-primary:hover {
             background-color: #2a5298;
             transform: translateY(-2px);
+        }
+        
+        .btn-secondary {
+        	font-weight: 600;
+        }
+        
+        .btn-secondary:hover {
+        	transform: translateY(-2px);
         }
 
         .input-group-text {
@@ -151,7 +177,7 @@
 
             <!-- 🔴 ဒီနေရာမှာ Forgot Password လင့်ခ် ထည့်ထားပါတယ် -->
             <div class="d-flex justify-content-end mb-3">
-                <a href="#" class="text-decoration-none" style="color: #1e3c72; font-size: 0.9rem;" data-bs-toggle="modal" data-bs-target="#forgotPasswordModal">
+                <a href="#" class="fp-text text-decoration-none" style="color: #1e3c72; font-size: 0.9rem;" data-bs-toggle="modal" data-bs-target="#forgotPasswordModal">
                     Forgot Password?
                 </a>
             </div>
@@ -171,7 +197,7 @@
                 <h5 class="modal-title" id="forgotPasswordModalLabel"><i class="fa-solid fa-key me-2"></i>Password Reset Request</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body">
+            <div class="modal-body p-4">
                 <div class="alert alert-info py-2" style="font-size: 0.9rem;">
                     Please enter your Staff ID and select a reason. An administrator will review your request.
                 </div>

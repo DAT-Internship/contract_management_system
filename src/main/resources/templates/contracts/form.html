@@ -12,8 +12,15 @@
 					<h1 th:text="${contractForm.contractId != null ? 'Edit Contract' : 'Contract Registration'}">Contract Registration</h1>
 					<p>Enter the agreement details, dates, and contract status.</p>
 				</div>
-				<a class="btn btn-light border" th:href="@{/contracts}"><i class="fa-solid fa-arrow-left me-2" aria-hidden="true"></i>Back to contracts</a>
+				<a class="contract-back-button"
+				   th:href="@{/contracts}">
+				    <span class="contract-back-button-icon">
+				        <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+				    </span>				
+				    <span>Back to Contracts</span>
+				</a>
 			</div>
+			
 			<div th:replace="~{fragments/layout :: alerts}"></div>
 
 			<form th:action="${contractForm.contractId != null ? '/contracts/' + contractForm.contractId : '/contracts'}" th:object="${contractForm}" method="post" id="contractForm" enctype="multipart/form-data">
@@ -72,20 +79,34 @@
 
 				<!-- Attachments section matching screenshot -->
 				<section class="contract-form-card attachment-section-card">
-					<div class="card-title-header">
-						<h2>Attachments</h2>
+					<div class="attachment-card-header">
+					    <div class="attachment-card-heading">
+					        <div class="attachment-heading-icon">
+					            <i class="fa-solid fa-paperclip" aria-hidden="true"></i>
+					        </div>
+					
+					        <div class="attachment-heading-text">
+					            <h2>Attachments</h2>
+					            <p> Add supporting documents related to this contract.</p>
+					        </div>
+					    </div>										    
 					</div>
-					<div class="attachment-box" id="attachmentBox">
-						<div class="attachment-cloud-icon">
-							<i class="fa-solid fa-cloud-arrow-up" aria-hidden="true"></i>
-						</div>
-						<div class="attachment-main-text">Drop contract files here</div>
-						<div class="attachment-sub-text">PDF, DOC/DOCX, XLS/XLSX, JPG, PNG • Multiple files supported</div>
-						<div class="attachment-input-wrapper">
-							<input class="form-control" type="file" id="contractFilesInput" name="files" multiple
-								accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png">
-						</div>
+					
+					<div class="contract-attachment-zone" id="attachmentBox">					
+					    <label class="contract-attachment-drop-area" for="contractFilesInput">					
+					        <i class="fa-solid fa-cloud-arrow-up" aria-hidden="true"></i>					
+					        <strong>Drop contract files here</strong>					
+					        <span>or click to browse files</span>					
+					        <small>PDF, DOC/DOCX, XLS/XLSX, JPG and PNG</small>					
+					        <input class="visually-hidden" type="file" id="contractFilesInput" name="files" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png">					
+					    </label>
+					
+					    <div class="contract-attachment-helper">
+					        <i class="fa-solid fa-circle-info" aria-hidden="true"></i>					
+					        <span>Multiple supporting documents can be selected at once.</span>
+					    </div>					
 					</div>
+					
 					<div class="selected-files-container d-none" id="selectedFilesContainer">
 						<div class="selected-files-title">
 							<span><i class="fa-solid fa-paperclip me-1"></i>Selected files (<span id="fileCount">0</span>)</span>
@@ -96,9 +117,38 @@
 				</section>
 
 				<div class="contract-form-actions">
-					<a class="btn btn-outline-secondary" th:href="@{/contracts}">Cancel</a>
-					<button th:if="${contractForm.contractId == null or isDraft}" class="btn btn-outline-secondary" type="submit" name="action" value="draft" formnovalidate>Save Draft</button>
-					<button class="btn btn-primary" type="submit" name="action" value="submit">Submit for Approval</button>
+
+				    <a class="contract-cancel-action"
+				       th:href="@{/contracts}">
+				        <i class="fa-solid fa-xmark"
+				           aria-hidden="true"></i>
+				        <span>Cancel</span>
+				    </a>
+				
+				    <button th:if="${contractForm.contractId == null or isDraft}"
+				            class="contract-draft-action"
+				            type="submit"
+				            name="action"
+				            value="draft"
+				            formnovalidate>
+				
+				        <i class="fa-regular fa-floppy-disk"
+				           aria-hidden="true"></i>
+				
+				        <span>Save Draft</span>
+				    </button>
+				
+				    <button class="contract-submit-action"
+				            type="submit"
+				            name="action"
+				            value="submit">
+				
+				        <i class="fa-solid fa-paper-plane"
+				           aria-hidden="true"></i>
+				
+				        <span>Submit for Approval</span>
+				    </button>
+				
 				</div>
 			</form>
 		</main>

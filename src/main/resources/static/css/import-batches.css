@@ -1,0 +1,809 @@
+/* ========================================
+   Import Batches Page
+======================================== */
+
+#importBatchesPage {
+    width: 100%;
+    max-width: 100%;
+    padding: 26px 28px 32px;
+    overflow-x: hidden;
+    background-color: #f5f7fb;
+}
+
+/* Page heading */
+.import-page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    margin-bottom: 22px;
+}
+
+.import-page-heading {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    gap: 14px;
+    margin-left: 17px;
+}
+
+.import-page-icon {
+    display: inline-flex;
+    width: 48px;
+    height: 48px;
+    flex: 0 0 48px;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+    background-color: #1e3c72;
+    border-radius: 10px;
+    font-size: 18px;
+    box-shadow: 0 5px 12px rgba(30, 60, 114, 0.18);
+}
+
+.import-page-heading-text {
+    min-width: 0;
+}
+
+.import-page-eyebrow {
+    display: block;
+    margin-bottom: 2px;
+    color: #1e3c72;
+    font-size: 10px;
+    font-weight: 750;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.import-page-heading h1 {
+    margin: 0;
+    color: #172033;
+    font-size: 25px;
+    font-weight: 720;
+    line-height: 1.2;
+}
+
+.import-page-heading p {
+    margin: 5px 0 0;
+    color: #64748b;
+    font-size: 13px;
+    line-height: 1.45;
+}
+
+/* Page buttons */
+.import-page-actions {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 9px;
+    margin-right: 8px;
+}
+
+.import-template-button,
+.import-new-button {
+    display: inline-flex;
+    min-height: 42px;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 9px 15px;
+    border-radius: 7px;
+    font-size: 12px;
+    font-weight: 650;
+    text-decoration: none;
+}
+
+.import-template-button {
+    color: #1e3c72;
+    background-color: #ffffff;
+    border: 1px solid #ccd8e7;
+}
+
+.import-template-button:hover {
+    color: #172033;
+    background-color: #f1f5f9;
+}
+
+.import-new-button {
+    color: #ffffff;
+    background-color: #1e3c72;
+    border: 1px solid #1e3c72;
+}
+
+.import-new-button:hover {
+    color: #ffffff;
+    background-color: #18325f;
+}
+
+/* ========================================
+   Summary cards
+======================================== */
+
+.import-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+    margin-bottom: 18px;
+}
+
+.import-summary-card {
+    display: flex;
+    min-width: 0;
+    min-height: 92px;
+    align-items: center;
+    gap: 13px;
+    padding: 17px;
+    background-color: #ffffff;
+    border: 1px solid #dde5ee;
+    border-radius: 10px;
+    box-shadow: 0 3px 10px rgba(15, 23, 42, 0.04);
+}
+
+.import-summary-icon {
+    display: inline-flex;
+    width: 42px;
+    height: 42px;
+    flex: 0 0 42px;
+    align-items: center;
+    justify-content: center;
+    color: #1e3c72;
+    background-color: #edf3fb;
+    border-radius: 9px;
+    font-size: 16px;
+}
+
+.import-summary-success {
+    color: #15803d;
+    background-color: #ecfdf3;
+}
+
+.import-summary-danger {
+    color: #dc2626;
+    background-color: #fef2f2;
+}
+
+.import-summary-warning {
+    color: #b45309;
+    background-color: #fff7ed;
+}
+
+.import-summary-card > div:last-child {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+}
+
+.import-summary-card span {
+    color: #64748b;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.import-summary-card strong {
+    margin-top: 2px;
+    color: #172033;
+    font-size: 22px;
+    font-weight: 720;
+    line-height: 1.2;
+}
+
+/* ========================================
+   Upload card
+======================================== */
+
+.import-upload-card,
+.import-table-card {
+    overflow: hidden;
+    background-color: #ffffff;
+    border: 1px solid #dde5ee !important;
+    border-radius: 12px !important;
+    box-shadow: 0 3px 12px rgba(15, 23, 42, 0.05) !important;
+}
+
+.form-section-heading h2,
+.import-table-card h2 {
+    margin: 0;
+    color: #172033;
+    font-size: 17px;
+    font-weight: 700;
+}
+
+.form-section-heading p {
+    margin: 5px 0 0;
+    color: #64748b;
+    font-size: 12px;
+}
+
+/* Import-type selector */
+.import-type-button {
+    min-height: 40px;
+    padding: 8px 14px;
+    color: #1e3c72;
+    background-color: #ffffff;
+    border-color: #cbd7e6;
+    font-size: 12px;
+    font-weight: 650;
+}
+
+.import-type-button:hover {
+    color: #1e3c72;
+    background-color: #edf3fb;
+    border-color: #9fb2ca;
+}
+
+.import-type-button.active {
+    color: #ffffff;
+    background-color: #1e3c72;
+    border-color: #1e3c72;
+}
+
+/* Upload area */
+.upload-zone {
+    padding: 16px;
+    background-color: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 9px;
+}
+
+.upload-drop-area {
+    display: flex;
+    min-height: 185px;
+    align-items: center;
+    justify-content: center;
+    padding: 26px 18px;
+    cursor: pointer;
+    flex-direction: column;
+    color: #64748b;
+    background-color: #ffffff;
+    border: 2px dashed #b9c7d8;
+    border-radius: 9px;
+    text-align: center;
+    transition:
+        border-color 0.2s ease,
+        background-color 0.2s ease;
+}
+
+.upload-drop-area:hover {
+    background-color: #f5f8fc;
+    border-color: #1e3c72;
+}
+
+.upload-drop-area > i {
+    margin-bottom: 12px;
+    color: #1e3c72;
+    font-size: 30px;
+}
+
+.upload-drop-area strong {
+    color: #253247;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.upload-drop-area span {
+    margin-top: 5px;
+    color: #7b8798;
+    font-size: 11px;
+}
+
+.upload-helper {
+    margin-top: 13px;
+    padding: 10px 12px;
+    color: #475569;
+    background-color: #eef3f8;
+    border-radius: 6px;
+    font-size: 11px;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+}
+
+.upload-selected {
+    margin-top: 12px;
+    padding: 10px 12px;
+    color: #1e3c72;
+    background-color: #edf3fb;
+    border: 1px solid #d7e4f3;
+    border-radius: 6px;
+    font-size: 12px;
+}
+
+.upload-progress {
+    height: 7px;
+    overflow: hidden;
+    background-color: #e2e8f0;
+    border-radius: 10px;
+}
+
+.upload-progress .progress-bar {
+    background-color: #1e3c72;
+}
+
+.upload-submit {
+    min-height: 40px;
+    padding: 8px 16px;
+    color: #ffffff !important;
+    background-color: #1e3c72 !important;
+    border-color: #1e3c72 !important;
+    border-radius: 7px;
+    font-size: 12px;
+    font-weight: 650;
+}
+
+/* Hover color */
+.upload-submit:hover:not(:disabled) {
+    color: #ffffff !important;
+    background-color: #18325f !important;
+    border-color: #18325f !important;
+}
+
+/* Keyboard focus */
+.upload-submit:focus,
+.upload-submit:focus-visible {
+    color: #ffffff !important;
+    background-color: #18325f !important;
+    border-color: #18325f !important;
+    box-shadow: 0 0 0 3px rgba(30, 60, 114, 0.18) !important;
+}
+
+/* Disabled before a file is selected */
+.upload-submit:disabled {
+    color: #ffffff !important;
+    background-color: #94a3b8 !important;
+    border-color: #94a3b8 !important;
+    cursor: not-allowed;
+    opacity: 0.65;
+}.upload-submit {
+    min-height: 40px;
+    padding: 8px 16px;
+    color: #ffffff !important;
+    background-color: #1e3c72 !important;
+    border-color: #1e3c72 !important;
+    border-radius: 7px;
+    font-size: 12px;
+    font-weight: 650;
+}
+
+/* Hover color */
+.upload-submit:hover:not(:disabled) {
+    color: #ffffff !important;
+    background-color: #18325f !important;
+    border-color: #18325f !important;
+}
+
+/* Keyboard focus */
+.upload-submit:focus,
+.upload-submit:focus-visible {
+    color: #ffffff !important;
+    background-color: #18325f !important;
+    border-color: #18325f !important;
+    box-shadow: 0 0 0 3px rgba(30, 60, 114, 0.18) !important;
+}
+
+/* Disabled before a file is selected */
+.upload-submit:disabled {
+    color: #ffffff !important;
+    background-color: #94a3b8 !important;
+    border-color: #94a3b8 !important;
+    cursor: not-allowed;
+    opacity: 0.65;
+}
+
+/* ========================================
+   History table
+======================================== */
+
+.import-table-card .table-responsive {
+    overflow-x: auto;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    scrollbar-width: thin;
+    scrollbar-color: #9babc0 #f1f5f9;
+}
+
+.import-table-card .table-responsive::-webkit-scrollbar {
+    width: 7px;
+    height: 7px;
+}
+
+.import-table-card .table-responsive::-webkit-scrollbar-track {
+    background-color: #f1f5f9;
+}
+
+.import-table-card .table-responsive::-webkit-scrollbar-thumb {
+    background-color: #9babc0;
+    border-radius: 10px;
+}
+
+.import-table-card .table-responsive::-webkit-scrollbar-thumb:hover {
+    background-color: #1e3c72;
+}
+
+.import-table-card table {
+    min-width: 920px;
+}
+
+.import-table-card thead th {
+    padding: 11px 13px;
+    color: #64748b;
+    background-color: #f7f9fc;
+    border-bottom: 1px solid #e2e8f0;
+    font-size: 10px;
+    font-weight: 750;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    text-transform: uppercase;
+}
+
+.import-table-card tbody td {
+    padding: 12px 13px;
+    color: #334155;
+    border-bottom-color: #edf1f5;
+    font-size: 12px;
+    vertical-align: middle;
+}
+
+.import-table-card tbody tr:hover td {
+    background-color: #f8fafc;
+}
+
+/* Pagination */
+#batchPageSize {
+    min-height: 34px;
+    border-color: #d7e0ea;
+    border-radius: 6px;
+    font-size: 12px;
+}
+
+#batchPagination .page-link {
+    min-width: 32px;
+    color: #1e3c72;
+    font-size: 12px;
+    text-align: center;
+}
+
+#batchPagination .page-item.active .page-link {
+    color: #ffffff;
+    background-color: #1e3c72;
+    border-color: #1e3c72;
+}
+
+/* ========================================
+   Responsive
+======================================== */
+
+@media (max-width: 1100px) {
+    .import-summary-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 700px) {
+    #importBatchesPage {
+        padding: 20px 16px 26px;
+    }
+
+    .import-page-header {
+        align-items: stretch;
+        flex-direction: column;
+        gap: 17px;
+    }
+
+    .import-page-heading {
+        align-items: flex-start;
+    }
+
+    .import-page-icon {
+        width: 44px;
+        height: 44px;
+        flex-basis: 44px;
+        font-size: 16px;
+    }
+
+    .import-page-heading h1 {
+        font-size: 22px;
+    }
+
+    .import-page-heading p {
+        font-size: 12px;
+    }
+
+    .import-page-actions {
+        width: 100%;
+    }
+
+    .import-template-button,
+    .import-new-button {
+        flex: 1 1 0;
+    }
+
+    .import-summary-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    .import-summary-card {
+        min-height: 82px;
+        padding: 13px;
+    }
+
+    .import-summary-icon {
+        width: 38px;
+        height: 38px;
+        flex-basis: 38px;
+    }
+
+    .import-upload-card,
+    .import-table-card {
+        padding: 18px !important;
+    }
+
+    .btn-group {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        width: 100%;
+    }
+
+    .import-type-button {
+        min-width: 0;
+    }
+
+    .upload-drop-area {
+        min-height: 165px;
+    }
+
+    .import-table-card table {
+        min-width: 850px;
+    }
+}
+
+@media (max-width: 480px) {
+    #importBatchesPage {
+        padding: 16px 12px 22px;
+    }
+
+    .import-page-icon {
+        display: none;
+    }
+
+    .import-page-heading h1 {
+        font-size: 20px;
+    }
+
+    .import-page-actions {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .import-template-button,
+    .import-new-button {
+        width: 100%;
+    }
+
+    .import-summary-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .import-summary-card {
+        min-height: 76px;
+    }
+
+    .import-upload-card,
+    .import-table-card {
+        padding: 15px !important;
+        border-radius: 10px !important;
+    }
+
+    .btn-group {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .import-type-button {
+        width: 100%;
+        border-radius: 6px !important;
+    }
+
+    .upload-zone {
+        padding: 12px;
+    }
+
+    .upload-drop-area {
+        min-height: 145px;
+        padding: 20px 12px;
+    }
+
+    .upload-drop-area > i {
+        font-size: 26px;
+    }
+
+    .import-table-card > .d-flex:last-child {
+        align-items: stretch !important;
+        flex-direction: column;
+    }
+
+    .import-table-card > .d-flex:last-child > div {
+        justify-content: space-between;
+        width: 100%;
+    }
+}
+
+/* Import status badges */
+.import-table-card .badge.text-bg-success {
+    color: #166534 !important;
+    background-color: #dcfce7 !important;
+}
+
+.import-table-card .badge.text-bg-danger {
+    color: #b91c1c !important;
+    background-color: #fee2e2 !important;
+}
+
+.import-table-card .badge.text-bg-warning {
+    color: #a16207 !important;
+    background-color: #fef9c3 !important;
+}
+
+.import-table-card .badge.text-bg-info {
+    color: #1e3c72 !important;
+    background-color: #e8f0fb !important;
+}
+
+.import-table-card .badge.text-bg-secondary {
+    color: #475569 !important;
+    background-color: #f1f5f9 !important;
+}
+
+.import-type-button.btn-primary,
+.import-type-button.active {
+    color: #ffffff;
+    background-color: #1e3c72;
+    border-color: #1e3c72;
+}
+
+.import-type-button.btn-primary:hover,
+.import-type-button.active:hover {
+    color: #ffffff;
+    background-color: #18325f;
+    border-color: #18325f;
+}
+
+.import-type-button.btn-outline-primary {
+    color: #1e3c72;
+    background-color: #ffffff;
+    border-color: #cbd7e6;
+}
+
+.import-type-button.btn-outline-primary:hover {
+    color: #1e3c72;
+    background-color: #edf3fb;
+    border-color: #9fb2ca;
+}
+
+.import-table-card .btn-outline-primary {
+    color: #1e3c72;
+    background-color: #ffffff;
+    border-color: #b9c8da;
+}
+
+.import-table-card .btn-outline-primary:hover {
+    color: #ffffff;
+    background-color: #1e3c72;
+    border-color: #1e3c72;
+}
+
+.import-table-card .btn-link {
+    color: #1e3c72;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.import-table-card .btn-link:hover {
+    color: #132b54;
+    text-decoration: underline !important;
+}
+
+.import-table-card .badge.text-bg-light {
+    color: #1e3c72 !important;
+    background-color: #edf3fb !important;
+    border: 1px solid #d7e4f3;
+}
+
+.upload-progress .progress-bar {
+    background-color: #1e3c72;
+}
+
+/* ========================================
+   Selected upload file
+======================================== */
+
+.upload-selected {
+    display: flex;
+    min-width: 0;
+    min-height: 50px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    margin-top: 12px;
+    padding: 10px 11px 10px 14px;
+    color: #1e3c72;
+    background-color: #edf3fb;
+    border: 1px solid #cfdeef;
+    border-radius: 7px;
+    font-size: 12px;
+}
+
+/* Keep Bootstrap's hidden state working */
+.upload-selected.d-none {
+    display: none !important;
+}
+
+.upload-selected-info {
+    display: flex;
+    min-width: 0;
+    flex: 1 1 auto;
+    align-items: center;
+    gap: 10px;
+}
+
+.upload-selected-info > i {
+    flex: 0 0 auto;
+    color: #15803d;
+    font-size: 17px;
+}
+
+.upload-selected-name {
+    min-width: 0;
+    color: #1e3c72;
+    font-weight: 650;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Remove-file button */
+.upload-remove-file {
+    display: inline-flex;
+    width: 32px;
+    height: 32px;
+    flex: 0 0 32px;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    color: #64748b;
+    cursor: pointer;
+    background-color: #ffffff;
+    border: 1px solid #cfdae7;
+    border-radius: 6px;
+    transition:
+        color 0.18s ease,
+        background-color 0.18s ease,
+        border-color 0.18s ease;
+}
+
+.upload-remove-file:hover {
+    color: #b91c1c;
+    background-color: #fef2f2;
+    border-color: #fecaca;
+}
+
+.upload-remove-file:focus-visible {
+    outline: 3px solid rgba(30, 60, 114, 0.18);
+    outline-offset: 2px;
+}
+
+@media (max-width: 480px) {
+    .upload-selected {
+        min-height: 48px;
+        gap: 9px;
+        padding: 9px 9px 9px 11px;
+    }
+
+    .upload-selected-name {
+        font-size: 11px;
+    }
+
+    .upload-remove-file {
+        width: 34px;
+        height: 34px;
+        flex-basis: 34px;
+    }
+}
