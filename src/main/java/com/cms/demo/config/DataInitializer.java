@@ -16,12 +16,15 @@ import java.time.LocalDateTime;
 @Configuration
 public class DataInitializer implements CommandLineRunner {
 
+    private static final String DEFAULT_ADMIN_CODE = "25-00001";
+    private static final String DEFAULT_FINANCE_CODE = "25-00002";
+
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final DepartmentRepository departmentRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public DataInitializer(UserRepository userRepository, RoleRepository roleRepository, 
+    public DataInitializer(UserRepository userRepository, RoleRepository roleRepository,
                            DepartmentRepository departmentRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
@@ -31,53 +34,65 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     @Transactional
-    public void run(String... args) throws Exception {
-        System.out.println("🔍 Checking for Default User...");
-        
-        // ၁။ Admin User ရှိပြီးသားလား အရင်စစ်မယ်
-        if (userRepository.findByEmployeeCode("25-00001").isEmpty()) {
-            
-            // ၂။ Department မရှိရင် "Management" ဆိုတဲ့ ဌာန ဆောက်မယ်
-            Department dept = departmentRepository.findByDeptCodeIgnoreCase("MGMT").orElseGet(() -> {
-                // parent_dept_id is NOT NULL; attach new departments to the seeded ROOT row.
-                Department root = departmentRepository.findByDeptCodeIgnoreCase("ROOT")
-                        .orElseThrow(() -> new IllegalStateException(
-                                "ROOT department is missing; verify database migrations have run"));
+    public void run(String... args) {
+        System.out.println("Checking for default users...");
 
-                Department newDept = new Department();
-                newDept.setDeptCode("MGMT");
-                newDept.setDeptName("Management");
-                newDept.setIsActive(true);
-                newDept.setCreatedAt(LocalDateTime.now());
-                newDept.setParentDepartment(root);
-                return departmentRepository.save(newDept);
-            });
+        Department management = ensureDepartment("MGMT", "Management");
+        ensureUser(DEFAULT_ADMIN_CODE, "System Administrator", "admin@cms.com", "admin123",
+                "ADMIN", "Administrator", "Full system access", management);
 
-            // ၃။ Role မရှိရင် "ADMIN" Role ဆောက်မယ်
-            Role role = roleRepository.findByRoleCode("ADMIN").orElseGet(() -> {
-                Role newRole = new Role();
-                newRole.setRoleCode("ADMIN");
-                newRole.setRoleName("Administrator");
-                return roleRepository.save(newRole);
-            });
+        Department financeDepartment = departmentRepository.findByDeptCodeIgnoreCase("D006")
+                .orElse(management);
+        ensureUser(DEFAULT_FINANCE_CODE, "Finance User", "finance@cms.com", "finance123",
+                "FINANCE", "Finance", "View all contracts and manage payment records", financeDepartment);
+    }
 
-            // ၄။ Default Admin User ကို ဖန်တီးမယ်
-            User admin = new User();
-            admin.setEmployeeCode("25-00001"); 
-            admin.setFullName("System Administrator");
-            admin.setEmail("admin@cms.com");
-            admin.setPasswordHash(passwordEncoder.encode("admin123")); 
-            admin.setDepartment(dept);
-            admin.setRole(role);
-            admin.setIsActive(true);
-            admin.setCreatedAt(LocalDateTime.now());
-            admin.setUpdatedAt(LocalDateTime.now());
+    private Department ensureDepartment(String code, String name) {
+        return departmentRepository.findByDeptCodeIgnoreCase(code).orElseGet(() -> {
+            // parent_dept_id is NOT NULL; attach new departments to the seeded ROOT row.
+            Department root = departmentRepository.findByDeptCodeIgnoreCase("ROOT")
+                    .orElseThrow(() -> new IllegalStateException(
+                            "ROOT department is missing; verify database migrations have run"));
 
-            // ၅။ Database ထဲ သိမ်းမယ်
-            userRepository.save(admin);
-            System.out.println("✅ Default Admin User (25-00001) created successfully in Database!");
-        } else {
-            System.out.println("ℹ️ Default Admin User already exists in Database.");
+            Department department = new Department();
+            department.setDeptCode(code);
+            department.setDeptName(name);
+            department.setIsActive(true);
+            department.setCreatedAt(LocalDateTime.now());
+            department.setParentDepartment(root);
+            return departmentRepository.save(department);
+        });
+    }
+
+    private Role ensureRole(String code, String name, String description) {
+        return roleRepository.findByRoleCode(code).orElseGet(() -> {
+            Role role = new Role();
+            role.setRoleCode(code);
+            role.setRoleName(name);
+            role.setDescription(description);
+            return roleRepository.save(role);
+        });
+    }
+
+    private void ensureUser(String employeeCode, String fullName, String email, String password,
+                           String roleCode, String roleName, String roleDescription,
+                           Department department) {
+        if (userRepository.findByEmployeeCode(employeeCode).isPresent()) {
+            System.out.println("Default user " + employeeCode + " already exists.");
+            return;
         }
+
+        User user = new User();
+        user.setEmployeeCode(employeeCode);
+        user.setFullName(fullName);
+        user.setEmail(email);
+        user.setPasswordHash(passwordEncoder.encode(password));
+        user.setDepartment(department);
+        user.setRole(ensureRole(roleCode, roleName, roleDescription));
+        user.setIsActive(true);
+        user.setCreatedAt(LocalDateTime.now());
+        user.setUpdatedAt(LocalDateTime.now());
+        userRepository.save(user);
+        System.out.println("Default " + roleName + " user (" + employeeCode + ") created successfully.");
     }
 }

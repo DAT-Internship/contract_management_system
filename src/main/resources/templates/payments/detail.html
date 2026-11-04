@@ -1,0 +1,663 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head('Payment Details')}"></head>
+<body>
+<aside th:replace="~{fragments/layout :: sidebar}"></aside>
+<div class="main-area">
+    <header class="topbar detail-topbar">
+        <div class="d-flex align-items-center gap-3">
+            <button class="btn btn-light menu-toggle" type="button" aria-label="Toggle navigation"
+                    onclick="document.body.classList.toggle('sidebar-open')">
+                <i class="fa-solid fa-bars" aria-hidden="true"></i>
+            </button>
+            <a class="btn btn-light btn-sm detail-back-button" th:href="@{/payments}" aria-label="Back to payments">
+                <i class="fa-solid fa-arrow-left"></i>
+            </a>
+            <div>
+                <h1 class="top-title mb-0" th:text="${contract.contractNo}">Contract No</h1>
+                <div class="small text-muted">
+                    <span th:text="${contract.partyName ?: '-'}">Customer</span>
+                    <span> - </span>
+                    <span th:text="${contract.paymentTypeName ?: 'No payment type'}">Payment type</span>
+                </div>
+            </div>
+        </div>
+        <div class="detail-topbar-actions">
+            <span class="status-badge"
+                  th:classappend="${' status-' + #strings.replace(#strings.toLowerCase(contract.paymentStatus), '_', '-')}"
+                  th:text="${contract.paymentStatusName}">Pending</span>
+            <button class="btn btn-primary btn-sm js-add-invoice" type="button" sec:authorize="hasRole('FINANCE')">
+                <i class="fa-solid fa-plus me-1"></i>Add Invoice
+            </button>
+        </div>
+    </header>
+
+    <main class="page-content contract-detail-content payment-detail-page">
+        <div th:replace="~{fragments/layout :: alerts}"></div>
+
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb small mb-0">
+                <li class="breadcrumb-item"><a th:href="@{/dashboard}">Home</a></li>
+                <li class="breadcrumb-item"><a th:href="@{/payments}">Payments</a></li>
+                <li class="breadcrumb-item active" aria-current="page" th:text="${contract.contractNo}">Contract</li>
+            </ol>
+        </nav>
+
+        <div class="row g-4 align-items-start">
+            <div class="col-12 col-xl-8 detail-main-column">
+                <section class="card border-0 shadow-sm rounded-4 p-4 mb-4 detail-card payment-summary-card">
+                    <div class="card-title-header px-0 pt-0">
+                        <div>
+                            <h2>Payment Summary</h2>
+                            <p class="payment-summary-caption mb-0">
+                                Contract gross, invoiced, received, and outstanding amounts.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="row row-cols-2 row-cols-lg-5 g-2">
+                        <div class="col">
+                            <div class="payment-stat text-center">
+                                <div class="payment-label">CONTRACT GROSS</div>
+                                <div class="payment-amount"
+                                     th:text="${(contract.currencyCode ?: '') + ' ' + #numbers.formatDecimal(contract.contractGross, 1, 2)}">0.00</div>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="payment-stat text-center">
+                                <div class="payment-label">INVOICED</div>
+                                <div class="payment-amount"
+                                     th:text="${(contract.currencyCode ?: '') + ' ' + #numbers.formatDecimal(contract.totalInvoiced, 1, 2)}">0.00</div>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="payment-stat text-center">
+                                <div class="payment-label">PAID</div>
+                                <div class="payment-amount paid-amount"
+                                     th:text="${(contract.currencyCode ?: '') + ' ' + #numbers.formatDecimal(contract.totalPaid, 1, 2)}">0.00</div>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="payment-stat text-center">
+                                <div class="payment-label">OUTSTANDING</div>
+                                <div class="payment-amount outstanding-amount"
+                                     th:text="${(contract.currencyCode ?: '') + ' ' + #numbers.formatDecimal(contract.outstandingAmount, 1, 2)}">0.00</div>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="payment-stat text-center">
+                                <div class="payment-label">PROGRESS</div>
+                                <div class="payment-amount" th:text="${contract.paymentProgressPercent + '%'}">0%</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="progress mt-3 payment-progress" role="progressbar"
+                         th:attr="aria-valuenow=${contract.paymentProgressPercent}" aria-valuemin="0" aria-valuemax="100">
+                        <div class="progress-bar" th:style="|width:${contract.paymentProgressPercent}%|"></div>
+                    </div>
+                </section>
+
+                <section class="card border-0 shadow-sm rounded-4 p-4 mb-4 detail-card">
+                    <div class="card-title-header px-0 pt-0 d-flex justify-content-between align-items-start gap-3">
+                        <div>
+                            <h2>Invoices &amp; Scheduled Payments</h2>
+                            <p class="text-muted small mb-0">
+                                <span th:text="${contract.invoiceCount}">0</span> invoice(s)
+                                <span th:if="${contract.nextDueDate != null}">
+                                    - next due <span th:text="${#temporals.format(contract.nextDueDate, 'dd MMM yyyy')}">-</span>
+                                </span>
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive payment-invoice-table">
+                        <table class="table align-middle mb-0">
+                            <thead>
+                            <tr>
+                                <th>INVOICE</th>
+                                <th>DUE DATE</th>
+                                <th>TOTAL</th>
+                                <th>PAID</th>
+                                <th>OUTSTANDING</th>
+                                <th>STATUS</th>
+                                <th class="text-end">ACTIONS</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="invoice : ${invoices}">
+                                <td>
+                                    <div class="fw-semibold" th:text="${invoice.invoiceNo ?: 'Unbilled'}">Invoice</div>
+                                    <small class="text-muted d-block text-truncate payment-invoice-description"
+                                           th:text="${invoice.description}" th:title="${invoice.description}">Description</small>
+                                </td>
+                                <td class="text-nowrap"
+                                    th:text="${invoice.dueDate != null ? #temporals.format(invoice.dueDate, 'dd MMM yyyy') : '-'}">-</td>
+                                <td class="text-nowrap"
+                                    th:text="${(invoice.currencyCode ?: '') + ' ' + #numbers.formatDecimal(invoice.totalAmount, 1, 2)}">0.00</td>
+                                <td class="text-nowrap text-success fw-semibold"
+                                    th:text="${#numbers.formatDecimal(invoice.paidAmount, 1, 2)}">0.00</td>
+                                <td class="text-nowrap fw-semibold"
+                                    th:classappend="${invoice.outstandingAmount != null and invoice.outstandingAmount.signum() > 0} ? ' text-warning' : ' text-success'"
+                                    th:text="${#numbers.formatDecimal(invoice.outstandingAmount, 1, 2)}">0.00</td>
+                                <td>
+                                    <span class="status-badge"
+                                          th:classappend="${' status-' + #strings.replace(#strings.toLowerCase(invoice.statusCode), '_', '-')}"
+                                          th:text="${invoice.statusName}">Pending</span>
+                                </td>
+                                <td class="text-end">
+                                    <div class="d-inline-flex gap-1 payment-invoice-actions">
+                                        <button class="btn btn-sm btn-outline-primary js-view-invoice" type="button"
+                                                title="View invoice"
+                                                th:attr="data-invoice-no=${invoice.invoiceNo != null ? invoice.invoiceNo : 'Unbilled'},
+                                                         data-description=${invoice.description},
+                                                         data-invoice-date=${invoice.invoiceDate != null ? #temporals.format(invoice.invoiceDate, 'dd MMM yyyy') : '-'},
+                                                         data-due-date=${invoice.dueDate != null ? #temporals.format(invoice.dueDate, 'dd MMM yyyy') : '-'},
+                                                         data-currency=${invoice.currencyCode ?: '-'},
+                                                         data-amount=${#numbers.formatDecimal(invoice.amount, 1, 2)},
+                                                         data-tax-amount=${#numbers.formatDecimal(invoice.taxAmount, 1, 2)},
+                                                         data-total-amount=${#numbers.formatDecimal(invoice.totalAmount, 1, 2)},
+                                                         data-paid-amount=${#numbers.formatDecimal(invoice.paidAmount, 1, 2)},
+                                                         data-outstanding-amount=${#numbers.formatDecimal(invoice.outstandingAmount, 1, 2)},
+                                                         data-paid-date=${invoice.paidDate != null ? #temporals.format(invoice.paidDate, 'dd MMM yyyy') : '-'},
+                                                         data-status-code=${invoice.statusCode},
+                                                         data-status-name=${invoice.statusName},
+                                                         data-updated-at=${invoice.updatedAt != null ? #temporals.format(invoice.updatedAt, 'dd MMM yyyy HH:mm') : '-'},
+                                                         data-updated-by=${invoice.updatedBy ?: '-'}">
+                                            <i class="fa-solid fa-eye me-1"></i>View
+                                        </button>
+                                        <div class="d-inline-flex gap-1" sec:authorize="hasRole('FINANCE')">
+                                            <button class="btn btn-sm btn-outline-success js-pay-invoice" type="button"
+                                                    th:attr="data-invoice-id=${invoice.invoiceId},
+                                                             data-invoice-no=${invoice.invoiceNo != null ? invoice.invoiceNo : 'Unbilled'},
+                                                             data-paid-amount=${invoice.paidAmount},
+                                                             data-total-amount=${invoice.totalAmount}">
+                                                <i class="fa-solid fa-arrows-rotate me-1"></i>Update
+                                            </button>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(invoices)}">
+                                <td colspan="7" class="empty-state text-center">
+                                    <div class="empty-icon"><i class="fa-regular fa-file-lines"></i></div>
+                                    <strong>No invoices yet</strong>
+                                    <span sec:authorize="hasRole('FINANCE')">Add the first invoice or scheduled payment.</span>
+                                    <span sec:authorize="!hasRole('FINANCE')">No payment records have been added.</span>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+
+            <div class="col-12 col-xl-4 detail-side-column d-grid align-content-start gap-3">
+                <section class="card border-0 shadow-sm rounded-4 p-4 detail-card">
+                    <div class="card-title-header px-0 pt-0">
+                        <h2>Contract Information</h2>
+                    </div>
+                    <div class="row row-cols-2 g-3">
+                        <div class="col">
+                            <div class="detail-label">Contract</div>
+                            <div class="detail-value" th:text="${contract.contractNo}">Contract</div>
+                        </div>
+                        <div class="col">
+                            <div class="detail-label">Customer</div>
+                            <div class="detail-value" th:text="${contract.partyName ?: '-'}">Customer</div>
+                        </div>
+                        <div class="col">
+                            <div class="detail-label">Payment type</div>
+                            <div class="detail-value" th:text="${contract.paymentTypeName ?: '-'}">Type</div>
+                        </div>
+                        <div class="col">
+                            <div class="detail-label">Tax rate</div>
+                            <div class="detail-value" th:text="${contract.commercialTaxRate != null ? contract.commercialTaxRate + '%' : '-'}">-</div>
+                        </div>
+                        <div class="col">
+                            <div class="detail-label">Contract period</div>
+                            <div class="detail-value"
+                                 th:text="${contract.startDate != null and contract.endDate != null ? #temporals.format(contract.startDate, 'dd MMM yyyy') + ' - ' + #temporals.format(contract.endDate, 'dd MMM yyyy') : '-'}">-</div>
+                        </div>
+                        <div class="col">
+                            <div class="detail-label">Remaining</div>
+                            <div class="detail-value" th:text="${contract.remainingDays + ' days'}">0 days</div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="card border-0 shadow-sm rounded-4 p-4 detail-card">
+                    <div class="card-title-header px-0 pt-0">
+                        <h2>Payment History</h2>
+                        <p class="text-muted small mb-0">Audit trail for this contract's invoices.</p>
+                    </div>
+                    <div th:if="${#lists.isEmpty(history)}" class="text-muted small">No payment history yet.</div>
+                    <div class="payment-history" th:unless="${#lists.isEmpty(history)}">
+                        <article class="payment-history-item" th:each="entry : ${history}">
+                            <div class="payment-history-dot"></div>
+                            <div class="payment-history-body">
+                                <div class="d-flex justify-content-between gap-2">
+                                    <strong th:text="${#strings.replace(entry.action, '_', ' ')}">ACTION</strong>
+                                    <small th:text="${entry.createdAt != null ? #temporals.format(entry.createdAt, 'dd MMM yyyy HH:mm') : '-'}">-</small>
+                                </div>
+                                <div class="small text-muted">
+                                    <span th:text="${entry.actorName ?: 'System'}">System</span>
+                                    <span th:if="${entry.actorRole != null}" th:text="${' - ' + entry.actorRole}"></span>
+                                </div>
+                                <div class="small mt-1"
+                                     th:if="${entry.newValue != null and entry.newValue.has('note')}"
+                                     th:text="${entry.newValue.get('note').asText()}">Note</div>
+                            </div>
+                        </article>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </main>
+</div>
+
+<div class="modal fade" id="invoiceModal" tabindex="-1" aria-labelledby="invoiceModalTitle" aria-hidden="true"
+     sec:authorize="hasRole('FINANCE')">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <form id="invoiceForm" th:action="@{/payments/{id}/invoices/save(id=${contract.contractId})}"
+                  th:object="${invoiceForm}" method="post"
+                  th:attr="data-tax-rate=${contract.commercialTaxRate != null ? contract.commercialTaxRate : 0},
+                           data-default-due-days=${defaultDueDays},
+                           data-payment-type=${contract.paymentTypeName},
+                           data-contract-gross=${contract.contractGross},
+                           data-total-invoiced=${contract.totalInvoiced}">
+                <div class="modal-header">
+                    <h2 class="modal-title fs-5" id="invoiceModalTitle">Add invoice</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" th:field="*{invoiceId}">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label required" for="description">Description</label>
+                            <textarea class="form-control" id="description" rows="2" th:field="*{description}"
+                                      th:classappend="${#fields.hasErrors('description')} ? ' is-invalid'"
+                                      placeholder="What is this invoice for?"></textarea>
+                            <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('description')}"
+                                 th:errors="*{description}"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="invoiceNo">Invoice number</label>
+                            <input class="form-control" id="invoiceNo" th:field="*{invoiceNo}"
+                                   th:classappend="${#fields.hasErrors('invoiceNo')} ? ' is-invalid'"
+                                   placeholder="Optional">
+                            <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('invoiceNo')}"
+                                 th:errors="*{invoiceNo}"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="currencyId">Currency</label>
+                            <select class="form-select" id="currencyId" th:field="*{currencyId}">
+                                <option value="">Contract / existing currency</option>
+                                <option th:each="currency : ${currencies}" th:value="${currency.id}"
+                                        th:text="${currency.code + ' - ' + currency.name}"></option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="invoiceDate">Invoice date</label>
+                            <input class="form-control" id="invoiceDate" type="date" th:field="*{invoiceDate}"
+                                   th:classappend="${#fields.hasErrors('invoiceDate')} ? ' is-invalid'">
+                            <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('invoiceDate')}"
+                                 th:errors="*{invoiceDate}"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label required" for="dueDate">Due date</label>
+                            <input class="form-control" id="dueDate" type="date" th:field="*{dueDate}"
+                                   th:classappend="${#fields.hasErrors('dueDate')} ? ' is-invalid'">
+                            <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('dueDate')}"
+                                 th:errors="*{dueDate}"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label required" for="amount">Amount before tax</label>
+                            <input class="form-control" id="amount" type="number" step="0.01" min="0"
+                                   th:field="*{amount}"
+                                   th:classappend="${#fields.hasErrors('amount')} ? ' is-invalid'">
+                            <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('amount')}"
+                                 th:errors="*{amount}"></div>
+                            <div class="form-text" id="amountLimitHelp">Invoice total including tax cannot exceed the remaining contract gross.</div>
+                            <div class="invalid-feedback d-block" id="amountLimitError" aria-live="polite"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="taxAmount">Tax amount</label>
+                            <input class="form-control" id="taxAmount" type="number" step="0.01" min="0"
+                                   th:field="*{taxAmount}"
+                                   th:classappend="${#fields.hasErrors('taxAmount')} ? ' is-invalid'"
+                                   placeholder="Auto from contract rate">
+                            <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('taxAmount')}"
+                                 th:errors="*{taxAmount}"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="paymentStatusId">Payment status</label>
+                            <select class="form-select" id="paymentStatusId" th:field="*{paymentStatusId}">
+                                <option value="">Automatic (based on amounts and due date)</option>
+                                <option th:each="status : ${paymentStatuses}" th:value="${status.id}"
+                                        th:text="${status.name}"></option>
+                            </select>
+                            <div class="form-text">Leave automatic to derive the status from the paid amount and due date.</div>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label" for="note">Note</label>
+                            <textarea class="form-control" id="note" rows="2" th:field="*{note}"
+                                      placeholder="Optional note for the audit trail"></textarea>
+                        </div>
+                    </div>
+                    <p class="small text-muted mb-0 mt-3">
+                        If tax is left blank, the contract commercial tax rate
+                        (<span th:text="${contract.commercialTaxRate != null ? contract.commercialTaxRate + '%' : '0%'}">0%</span>)
+                        is applied automatically.
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save invoice</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="invoiceViewModal" tabindex="-1" aria-labelledby="invoiceViewModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title fs-5" id="invoiceViewModalTitle">Invoice details</h2>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="detail-label">Invoice number</div>
+                        <div class="detail-value" id="viewInvoiceNo">-</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-label">Payment status</div>
+                        <div><span class="status-badge" id="viewInvoiceStatus">Pending</span></div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-label">Invoice date</div>
+                        <div class="detail-value" id="viewInvoiceDate">-</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-label">Due date</div>
+                        <div class="detail-value" id="viewInvoiceDueDate">-</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-label">Currency</div>
+                        <div class="detail-value" id="viewInvoiceCurrency">-</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-label">Amount before tax</div>
+                        <div class="detail-value" id="viewInvoiceAmount">-</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-label">Tax amount</div>
+                        <div class="detail-value" id="viewInvoiceTaxAmount">-</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-label">Total amount</div>
+                        <div class="detail-value" id="viewInvoiceTotalAmount">-</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-label">Paid amount</div>
+                        <div class="detail-value" id="viewInvoicePaidAmount">-</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-label">Outstanding amount</div>
+                        <div class="detail-value" id="viewInvoiceOutstandingAmount">-</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-label">Paid date</div>
+                        <div class="detail-value" id="viewInvoicePaidDate">-</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-label">Last updated</div>
+                        <div class="detail-value" id="viewInvoiceUpdatedAt">-</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-label">Updated by</div>
+                        <div class="detail-value" id="viewInvoiceUpdatedBy">-</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-label">Description</div>
+                        <div class="detail-value" id="viewInvoiceDescription">-</div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="paymentModal" tabindex="-1" aria-labelledby="paymentModalTitle" aria-hidden="true"
+     sec:authorize="hasRole('FINANCE')">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form id="paymentForm" th:action="@{/payments/{id}/payment(id=${contract.contractId})}"
+                  th:object="${paymentForm}" method="post">
+                <div class="modal-header">
+                    <div>
+                        <h2 class="modal-title fs-5" id="paymentModalTitle">Record payment</h2>
+                        <div class="small text-muted">
+                            <span id="paymentInvoiceLabel">Invoice</span>
+                            <span> - total </span>
+                            <span id="paymentTotalLabel">0.00</span>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" th:field="*{invoiceId}">
+                    <div class="mb-3">
+                        <label class="form-label required" for="paidAmount">Cumulative paid amount</label>
+                        <input class="form-control" id="paidAmount" type="number" step="0.01" min="0"
+                               th:field="*{paidAmount}"
+                               th:classappend="${#fields.hasErrors('paidAmount')} ? ' is-invalid'">
+                        <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('paidAmount')}"
+                             th:errors="*{paidAmount}"></div>
+                        <div class="form-text">Enter the total received so far, not only this payment.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="paidDate">Payment date</label>
+                        <input class="form-control" id="paidDate" type="date" th:field="*{paidDate}">
+                    </div>
+                    <div class="mb-0">
+                        <label class="form-label required" for="paymentNote">Note</label>
+                        <textarea class="form-control" id="paymentNote" rows="2" th:field="*{note}"
+                                  th:classappend="${#fields.hasErrors('note')} ? ' is-invalid'"
+                                  placeholder="Bank reference, receipt number, or reason"></textarea>
+                        <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('note')}"
+                             th:errors="*{note}"></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success">Save payment</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+<script th:inline="javascript">
+    (() => {
+        const invoiceModalElement = document.getElementById('invoiceModal');
+        const invoiceViewModalElement = document.getElementById('invoiceViewModal');
+        const paymentModalElement = document.getElementById('paymentModal');
+        const invoiceModal = invoiceModalElement ? new bootstrap.Modal(invoiceModalElement) : null;
+        const invoiceViewModal = invoiceViewModalElement ? new bootstrap.Modal(invoiceViewModalElement) : null;
+        const paymentModal = paymentModalElement ? new bootstrap.Modal(paymentModalElement) : null;
+        const invoiceForm = document.getElementById('invoiceForm');
+        const paymentForm = document.getElementById('paymentForm');
+        const invoiceTitle = document.getElementById('invoiceModalTitle');
+        const paymentInvoiceLabel = document.getElementById('paymentInvoiceLabel');
+        const paymentTotalLabel = document.getElementById('paymentTotalLabel');
+
+        const setValue = (form, name, value) => {
+            if (form && form.elements[name]) form.elements[name].value = value ?? '';
+        };
+
+        const taxRate = parseFloat(invoiceForm?.dataset.taxRate) || 0;
+        const defaultDueDays = parseInt(invoiceForm?.dataset.defaultDueDays, 10) || 30;
+        let taxManuallyEdited = false;
+        const paymentType = (invoiceForm?.dataset.paymentType || '').trim().toLowerCase();
+        const isManualDueDate = paymentType === 'milestone-based' || paymentType === 'lump sum';
+        const contractGross = parseFloat(invoiceForm?.dataset.contractGross) || 0;
+        const totalInvoiced = parseFloat(invoiceForm?.dataset.totalInvoiced) || 0;
+
+        const addDays = (isoDate, days) => {
+            const base = isoDate ? new Date(isoDate + 'T00:00:00') : new Date();
+            if (Number.isNaN(base.getTime())) return '';
+            base.setDate(base.getDate() + days);
+            return formatLocalDate(base);
+        };
+
+        const formatLocalDate = date => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+
+        const recalculateTax = () => {
+            if (!invoiceForm || taxManuallyEdited) return;
+            const amount = parseFloat(invoiceForm.elements['amount']?.value);
+            if (Number.isNaN(amount)) return;
+            const tax = Math.round(amount * taxRate) / 100;
+            setValue(invoiceForm, 'taxAmount', tax.toFixed(2));
+        };
+
+        const recalculateDueDate = () => {
+            if (!invoiceForm || isManualDueDate) return;
+            const invoiceDate = invoiceForm.elements['invoiceDate']?.value;
+            if (!invoiceDate) return;
+            const months = { 'monthly': 1, 'quarterly': 3, 'semi-annual': 6, 'annual': 12 }[paymentType];
+            let next = '';
+            if (paymentType === 'lump sum') next = invoiceDate;
+            else if (months) {
+                const date = new Date(invoiceDate + 'T00:00:00');
+                const day = date.getDate();
+                date.setDate(1);
+                date.setMonth(date.getMonth() + months);
+                const lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+                date.setDate(Math.min(day, lastDay));
+                next = formatLocalDate(date);
+            } else next = addDays(invoiceDate, defaultDueDays);
+            if (next) setValue(invoiceForm, 'dueDate', next);
+        };
+
+        if (invoiceForm?.elements['dueDate']) {
+            invoiceForm.elements['dueDate'].readOnly = !isManualDueDate;
+        }
+
+        const validateInvoiceTotal = () => {
+            if (!invoiceForm) return true;
+            const amount = parseFloat(invoiceForm.elements['amount']?.value) || 0;
+            const taxInput = invoiceForm.elements['taxAmount']?.value;
+            const tax = taxInput === '' || taxInput == null
+                ? Math.round(amount * taxRate) / 100
+                : (parseFloat(taxInput) || 0);
+            const invoiceId = invoiceForm.elements['invoiceId']?.value;
+            const currentTotal = invoiceId
+                ? (parseFloat(document.querySelector(`[data-invoice-id="${invoiceId}"]`)?.dataset.totalAmount) || 0)
+                : 0;
+            const available = Math.max(0, contractGross - totalInvoiced + currentTotal);
+            const exceeds = amount + tax > available + 0.001;
+            const amountField = invoiceForm.elements['amount'];
+            const error = document.getElementById('amountLimitError');
+            amountField?.setCustomValidity(exceeds
+                ? `Invoice total including tax exceeds the remaining contract gross of ${available.toFixed(2)}.`
+                : '');
+            if (error) error.textContent = exceeds
+                ? `Invoice total including tax exceeds the remaining contract gross (${available.toFixed(2)}).`
+                : '';
+            return !exceeds;
+        };
+
+        if (invoiceForm) {
+            invoiceForm.elements['amount']?.addEventListener('input', recalculateTax);
+            invoiceForm.elements['amount']?.addEventListener('input', validateInvoiceTotal);
+            invoiceForm.elements['taxAmount']?.addEventListener('input', () => {
+                taxManuallyEdited = true;
+                validateInvoiceTotal();
+            });
+            invoiceForm.elements['invoiceDate']?.addEventListener('change', recalculateDueDate);
+            invoiceForm.addEventListener('submit', validateInvoiceTotal);
+        }
+
+        const resetInvoiceForm = () => {
+            if (!invoiceForm) return;
+            invoiceForm.reset();
+            setValue(invoiceForm, 'invoiceId', '');
+            taxManuallyEdited = false;
+            if (invoiceTitle) invoiceTitle.textContent = 'Add invoice';
+            if (isManualDueDate) setValue(invoiceForm, 'dueDate', '');
+            recalculateDueDate();
+            validateInvoiceTotal();
+        };
+
+        document.querySelectorAll('.js-add-invoice').forEach((button) => {
+            button.addEventListener('click', () => {
+                resetInvoiceForm();
+                invoiceModal?.show();
+            });
+        });
+
+        document.querySelectorAll('.js-view-invoice').forEach((button) => {
+            button.addEventListener('click', () => {
+                const setText = (id, value) => {
+                    const element = document.getElementById(id);
+                    if (element) element.textContent = value || '-';
+                };
+
+                setText('viewInvoiceNo', button.dataset.invoiceNo);
+                setText('viewInvoiceDescription', button.dataset.description);
+                setText('viewInvoiceDate', button.dataset.invoiceDate);
+                setText('viewInvoiceDueDate', button.dataset.dueDate);
+                setText('viewInvoiceCurrency', button.dataset.currency);
+                setText('viewInvoiceAmount', button.dataset.amount);
+                setText('viewInvoiceTaxAmount', button.dataset.taxAmount);
+                setText('viewInvoiceTotalAmount', button.dataset.totalAmount);
+                setText('viewInvoicePaidAmount', button.dataset.paidAmount);
+                setText('viewInvoiceOutstandingAmount', button.dataset.outstandingAmount);
+                setText('viewInvoicePaidDate', button.dataset.paidDate);
+                setText('viewInvoiceUpdatedAt', button.dataset.updatedAt);
+                setText('viewInvoiceUpdatedBy', button.dataset.updatedBy);
+
+                const status = document.getElementById('viewInvoiceStatus');
+                if (status) {
+                    const code = (button.dataset.statusCode || '').toLowerCase().replace(/_/g, '-');
+                    status.textContent = button.dataset.statusName || '-';
+                    status.className = 'status-badge' + (code ? ' status-' + code : '');
+                }
+
+                invoiceViewModal?.show();
+            });
+        });
+
+        document.querySelectorAll('.js-pay-invoice').forEach((button) => {
+            button.addEventListener('click', () => {
+                setValue(paymentForm, 'invoiceId', button.dataset.invoiceId);
+                setValue(paymentForm, 'paidAmount', button.dataset.paidAmount);
+                setValue(paymentForm, 'paidDate', new Date().toISOString().slice(0, 10));
+                setValue(paymentForm, 'note', '');
+                if (paymentInvoiceLabel) paymentInvoiceLabel.textContent = button.dataset.invoiceNo || 'Invoice';
+                if (paymentTotalLabel) paymentTotalLabel.textContent = button.dataset.totalAmount || '0.00';
+                paymentModal?.show();
+            });
+        });
+
+        const openInvoiceOnLoad = /*[[${openInvoiceModal != null and openInvoiceModal}]]*/ false;
+        const openPaymentOnLoad = /*[[${openPaymentModal != null and openPaymentModal}]]*/ false;
+        if (openInvoiceOnLoad) {
+            if (invoiceTitle) invoiceTitle.textContent = 'Add invoice';
+            invoiceModal?.show();
+        }
+        if (openPaymentOnLoad) {
+            paymentModal?.show();
+        }
+    })();
+</script>
+</body>
+</html>

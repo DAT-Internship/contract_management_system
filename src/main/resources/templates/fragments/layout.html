@@ -10,7 +10,8 @@
   <link rel="stylesheet" href="https://use.fontawesome.com/releases/v7.3.1/css/all.css"/>
   <link rel="stylesheet" th:href="@{/css/app.css}">
   <link rel="stylesheet" th:if="${page == 'master-setup'}" th:href="@{/css/master-setup.css}">
-  <link rel="stylesheet" th:if="${page == 'contracts' or page == 'import-batches'}" th:href="@{/css/contracts.css}">
+  <link rel="stylesheet" th:if="${page == 'contracts' or page == 'import-batches' or page == 'payments'}" th:href="@{/css/contracts.css}">
+  <link rel="stylesheet" th:if="${page == 'payments'}" th:href="@{/css/payments.css}">
   <link rel="stylesheet" th:if="${page == 'audit'}" th:href="@{/css/audit.css}">
   <meta name="employee-code"
       th:if="${#authentication != null and #authentication.authenticated}"
@@ -48,12 +49,15 @@
     Contracts
   </a>
 
-  <a class="side-link" href="#">
+  <a class="side-link"
+     th:href="@{/payments}"
+     th:classappend="${page == 'payments'} ? ' active'">
     <i class="fa-solid fa-credit-card nav-icon" aria-hidden="true"></i>
     Payments
   </a>
 
-  <a class="side-link" href="#">
+  <a class="side-link"
+     href="#">
     <i class="fa-solid fa-square-check nav-icon" aria-hidden="true"></i>
     Approval Queue
   </a>

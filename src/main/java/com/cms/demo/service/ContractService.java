@@ -175,9 +175,19 @@ public class ContractService {
 
     @Transactional(readOnly = true)
     public List<ContractResponse> findAll(String employeeCode) {
+        return findVisibleContracts(employeeCode).stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
+    /**
+     * Contracts the current user may see. Drafts are private to their creator;
+     * all other contracts are visible to authenticated users.
+     */
+    @Transactional(readOnly = true)
+    public List<Contract> findVisibleContracts(String employeeCode) {
         return contractRepository.findAllByOrderByRegisterDateDescContractIdDesc().stream()
                 .filter(contract -> !isDraft(contract) || isCreatedBy(contract, employeeCode))
-                .map(this::toResponse)
                 .toList();
     }
 
