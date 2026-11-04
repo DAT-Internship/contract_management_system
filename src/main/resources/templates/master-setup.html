@@ -334,43 +334,59 @@
 				</div>
 
 				<!-- ================= PROJECT ================= -->
-				<div class="master-card">
-					<div class="card-top-content">
-						<div class="master-card-header">
-							<div>
-								<div class="master-icon"><i class="fa-solid fa-diagram-project"></i></div>
-								<h3>Projects</h3>
-							</div>
-							<span class="count-badge" th:text="${projects != null ? projects.size() : 0}">0</span>
-						</div>
-						
-						<div class="master-list-heading">
-						    <span>Project</span>
-						    <span>Actions</span>
-						</div>
-						<div class="master-items">
-							<div class="master-item" th:each="item : ${projects}">
-								<div class="d-flex flex-column">
-									<span class="fw-semibold" th:text="${item.projectName}">Project Name</span>
-									<small class="text-muted">
-										<span class="badge bg-light text-dark border me-1" th:text="${item.projectCode}">Code</span>
-										<span class="badge bg-primary me-1" th:text="'Rank ' + ${item.projectRank}">Rank A</span>
-										<span th:if="${item.department != null}" th:text="${item.department.deptName}">Dept</span>
-									</small>
-								</div>
-								<div class="master-actions">
-									<button type="button" class="btn btn-sm btn-outline-primary" onclick="openEditFromButton(this)" th:attr="data-id=${item.projectId},data-type='project',data-code=${item.projectCode},data-name=${item.projectName},data-project-rank=${item.projectRank},data-department-id=${item.department != null ? item.department.departmentId : ''},data-project-manager-id=${item.projectManager != null ? item.projectManager.userId : ''},data-start-date=${item.startDate},data-end-date=${item.endDate},data-status=${item.status}" title="Edit"><i class="fa-solid fa-pen"></i></button>
-									<form th:action="@{/master-setup/delete}" method="post" onsubmit="return confirm('Delete this project?');" class="d-inline">
-										<input type="hidden" name="type" value="project">
-										<input type="hidden" name="id" th:value="${item.projectId}">
-										<button type="submit" class="btn btn-sm btn-outline-danger" title="Delete"><i class="fa-solid fa-trash"></i></button>
-									</form>
-								</div>
-							</div>
-							<div class="empty-message" th:if="${projects == null || projects.isEmpty()}">No projects found.</div>
-						</div>
-					</div>
-					<button type="button" class="btn btn-primary add-btn" onclick="openAddModal('project')"><i class="fa-solid fa-plus me-1"></i> Add</button>
+				<div class="master-card">				
+				    <div class="card-top-content">				
+				        <div class="master-card-header">			
+				            <div>
+				                <div class="master-icon">
+				                    <i class="fa-solid fa-diagram-project" aria-hidden="true"></i>
+				                </div>				
+				                <h3>Projects</h3>
+				            </div>				
+				            <span class="count-badge" th:text="${projects != null ? projects.size() : 0}">0</span>				
+				        </div>
+				
+				        <div class="master-list-heading">
+				            <span>Name</span>
+				            <span>Actions</span>
+				        </div>				
+				        <div class="master-items">				
+				            <div class="master-item" th:each="item : ${projects}">				
+				                <!-- Display only the project name -->
+				                <span th:text="${item.projectName}">Project Name</span>				
+				                <div class="master-actions">
+				                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="openEditFromButton(this)"
+				                            th:attr="
+				                                data-id=${item.projectId},
+				                                data-type='project',
+				                                data-code=${item.projectCode},
+				                                data-name=${item.projectName},
+				                                data-project-rank=${item.projectRank},
+				                                data-department-id=${item.department != null ? item.department.departmentId : ''},
+				                                data-project-manager-id=${item.projectManager != null ? item.projectManager.userId : ''},
+				                                data-start-date=${item.startDate},
+				                                data-end-date=${item.endDate},
+				                                data-status=${item.status}
+				                            "
+				                            title="Edit" aria-label="Edit project">				
+				                        <i class="fa-solid fa-pen" aria-hidden="true"></i>				
+				                    </button>				
+				                    <form th:action="@{/master-setup/delete}" method="post" class="d-inline" onsubmit="return confirm('Delete this project?');">				
+				                        <input type="hidden" name="type" value="project">
+				                        <input type="hidden" name="id" th:value="${item.projectId}">				
+				                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete" aria-label="Delete project">				
+				                            <i class="fa-solid fa-trash" aria-hidden="true"></i>				
+				                        </button>				
+				                    </form>				
+				                </div>				
+				            </div>				
+				            <div class="empty-message" th:if="${projects == null || projects.isEmpty()}">No projects found.</div>				
+				        </div>				
+				    </div>
+				
+				    <button type="button" class="btn btn-primary add-btn" onclick="openAddModal('project')">				
+				        <i class="fa-solid fa-plus me-1" aria-hidden="true"></i>Add				
+				    </button>				
 				</div>
 			</div>
 		</main>
