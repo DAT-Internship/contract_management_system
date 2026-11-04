@@ -254,7 +254,7 @@ public class ContractPageController {
         boolean saveAsDraft = "draft".equalsIgnoreCase(action);
         if (saveAsDraft) {
             form.setStatusId(draftStatusId());
-        } else if (form.getStatusId() == null || isDraftStatus(form.getStatusId())) {
+        } else if (contractId == null && (form.getStatusId() == null || isDraftStatus(form.getStatusId()))) {
             resolveStatusByCandidateCodes(List.of("WAITING_SIGN", "ACTIVE"))
                     .ifPresent(s -> form.setStatusId(s.getId()));
         }
@@ -290,7 +290,6 @@ public class ContractPageController {
                         || !java.util.Objects.equals(contractBeforeUpdate.getCommercialTaxRate(), form.getCommercialTaxRate())
                         || !java.util.Objects.equals(contractBeforeUpdate.getCurrency() == null ? null : contractBeforeUpdate.getCurrency().getId(), form.getCurrencyId());
                 contractService.update(contractId, form.toRequest(), principal.getName());
-                ensureSinglePendingApproval(contractId, principal.getName());
                 if (paymentDetailsChanged) createPaymentUpdatedHistory(contractId, principal.getName());
                 if (files != null) files.stream().filter(file -> file != null && !file.isEmpty())
                         .forEach(file -> contractService.addAttachment(contractId, file, principal.getName()));
@@ -345,41 +344,6 @@ public class ContractPageController {
         event.setUpdatedAt(LocalDateTime.now());
         approvalStepRepository.save(event);
         recordApprovalChange(employeeCode, contractId, "", "PAYMENT_UPDATED", event.getCurrentApproval(), event.getComment());
-    }
-
-    private void ensureSinglePendingApproval(Long contractId, String employeeCode) {
-        var steps = approvalStepRepository.findByContractContractIdOrderByCreatedAtDesc(contractId);
-        var pendingSteps = steps.stream()
-                .filter(step -> "PENDING".equalsIgnoreCase(step.getStatus()))
-                .toList();
-        if (!pendingSteps.isEmpty()) {
-            // Keep the newest pending row visible in the queue and close any duplicate pending rows.
-            for (int i = 1; i < pendingSteps.size(); i++) {
-                pendingSteps.get(i).setStatus("SUPERSEDED");
-                pendingSteps.get(i).setUpdatedAt(LocalDateTime.now());
-            }
-            approvalStepRepository.saveAll(pendingSteps);
-            return;
-        }
-
-        // Reuse a returned row only when it is the latest approval record. If the
-        // latest decision was APPROVED, preserve it in history and create a new review row.
-        ApprovalStep latest = steps.isEmpty() ? null : steps.get(0);
-        if (latest != null && "RETURNED".equalsIgnoreCase(latest.getStatus())) {
-            ApprovalStep step = latest;
-            step.setStatus("PENDING");
-            step.setComment(null);
-            var reviser = userRepository.findByEmployeeCode(employeeCode).orElse(null);
-            step.setSubmittedBy(reviser);
-            String reviserName = reviser == null ? null : reviser.getFullName();
-            if (reviserName == null || reviserName.isBlank()) reviserName = "System";
-            step.setCurrentApproval("Resubmitted by " + reviserName);
-            step.setUpdatedAt(LocalDateTime.now());
-            approvalStepRepository.save(step);
-            recordApprovalChange(employeeCode, contractId, "RETURNED", "PENDING", step.getCurrentApproval(), "");
-        } else {
-            createApprovalStep(contractId, employeeCode);
-        }
     }
 
     private void recordApprovalChange(String employeeCode, Long contractId, String oldStatus,
