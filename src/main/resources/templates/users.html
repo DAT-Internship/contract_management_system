@@ -1,263 +1,550 @@
 <!doctype html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
-<head th:replace="~{fragments/layout :: head('User Management')}"></head>
-<link rel="stylesheet" th:href="@{/css/user-management.css}">
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head th:replace="~{fragments/layout :: head('User Management')}">
+</head>
+
+<link rel="stylesheet"
+      th:href="@{/css/user-management.css}">
+
 <body>
-	<th:block th:with="page='users'">
-	<!-- Sidebar -->
-	<aside th:replace="~{fragments/layout :: sidebar}"></aside>
-	
-	<!-- Topbar -->
-	<div class="users-topbar-wrapper">
-	    <header th:replace="~{fragments/layout :: topbar}"></header>
-	</div>
 
-	<!-- Main Content -->
-	<div class="main-wrapper users-main-wrapper">		
-		<main class="content">
-			<div th:replace="~{fragments/layout :: alerts}"></div>			
-			<div class="user-page-header mb-4">
-				<div class="user-page-heading">
-				    <div class="user-page-heading-icon">
-				        <i class="fa-solid fa-users" aria-hidden="true"></i>
-				    </div>
-				
-				    <div class="user-page-heading-text">
-				        <span class="user-page-eyebrow">Account Administration</span>
-				        <h2 class="user-page-title">User Management</h2>
-				        <p class="user-page-description">Manage user accounts, roles, and access status.</p>
-				    </div>
-				</div>
-			
-				<!-- Add User Modal ဖွင့်ဖို့ ခလုတ် -->
-				<button type="button" class="add-user-page-button" data-bs-toggle="modal" data-bs-target="#addUserModal">			
-				    <span class="add-user-button-icon"><i class="fa-solid fa-plus" aria-hidden="true"></i></span>				
-				    <span class="add-user-button-text">
-				        <strong>Add User</strong>
-				        <small>Create a new account</small>
-				    </span>			
-				</button>		
-			</div>
+    <th:block th:with="page='users'">
 
-			<div class="user-table-card">
-			    <!-- Table header -->
-			    <div class="user-table-header">
-			        <div>
-			            <h5 class="user-table-title">User List</h5>
-			            <p class="user-table-subtitle">View and manage registered user accounts.</p>
-			        </div>			
-			        <div class="user-count">
-			            <i class="fa-solid fa-users" aria-hidden="true"></i>			
-			            <span th:text="${#lists.size(users)} + ' users'">0 users</span>
-			        </div>
-			    </div>
-			
-			    <!-- Responsive table -->
-			    <div class="table-responsive user-table-responsive">
-			        <table class="table user-management-table align-middle">			
-			            <thead>
-			                <tr>
-			                    <th scope="col">Staff ID</th>
-			                    <th scope="col">User</th>
-			                    <th scope="col">Email</th>
-			                    <th scope="col">Role</th>
-			                    <th scope="col">Status</th>
-			                    <th scope="col" class="text-end">Actions</th>
-			                </tr>
-			            </thead>			
-			            <tbody>
+        <!-- ================= SIDEBAR ================= -->
+        <aside th:replace="~{fragments/layout :: sidebar}">
+        </aside>
 
-						    <tr th:each="user : ${users}">
-						
-						        <td data-label="Staff ID">
-						            <span class="user-staff-id"
-						                  th:text="${user.employeeCode}">
-						                EMP001
-						            </span>
-						        </td>
-						
-						        <td data-label="User">
-						            <div class="user-name-cell">
-						                <div class="user-name-info">
-						                    <span class="user-full-name"
-						                          th:text="${user.fullName}">
-						                        User Name
-						                    </span>
-						                </div>
-						            </div>
-						        </td>
-						
-						        <td data-label="Email">
-						            <span class="user-email"
-						                  th:text="${user.email}">
-						                user@example.com
-						            </span>
-						        </td>
-						
-						        <td data-label="Role">
-						            <span class="user-role-badge"
-						                  th:text="${user.role.roleName}">
-						                Admin
-						            </span>
-						        </td>
-						
-						        <td data-label="Status">
-						            <span th:if="${user.isActive}"
-						                  class="user-status user-status-active">
-						                <span class="user-status-dot"></span>
-						                Active
-						            </span>
-						
-						            <span th:unless="${user.isActive}"
-						                  class="user-status user-status-inactive">
-						                <span class="user-status-dot"></span>
-						                Inactive
-						            </span>
-						        </td>
-						
-						        <td data-label="Actions">
-						            <div class="user-table-actions">
-						
-						                <a th:href="@{/users/edit/{id}(id=${user.userId})}"
-						                   class="user-action-btn user-edit-btn"
-						                   title="Edit user"
-						                   aria-label="Edit user">
-						
-						                    <i class="fa-solid fa-pen"
-						                       aria-hidden="true"></i>
-						                    <span>Edit</span>
-						                </a>
-						
-						                <a th:href="@{/users/deactivate/{id}(id=${user.userId})}"
-						                   th:if="${user.isActive}"
-						                   class="user-action-btn user-deactivate-btn"
-						                   title="Deactivate user"
-						                   aria-label="Deactivate user">
-						
-						                    <i class="fa-solid fa-user-slash"
-						                       aria-hidden="true"></i>
-						                    <span>Deactivate</span>
-						                </a>
-						
-						                <span th:unless="${user.isActive}"
-						                      class="user-action-disabled">
-						                    No actions
-						                </span>
-						
-						            </div>
-						        </td>
-						
-						    </tr>
-						
-						    <tr th:if="${#lists.isEmpty(users)}"
-						        class="user-empty-row">
-						
-						        <td colspan="6">
-						            <div class="user-table-empty">
-						
-						                <div class="user-table-empty-icon">
-						                    <i class="fa-solid fa-users"
-						                       aria-hidden="true"></i>
-						                </div>
-						
-						                <h6>No users found</h6>
-						
-						                <p>
-						                    Add a user to begin managing user accounts.
-						                </p>
-						
-						                <button type="button"
-						                        class="btn btn-primary"
-						                        data-bs-toggle="modal"
-						                        data-bs-target="#addUserModal">
-						
-						                    <i class="fa-solid fa-plus me-2"
-						                       aria-hidden="true"></i>
-						
-						                    Add User
-						                </button>
-						
-						            </div>
-						        </td>
-						    </tr>
-						
-						</tbody>			
-			        </table>
-			    </div>			
-			</div>
-		</main>
-	</div>
+        <!-- ================= TOPBAR ================= -->
+        <div class="users-topbar-wrapper">
+            <header th:replace="~{fragments/layout :: topbar}">
+            </header>
+        </div>
 
-	<!-- Add User Modal -->
-	<div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">	
-	    <div class="modal-dialog modal-dialog-centered modal-lg">
-	        <div class="modal-content add-user-modal">
-	
-	            <!-- Modal header -->
-	            <div class="modal-header add-user-header">
-	                <div>
-	                    <h4 class="modal-title add-user-title" id="addUserModalLabel">Add New User</h4>	
-	                    <p class="add-user-subtitle">Enter the employee and account information below.</p>
-	                </div>	
-	                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-	            </div>
-	
-	            <!-- Add User form -->
-	            <form th:action="@{/users/add}" method="post" class="add-user-form">	
-	                <div class="modal-body add-user-body">	
-	                    <div class="add-user-form-grid">
-	
-	                        <!-- Staff ID -->
-	                        <div class="add-user-field">
-	                            <label for="addEmployeeCode" class="form-label">Staff ID <span class="required-mark">*</span></label>	
-	                            <input id="addEmployeeCode" type="text" name="employeeCode" class="form-control" placeholder="Enter staff ID" autocomplete="off" required>	
-	                            <small class="add-user-help-text">Enter the employee’s unique staff ID.</small>
-	                        </div>
-	
-	                        <!-- Full name -->
-	                        <div class="add-user-field">
-	                            <label for="addFullName" class="form-label">Full Name <span class="required-mark">*</span></label>	
-	                            <input id="addFullName" type="text" name="fullName" class="form-control" placeholder="Enter full name" autocomplete="name" required>
-	                        </div>
-	
-	                        <!-- Email -->
-	                        <div class="add-user-field add-user-field-full">
-	                            <label for="addEmail" class="form-label">Email Address <span class="required-mark">*</span></label>	
-	                            <input id="addEmail" type="email" name="email" class="form-control" placeholder="name@example.com" autocomplete="email" required>
-	                        </div>
-	
-	                        <!-- Department -->
-	                        <div class="add-user-field">
-	                            <label for="addDepartment" class="form-label">Department <span class="required-mark">*</span></label>	
-	                            <select id="addDepartment" name="departmentId" class="form-select" required>	
-	                                <option value="" selected disabled>Select department</option>	
-	                                <option th:each="dept : ${departments}" th:value="${dept.departmentId}" th:text="${dept.deptName}"></option>
-	                            </select>
-	                        </div>
-	
-	                        <!-- Role -->
-	                        <div class="add-user-field">
-	                            <label for="addRole" class="form-label">Role <span class="required-mark">*</span></label>	
-	                            <select id="addRole" name="roleId" class="form-select" required>	
-	                                <option value="" selected disabled>Select role</option>	
-	                                <option th:each="role : ${roles}" th:value="${role.roleId}" th:text="${role.roleName}"></option>
-	                            </select>
-	                        </div>	
-	                    </div>	
-	                </div>
-	
-	                <!-- Modal footer -->
-	                <div class="modal-footer add-user-actions">
-	                    <button type="button" class="btn add-user-cancel-btn" data-bs-dismiss="modal">Cancel</button>	
-	                    <button type="submit" class="btn btn-primary add-user-submit-btn"><i class="fa-solid fa-plus me-2" aria-hidden="true"></i>Add User</button>
-	                </div>	
-	            </form>	
-	        </div>
-	    </div>
-	</div>
+        <!-- ================= MAIN CONTENT ================= -->
+        <div class="main-wrapper users-main-wrapper">
 
-	<!-- Scripts -->
-	<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
-	</th:block>
+            <main class="content">
+
+                <!-- Alerts -->
+                <div th:replace="~{fragments/layout :: alerts}">
+                </div>
+
+                <!-- ================= PAGE HEADER ================= -->
+                <div class="user-page-header mb-4">
+
+                    <div class="user-page-heading">
+
+                        <div class="user-page-heading-icon">
+                            <i class="fa-solid fa-users"
+                               aria-hidden="true">
+                            </i>
+                        </div>
+
+                        <div class="user-page-heading-text">
+
+                            <span class="user-page-eyebrow">
+                                Account Administration
+                            </span>
+
+                            <h2 class="user-page-title">
+                                User Management
+                            </h2>
+
+                            <p class="user-page-description">
+                                Manage user accounts, roles, and access status.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                    <!-- Open Add User Modal -->
+                    <button type="button"
+                            class="add-user-page-button"
+                            data-bs-toggle="modal"
+                            data-bs-target="#addUserModal">
+
+                        <span class="add-user-button-icon">
+                            <i class="fa-solid fa-plus"
+                               aria-hidden="true">
+                            </i>
+                        </span>
+
+                        <span class="add-user-button-text">
+                            <strong>Add User</strong>
+                            <small>Create a new account</small>
+                        </span>
+
+                    </button>
+
+                </div>
+
+                <!-- ================= USER TABLE CARD ================= -->
+                <div class="user-table-card">
+
+                    <!-- Table header -->
+                    <div class="user-table-header">
+
+                        <div>
+                            <h5 class="user-table-title">
+                                User List
+                            </h5>
+
+                            <p class="user-table-subtitle">
+                                View and manage registered user accounts.
+                            </p>
+                        </div>
+
+                        <div class="user-count">
+
+                            <i class="fa-solid fa-users"
+                               aria-hidden="true">
+                            </i>
+
+                            <span th:text="${#lists.size(users)} + ' users'">
+                                0 users
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                    <!-- Responsive table -->
+                    <div class="table-responsive user-table-responsive">
+
+                        <table class="table user-management-table align-middle">
+
+                            <thead>
+                                <tr>
+                                    <th scope="col">Staff ID</th>
+                                    <th scope="col">User</th>
+                                    <th scope="col">Email</th>
+                                    <th scope="col">Role</th>
+                                    <th scope="col">Status</th>
+                                    <th scope="col"
+                                        class="text-end">
+                                        Actions
+                                    </th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+
+                                <!-- User rows -->
+                                <tr th:each="user : ${users}">
+
+                                    <!-- Staff ID -->
+                                    <td data-label="Staff ID">
+
+                                        <span class="user-staff-id"
+                                              th:text="${user.employeeCode}">
+                                            EMP001
+                                        </span>
+
+                                    </td>
+
+                                    <!-- User name -->
+                                    <td data-label="User">
+
+                                        <div class="user-name-cell">
+
+                                            <div class="user-name-info">
+
+                                                <span class="user-full-name"
+                                                      th:text="${user.fullName}">
+                                                    User Name
+                                                </span>
+
+                                            </div>
+
+                                        </div>
+
+                                    </td>
+
+                                    <!-- Email -->
+                                    <td data-label="Email">
+
+                                        <span class="user-email"
+                                              th:text="${user.email}">
+                                            user@example.com
+                                        </span>
+
+                                    </td>
+
+                                    <!-- Role -->
+                                    <td data-label="Role">
+
+                                        <span class="user-role-badge"
+                                              th:text="${user.role != null
+                                                  ? user.role.roleName
+                                                  : 'No Role'}">
+                                            Admin
+                                        </span>
+
+                                    </td>
+
+                                    <!-- Status -->
+                                    <td data-label="Status">
+
+                                        <span th:if="${user.isActive}"
+                                              class="user-status user-status-active">
+
+                                            <span class="user-status-dot">
+                                            </span>
+
+                                            Active
+
+                                        </span>
+
+                                        <span th:unless="${user.isActive}"
+                                              class="user-status user-status-inactive">
+
+                                            <span class="user-status-dot">
+                                            </span>
+
+                                            Inactive
+
+                                        </span>
+
+                                    </td>
+
+                                    <!-- Actions -->
+                                    <td data-label="Actions">
+
+                                        <div class="user-table-actions">
+
+                                            <!-- Edit -->
+                                            <a th:href="@{/users/edit/{id}(id=${user.userId})}"
+                                               class="user-action-btn user-edit-btn"
+                                               title="Edit user"
+                                               aria-label="Edit user">
+
+                                                <i class="fa-solid fa-pen"
+                                                   aria-hidden="true">
+                                                </i>
+
+                                                <span>Edit</span>
+
+                                            </a>
+
+                                            <!-- Deactivate -->
+                                            <a th:if="${user.isActive}"
+                                               th:href="@{/users/deactivate/{id}(id=${user.userId})}"
+                                               class="user-action-btn user-deactivate-btn"
+                                               title="Deactivate user"
+                                               aria-label="Deactivate user">
+
+                                                <i class="fa-solid fa-user-slash"
+                                                   aria-hidden="true">
+                                                </i>
+
+                                                <span>Deactivate</span>
+
+                                            </a>
+
+                                            <!-- Activate -->
+                                            <a th:unless="${user.isActive}"
+                                               th:href="@{/users/activate/{id}(id=${user.userId})}"
+                                               class="user-action-btn user-activate-btn"
+                                               title="Activate user"
+                                               aria-label="Activate user">
+
+                                                <i class="fa-solid fa-user-check"
+                                                   aria-hidden="true">
+                                                </i>
+
+                                                <span>Activate</span>
+
+                                            </a>
+
+                                        </div>
+
+                                    </td>
+
+                                </tr>
+
+                                <!-- Empty state -->
+                                <tr th:if="${#lists.isEmpty(users)}"
+                                    class="user-empty-row">
+
+                                    <td colspan="6">
+
+                                        <div class="user-table-empty">
+
+                                            <div class="user-table-empty-icon">
+
+                                                <i class="fa-solid fa-users"
+                                                   aria-hidden="true">
+                                                </i>
+
+                                            </div>
+
+                                            <h6>No users found</h6>
+
+                                            <p>
+                                                Add a user to begin managing
+                                                user accounts.
+                                            </p>
+
+                                            <button type="button"
+                                                    class="btn btn-primary"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#addUserModal">
+
+                                                <i class="fa-solid fa-plus me-2"
+                                                   aria-hidden="true">
+                                                </i>
+
+                                                Add User
+
+                                            </button>
+
+                                        </div>
+
+                                    </td>
+
+                                </tr>
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+            </main>
+
+        </div>
+
+        <!-- ================= ADD USER MODAL ================= -->
+        <div class="modal fade"
+             id="addUserModal"
+             tabindex="-1"
+             aria-labelledby="addUserModalLabel"
+             aria-hidden="true">
+
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+
+                <div class="modal-content add-user-modal">
+
+                    <!-- Modal header -->
+                    <div class="modal-header add-user-header">
+
+                        <div>
+
+                            <h4 class="modal-title add-user-title"
+                                id="addUserModalLabel">
+                                Add New User
+                            </h4>
+
+                            <p class="add-user-subtitle">
+                                Enter the employee and account information below.
+                            </p>
+
+                        </div>
+
+                        <button type="button"
+                                class="btn-close"
+                                data-bs-dismiss="modal"
+                                aria-label="Close">
+                        </button>
+
+                    </div>
+
+                    <form th:action="@{/users/create}"
+					      method="post"
+					      class="add-user-form">
+                        <div class="modal-body add-user-body">
+
+                            <div class="add-user-form-grid">
+
+                                <!-- Staff ID -->
+                                <div class="add-user-field">
+
+                                    <label for="addEmployeeCode"
+                                           class="form-label">
+
+                                        Staff ID
+
+                                        <span class="required-mark">
+                                            *
+                                        </span>
+
+                                    </label>
+
+                                    <input id="addEmployeeCode"
+                                           type="text"
+                                           name="employeeCode"
+                                           class="form-control"
+                                           placeholder="Enter staff ID"
+                                           autocomplete="off"
+                                           required>
+
+                                    <small class="add-user-help-text">
+                                        Enter the employee's unique staff ID.
+                                    </small>
+
+                                </div>
+
+                                <!-- Full name -->
+                                <div class="add-user-field">
+
+                                    <label for="addFullName"
+                                           class="form-label">
+
+                                        Full Name
+
+                                        <span class="required-mark">
+                                            *
+                                        </span>
+
+                                    </label>
+
+                                    <input id="addFullName"
+                                           type="text"
+                                           name="fullName"
+                                           class="form-control"
+                                           placeholder="Enter full name"
+                                           autocomplete="name"
+                                           required>
+
+                                </div>
+
+                                <!-- Email -->
+                                <div class="add-user-field add-user-field-full">
+
+                                    <label for="addEmail"
+                                           class="form-label">
+
+                                        Email Address
+
+                                        <span class="required-mark">
+                                            *
+                                        </span>
+
+                                    </label>
+
+                                    <input id="addEmail"
+                                           type="email"
+                                           name="email"
+                                           class="form-control"
+                                           placeholder="name@example.com"
+                                           autocomplete="email"
+                                           required>
+
+                                </div>
+
+                                <!-- Department -->
+                                <div class="add-user-field">
+
+                                    <label for="addDepartment"
+                                           class="form-label">
+
+                                        Department
+
+                                        <span class="required-mark">
+                                            *
+                                        </span>
+
+                                    </label>
+
+                                    <select id="addDepartment"
+                                            name="departmentId"
+                                            class="form-select"
+                                            required>
+
+                                        <option value=""
+                                                selected
+                                                disabled>
+                                            Select department
+                                        </option>
+
+                                        <option th:each="dept : ${departments}"
+                                                th:value="${dept.departmentId}"
+                                                th:text="${dept.deptName}">
+                                        </option>
+
+                                    </select>
+
+                                </div>
+
+                                <!-- Role -->
+                                <div class="add-user-field">
+
+                                    <label for="addRole"
+                                           class="form-label">
+
+                                        Role
+
+                                        <span class="required-mark">
+                                            *
+                                        </span>
+
+                                    </label>
+
+                                    <select id="addRole"
+                                            name="roleId"
+                                            class="form-select"
+                                            required>
+
+                                        <option value=""
+                                                selected
+                                                disabled>
+                                            Select role
+                                        </option>
+
+                                        <option th:each="role : ${roles}"
+                                                th:value="${role.roleId}"
+                                                th:text="${role.roleName}">
+                                        </option>
+
+                                    </select>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        <!-- Modal footer -->
+                        <div class="modal-footer add-user-actions">
+
+                            <button type="button"
+                                    class="btn add-user-cancel-btn"
+                                    data-bs-dismiss="modal">
+                                Cancel
+                            </button>
+
+                            <button type="submit"
+                                    class="btn btn-primary add-user-submit-btn">
+
+                                <i class="fa-solid fa-plus me-2"
+                                   aria-hidden="true">
+                                </i>
+
+                                Add User
+
+                            </button>
+
+                        </div>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- ================= SCRIPTS ================= -->
+        <th:block th:replace="~{fragments/layout :: scripts}">
+        </th:block>
+
+    </th:block>
+
 </body>
 </html>

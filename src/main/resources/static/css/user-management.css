@@ -1189,3 +1189,21 @@ svg {
         justify-self: auto;
     }
 }
+
+/* Activate user action */
+.user-activate-btn {
+    color: #15803d;
+    background-color: #f0fdf4;
+    border-color: #bbf7d0;
+}
+
+.user-activate-btn:hover {
+    color: #ffffff;
+    background-color: #15803d;
+    border-color: #15803d;
+}
+
+.user-activate-btn:focus-visible {
+    outline: 3px solid rgba(21, 128, 61, 0.18);
+    outline-offset: 2px;
+}

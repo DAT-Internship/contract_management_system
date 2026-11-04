@@ -30,21 +30,173 @@
 			<div class="audit-table-heading"><div><h2>Activity</h2><span th:text="${total + ' recorded events'}">0 recorded events</span></div><label class="audit-page-size">Show <select aria-label="Rows per page" onchange="const u=new URL(location);u.searchParams.set('pageSize',this.value);u.searchParams.set('page','1');location.href=u"><option th:each="size : ${pageSizes}" th:value="${size}" th:text="${size}" th:selected="${pageSize == size}"></option></select></label></div>
 			<div class="table-responsive">
 				<table class="table audit-table align-middle mb-0">
-					<thead><tr><th>TIME</th><th>USER</th><th>ACTION</th><th>AREA / RECORD</th><th>REQUEST DETAILS</th><th>IP ADDRESS</th></tr></thead>
+					<thead>
+						<tr>
+							<th>TIME</th>
+							<th>USER</th>
+							<th>ACTION</th>
+							<th>AREA / RECORD</th>
+							<th>OLD VALUE</th>
+							<th>NEW VALUE</th>
+						</tr>
+					</thead>
 					<tbody>
 						<tr th:each="entry : ${auditLogs}">
-							<td class="audit-time"><strong th:text="${#temporals.format(entry.createdAt, 'dd MMM yyyy')}">30 Oct 2026</strong><span th:text="${#temporals.format(entry.createdAt, 'HH:mm:ss')}">09:30:00</span></td>
-							<td><strong class="audit-user-name" th:text="${entry.actorName}">User</strong><span class="audit-user-code" th:text="${entry.employeeCode}">EMP001</span></td>
-							<td><span class="audit-action-badge" th:classappend="${' action-' + #strings.toLowerCase(entry.action)}" th:text="${#strings.replace(entry.action, '_', ' ')}">VIEW</span></td>
-							<td><strong th:text="${#strings.replace(entry.entityType, '_', ' ')}">CONTRACT</strong><span class="audit-record-id" th:text="${entry.entityId != null ? 'ID ' + entry.entityId : 'No record ID'}">ID 21</span></td>
-							<td><code class="audit-details" th:text="${entry.details}">{"method":"GET","path":"/contracts"}</code></td>
-							<td class="audit-ip" th:text="${entry.ipAddress ?: '-'}">127.0.0.1</td>
+							<td class="audit-time">
+								<strong th:text="${#temporals.format(entry.createdAt, 'dd MMM yyyy')}">30 Oct 2026</strong>
+								<span th:text="${#temporals.format(entry.createdAt, 'HH:mm:ss')}">09:30:00</span>
+							</td>
+							<td>
+								<strong class="audit-user-name" th:text="${entry.actorName}">User</strong>
+								<span class="audit-user-code" th:text="${entry.employeeCode}">EMP001</span>
+							</td>
+							<td>
+								<span class="audit-action-badge" th:classappend="${' action-' + #strings.toLowerCase(entry.action)}" th:text="${#strings.replace(entry.action, '_', ' ')}">VIEW</span>
+							</td>
+							<td>
+								<strong th:text="${#strings.replace(entry.entityType, '_', ' ')}">CONTRACT</strong>
+								<span class="audit-record-id" th:text="${entry.entityId != null ? 'ID ' + entry.entityId : 'No record ID'}">ID 21</span>
+							</td>
+							
+<!-- 🔴 OLD VALUE Column -->
+<td>
+    <span th:if="${entry.action == 'CREATE'}" class="text-muted small">-</span>
+    <div th:if="${entry.action != 'CREATE' and entry.oldValue != null}">
+        
+        <!-- Field ၂ ခုအထိ ဆိုရင် တိုက်ရိုက်ပြမယ် -->
+        <div th:if="${#strings.length(entry.oldValue) - #strings.replace(entry.oldValue, ',', '').length() <= 1}">
+            <!-- 🔴 ul, li တွေ ဖျက်ပြီး span ပဲ သုံးမယ် -->
+            <span th:each="pair : ${#strings.arraySplit(#strings.replace(#strings.replace(entry.oldValue, '{', ''), '}', ''), ',')}" 
+                  class="d-block text-danger small">
+                <strong style="text-transform: capitalize;" 
+                        th:text="${#strings.trim(#strings.substringBefore(pair, ':'))}">
+                </strong>: 
+                <span th:text="${#strings.trim(#strings.substringAfter(pair, ':'))}"></span>
+            </span>
+        </div>
+        
+        <!-- Field ၃ ခုအထက် ဆိုရင် View More လင့်ခ်ပြမယ် -->
+        <a th:if="${#strings.length(entry.oldValue) - #strings.replace(entry.oldValue, ',', '').length() > 1}" 
+           href="#" class="text-danger small fw-bold text-decoration-none" 
+           data-bs-toggle="modal" th:attr="data-bs-target='#oldModal'+${entry.id}">
+           View More...
+        </a>
+    </div>
+</td>
+
+<!-- 🔴 NEW VALUE Column -->
+<td>
+    <!-- Delete ဖြစ်ရင် - ပြမယ် -->
+    <span th:if="${entry.action == 'DELETE'}" class="text-muted small">-</span>
+    
+    <div th:if="${entry.action != 'DELETE' and entry.newValue != null}">
+        
+        <!-- 🔴 CREATE ဖြစ်ရင် View Details လင့်ခ်ပဲ ပြမယ် (အသစ်ထည့်ထားတယ်) -->
+        <div th:if="${entry.action == 'CREATE'}">
+            <a href="#" class="text-success small fw-bold text-decoration-none" 
+               data-bs-toggle="modal" th:attr="data-bs-target='#newModal'+${entry.id}">
+               View Details
+            </a>
+        </div>
+
+        <!-- 🔴 UPDATE ဖြစ်ရင် မင်း ရဲ့ မူရင်း Code အတိုင်း (Field ၂ ခုအထိ တိုက်ရိုက်ပြ၊ ၃ ခုအထက် View More) -->
+        <div th:if="${entry.action == 'UPDATE'}">
+            <!-- Field ၂ ခုအထိ ဆိုရင် တိုက်ရိုက်ပြမယ် -->
+            <div th:if="${#strings.length(entry.newValue) - #strings.replace(entry.newValue, ',', '').length() <= 1}">
+                <span th:each="pair : ${#strings.arraySplit(#strings.replace(#strings.replace(entry.newValue, '{', ''), '}', ''), ',')}" 
+                      class="d-block text-success small">
+                    <strong style="text-transform: capitalize;" 
+                            th:text="${#strings.trim(#strings.substringBefore(pair, ':'))}">
+                    </strong>: 
+                    <span th:text="${#strings.trim(#strings.substringAfter(pair, ':'))}"></span>
+                </span>
+            </div>
+
+            <!-- Field ၃ ခုအထက် ဆိုရင် View More လင့်ခ်ပြမယ် -->
+            <a th:if="${#strings.length(entry.newValue) - #strings.replace(entry.newValue, ',', '').length() > 1}" 
+               href="#" class="text-success small fw-bold text-decoration-none" 
+               data-bs-toggle="modal" th:attr="data-bs-target='#newModal'+${entry.id}">
+               View More...
+            </a>
+        </div>
+
+    </div>
+</td>
 						</tr>
-						<tr th:if="${#lists.isEmpty(auditLogs)}"><td colspan="6" class="audit-empty"><i class="fa-regular fa-clipboard" aria-hidden="true"></i><strong>No activity found</strong><span>Adjust the filters or come back after more activity is recorded.</span></td></tr>
+						<tr th:if="${#lists.isEmpty(auditLogs)}">
+							<td colspan="6" class="audit-empty">
+								<i class="fa-regular fa-clipboard" aria-hidden="true"></i>
+								<strong>No activity found</strong>
+								<span>Adjust the filters or come back after more activity is recorded.</span>
+							</td>
+						</tr>
 					</tbody>
 				</table>
 			</div>
-			<div class="audit-pagination"><span class="text-muted small" th:text="${'Showing ' + showingStart + '-' + showingEnd + ' of ' + total + ' events'}">Showing 0-0 of 0 events</span><nav aria-label="Audit pages"><ul class="pagination pagination-sm mb-0"><li class="page-item" th:classappend="${pageNumber <= 1} ? ' disabled'"><a class="page-link" th:href="@{/audit(page=${pageNumber - 1},pageSize=${pageSize},q=${q},action=${action},entityType=${entityType},from=${from},to=${to})}">Previous</a></li><li class="page-item" th:each="p : ${#numbers.sequence(1,totalPages)}" th:classappend="${p == pageNumber} ? ' active'"><a class="page-link" th:href="@{/audit(page=${p},pageSize=${pageSize},q=${q},action=${action},entityType=${entityType},from=${from},to=${to})}" th:text="${p}">1</a></li><li class="page-item" th:classappend="${pageNumber >= totalPages} ? ' disabled'"><a class="page-link" th:href="@{/audit(page=${pageNumber + 1},pageSize=${pageSize},q=${q},action=${action},entityType=${entityType},from=${from},to=${to})}">Next</a></li></ul></nav></div>
+			
+			<!-- 🔴 Modal Box များ (View နှိပ်ရင် ပေါ်လာမယ့် Box) -->
+			<div th:each="entry : ${auditLogs}">
+			    <!-- Old Value Box -->
+			    <div class="modal fade" th:id="'oldModal'+${entry.id}" tabindex="-1">
+			        <div class="modal-dialog modal-lg modal-dialog-centered">
+			            <div class="modal-content">
+			                <div class="modal-header bg-danger text-white">
+			                    <h5 class="modal-title">Old Value Data</h5>
+			                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+			                </div>
+			                <!-- Old Value Box -->
+<!-- Old Value Box -->
+<div class="modal-body">
+    <ol class="bg-light p-3 rounded text-danger mb-0">
+        <li th:each="pair : ${#strings.arraySplit(#strings.replace(#strings.replace(entry.oldValue, '{', ''), '}', ''), ',')}">
+            <!-- 🔴 CSS သုံးပြီး အကြီးပြောင်းမယ် -->
+            <strong style="text-transform: capitalize;" 
+                    th:text="${#strings.trim(#strings.substringBefore(pair, ':'))}">
+            </strong>: 
+            <span th:text="${#strings.trim(#strings.substringAfter(pair, ':'))}"></span>
+        </li>
+    </ol>
+</div>
+
+ </div>
+			        </div>
+			    </div>
+			    
+			    <!-- New Value Box -->
+			    <div class="modal fade" th:id="'newModal'+${entry.id}" tabindex="-1">
+			        <div class="modal-dialog modal-lg modal-dialog-centered">
+			            <div class="modal-content">
+			                <div class="modal-header bg-success text-white">
+			                    <h5 class="modal-title">New Value Data</h5>
+			                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+			                </div>
+			      <!-- New Value Box -->
+<div class="modal-body">
+    <ol class="bg-light p-3 rounded text-success mb-0">
+        <li th:each="pair : ${#strings.arraySplit(#strings.replace(#strings.replace(entry.newValue, '{', ''), '}', ''), ',')}">
+            <!-- 🔴 CSS သုံးပြီး အကြီးပြောင်းမယ် -->
+            <strong style="text-transform: capitalize;" 
+                    th:text="${#strings.trim(#strings.substringBefore(pair, ':'))}">
+            </strong>: 
+            <span th:text="${#strings.trim(#strings.substringAfter(pair, ':'))}"></span>
+        </li>
+    </ol>
+</div>
+			            </div>
+			        </div>
+			    </div>
+			</div>
+
+			<div class="audit-pagination">
+				<span class="text-muted small" th:text="${'Showing ' + showingStart + '-' + showingEnd + ' of ' + total + ' events'}">Showing 0-0 of 0 events</span>
+				<nav aria-label="Audit pages">
+					<ul class="pagination pagination-sm mb-0">
+						<li class="page-item" th:classappend="${pageNumber <= 1} ? ' disabled'"><a class="page-link" th:href="@{/audit(page=${pageNumber - 1},pageSize=${pageSize},q=${q},action=${action},entityType=${entityType},from=${from},to=${to})}">Previous</a></li>
+						<li class="page-item" th:each="p : ${#numbers.sequence(1,totalPages)}" th:classappend="${p == pageNumber} ? ' active'"><a class="page-link" th:href="@{/audit(page=${p},pageSize=${pageSize},q=${q},action=${action},entityType=${entityType},from=${from},to=${to})}" th:text="${p}">1</a></li>
+						<li class="page-item" th:classappend="${pageNumber >= totalPages} ? ' disabled'"><a class="page-link" th:href="@{/audit(page=${pageNumber + 1},pageSize=${pageSize},q=${q},action=${action},entityType=${entityType},from=${from},to=${to})}">Next</a></li>
+					</ul>
+				</nav>
+			</div>
 		</section>
 	</main>
 </div>
