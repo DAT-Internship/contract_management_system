@@ -5,6 +5,8 @@ import com.cms.demo.entity.ContractAttachment;
 import com.cms.demo.entity.MasterContractStatus;
 import com.cms.demo.service.ContractService;
 import com.cms.demo.service.FileStorageService;
+import com.cms.demo.service.AuditLogService;
+import com.cms.demo.service.ApprovalNotificationService;
 import com.cms.demo.repository.AgreementForRepository;
 import com.cms.demo.repository.ContractCategoryRepository;
 import com.cms.demo.repository.ContractStatusRepository;
@@ -45,6 +47,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Comparator;
 import java.util.Locale;
+import com.cms.demo.entity.ApprovalStep;
+import java.time.LocalDateTime;
 import java.nio.charset.StandardCharsets;
 import java.net.URI;
 
@@ -66,6 +70,8 @@ public class ContractPageController {
     private final UserRepository userRepository;
     private final ApprovalStepRepository approvalStepRepository;
     private final Validator validator;
+    private final AuditLogService auditLogService;
+    private final ApprovalNotificationService approvalNotificationService;
 
     public ContractPageController(
             ContractService contractService,
@@ -81,7 +87,9 @@ public class ContractPageController {
             ProjectRepository projectRepository,
             UserRepository userRepository,
             ApprovalStepRepository approvalStepRepository,
-            Validator validator) {
+            Validator validator,
+            AuditLogService auditLogService,
+            ApprovalNotificationService approvalNotificationService) {
         this.contractService = contractService;
         this.fileStorageService = fileStorageService;
         this.agreementForRepository = agreementForRepository;
@@ -96,6 +104,8 @@ public class ContractPageController {
         this.userRepository = userRepository;
         this.approvalStepRepository = approvalStepRepository;
         this.validator = validator;
+        this.auditLogService = auditLogService;
+        this.approvalNotificationService = approvalNotificationService;
     }
 
     @GetMapping
@@ -136,12 +146,17 @@ public class ContractPageController {
     }
 
     @GetMapping("/{contractId}")
-    public String detail(@PathVariable Long contractId, Model model, Principal principal) {
+    public String detail(@PathVariable Long contractId, Model model, Principal principal,
+            @RequestParam(required = false) String source,
+            @RequestParam(required = false) String q) {
         var contract = contractService.getContractForUser(contractId, principal.getName());
         if (contract.getStatus() != null && "DRAFT".equalsIgnoreCase(contract.getStatus().getCode())) {
             return "redirect:/contracts/" + contractId + "/edit";
         }
         model.addAttribute("page", "contracts");
+        boolean returnFromApprovals = "approvals".equalsIgnoreCase(source);
+        model.addAttribute("returnFromApprovals", returnFromApprovals);
+        model.addAttribute("approvalQuery", q);
         model.addAttribute("contract", contract);
         model.addAttribute("attachments", contractService.getAttachmentResponses(contractId, principal.getName()));
         // Temporary customer-wide payment-summary sample data; replace with party-level aggregates when payment reporting is connected.
@@ -160,7 +175,11 @@ public class ContractPageController {
             default -> currencyCode;
         };
         model.addAttribute("paymentCurrencySymbol", currencySymbol);
-        model.addAttribute("approvalSteps", approvalStepRepository.findByContractContractIdOrderByCreatedAtDesc(contractId));
+        model.addAttribute("approvalSteps", approvalStepRepository.findByContractContractIdOrderByCreatedAtDesc(contractId)
+                .stream()
+                .sorted(Comparator.comparing((ApprovalStep step) -> step.getUpdatedAt() != null
+                        ? step.getUpdatedAt() : step.getCreatedAt(), Comparator.nullsLast(Comparator.reverseOrder())))
+                .toList());
         return "contracts/detail";
     }
 
@@ -256,7 +275,6 @@ public class ContractPageController {
             addFormOptions(model);
             return "contracts/form";
         }
-
         try {
             if (saveAsDraft) {
                 var draft = contractId == null
@@ -265,13 +283,23 @@ public class ContractPageController {
                 redirectAttributes.addFlashAttribute("success", "Draft saved. You can continue editing it at any time.");
                 return "redirect:/contracts/" + draft.contractId() + "/edit";
             } else if (contractId == null) {
-                contractService.create(form.toRequest(), files, principal.getName());
+                var created = contractService.create(form.toRequest(), files, principal.getName());
+                if ("submit".equalsIgnoreCase(action)) createApprovalStep(created.contractId(), principal.getName());
             } else {
+                var contractBeforeUpdate = contractService.getContractForUser(contractId, principal.getName());
+                boolean paymentDetailsChanged = !java.util.Objects.equals(
+                        contractBeforeUpdate.getPaymentType() == null ? null : contractBeforeUpdate.getPaymentType().getId(), form.getPaymentTypeId())
+                        || !java.util.Objects.equals(contractBeforeUpdate.getContractValue(), form.getContractValue())
+                        || !java.util.Objects.equals(contractBeforeUpdate.getCommercialTaxRate(), form.getCommercialTaxRate())
+                        || !java.util.Objects.equals(contractBeforeUpdate.getCurrency() == null ? null : contractBeforeUpdate.getCurrency().getId(), form.getCurrencyId());
                 contractService.update(contractId, form.toRequest(), principal.getName());
+                ensureSinglePendingApproval(contractId, principal.getName());
+                if (paymentDetailsChanged) createPaymentUpdatedHistory(contractId, principal.getName());
                 if (files != null) files.stream().filter(file -> file != null && !file.isEmpty())
                         .forEach(file -> contractService.addAttachment(contractId, file, principal.getName()));
             }
-            String successMessage = contractId != null ? "Contract updated successfully."
+            String successMessage = "submit".equalsIgnoreCase(action) ? "Contract submitted for approval."
+                    : contractId != null ? "Contract updated successfully."
                     : "draft".equalsIgnoreCase(action) ? "Contract draft saved successfully." : "Contract registered successfully.";
             redirectAttributes.addFlashAttribute("success", successMessage);
             return contractId == null ? "redirect:/contracts" : "redirect:/contracts/" + contractId;
@@ -286,6 +314,92 @@ public class ContractPageController {
             addFormOptions(model);
             return "contracts/form";
         }
+    }
+
+    private void createApprovalStep(Long contractId, String employeeCode) {
+        var contract = contractService.getContract(contractId);
+        var submitter = userRepository.findByEmployeeCode(employeeCode)
+                .orElseThrow(() -> new ResponseStatusException(org.springframework.http.HttpStatus.UNAUTHORIZED));
+        ApprovalStep step = new ApprovalStep();
+        step.setContract(contract);
+        step.setParty(contract.getParty());
+        step.setSubmittedBy(submitter);
+        step.setCurrentApproval("Department / PMO review");
+        step.setStatus("PENDING");
+        step.setCreatedAt(LocalDateTime.now());
+        step.setUpdatedAt(LocalDateTime.now());
+        approvalStepRepository.save(step);
+        recordApprovalChange(employeeCode, contractId, "", "PENDING", step.getCurrentApproval(), "");
+        // NEW: notification + e-mail to the relevant approvers
+        approvalNotificationService.notifyApproversSubmitted(contract, submitter, false);
+    }
+
+    private void createPaymentUpdatedHistory(Long contractId, String employeeCode) {
+        var contract = contractService.getContract(contractId);
+        var editor = userRepository.findByEmployeeCode(employeeCode)
+                .orElseThrow(() -> new ResponseStatusException(org.springframework.http.HttpStatus.UNAUTHORIZED));
+        ApprovalStep event = new ApprovalStep();
+        event.setContract(contract);
+        event.setParty(contract.getParty());
+        event.setSubmittedBy(editor);
+        event.setApprover(editor);
+        event.setCurrentApproval("Payment Updated");
+        event.setStatus("PAYMENT_UPDATED");
+        event.setComment("Payment details updated");
+        event.setCreatedAt(LocalDateTime.now());
+        event.setUpdatedAt(LocalDateTime.now());
+        approvalStepRepository.save(event);
+        recordApprovalChange(employeeCode, contractId, "", "PAYMENT_UPDATED", event.getCurrentApproval(), event.getComment());
+    }
+
+    private void ensureSinglePendingApproval(Long contractId, String employeeCode) {
+        var steps = approvalStepRepository.findByContractContractIdOrderByCreatedAtDesc(contractId);
+        var pendingSteps = steps.stream()
+                .filter(step -> "PENDING".equalsIgnoreCase(step.getStatus()))
+                .toList();
+        if (!pendingSteps.isEmpty()) {
+            // Keep the newest pending row visible in the queue and close any duplicate pending rows.
+            for (int i = 1; i < pendingSteps.size(); i++) {
+                pendingSteps.get(i).setStatus("SUPERSEDED");
+                pendingSteps.get(i).setUpdatedAt(LocalDateTime.now());
+            }
+            approvalStepRepository.saveAll(pendingSteps);
+            return;
+        }
+
+        // Reuse a returned row only when it is the latest approval record. If the
+        // latest decision was APPROVED, preserve it in history and create a new review row.
+        ApprovalStep latest = steps.isEmpty() ? null : steps.get(0);
+        if (latest != null && "RETURNED".equalsIgnoreCase(latest.getStatus())) {
+            ApprovalStep step = latest;
+            step.setStatus("PENDING");
+            step.setComment(null);
+            var reviser = userRepository.findByEmployeeCode(employeeCode).orElse(null);
+            step.setSubmittedBy(reviser);
+            String reviserName = reviser == null ? null : reviser.getFullName();
+            if (reviserName == null || reviserName.isBlank()) reviserName = "System";
+            step.setCurrentApproval("Resubmitted by " + reviserName);
+            step.setUpdatedAt(LocalDateTime.now());
+            approvalStepRepository.save(step);
+            recordApprovalChange(employeeCode, contractId, "RETURNED", "PENDING", step.getCurrentApproval(), "");
+            // NEW: resubmitted after a rejection -> notify the approvers again
+            approvalNotificationService.notifyApproversSubmitted(contractService.getContract(contractId), reviser, true);
+        } else {
+            createApprovalStep(contractId, employeeCode);
+        }
+    }
+
+    private void recordApprovalChange(String employeeCode, Long contractId, String oldStatus,
+            String newStatus, String stage, String comment) {
+        auditLogService.record(employeeCode, "APPROVAL", contractId, "UPDATE",
+                "{\"status\":\"" + auditJsonValue(oldStatus) + "\",\"stage\":\"" + auditJsonValue(stage) + "\"}",
+                "{\"status\":\"" + auditJsonValue(newStatus) + "\",\"stage\":\"" + auditJsonValue(stage)
+                        + "\",\"comment\":\"" + auditJsonValue(comment) + "\"}");
+    }
+
+    private String auditJsonValue(String value) {
+        return value == null ? "" : value.replace("\\", "\\\\").replace("\"", "\\\"")
+                .replace("\r", "\\r").replace("\n", "\\n");
     }
 
     @GetMapping("/{contractId}/attachments/{attachmentId}/download")

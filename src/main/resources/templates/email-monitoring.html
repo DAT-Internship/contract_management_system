@@ -238,13 +238,35 @@
   var pageSize = parseInt(pageSizeSel.value, 10) || 10;
 
   // ---------- Filtering ----------
+  function norm(v) {
+    return (v || '').toLowerCase().replace(/_/g, ' ').replace(/\s+/g, ' ').trim();
+  }
+
+  // Search recipient, subject, contract, status and date only - the last "Actions" cell
+  // ("View details") is excluded so typing "view" or "details" does not match every row.
+  function searchText(row) {
+    var cells = row.querySelectorAll('td');
+    var parts = [];
+    for (var i = 0; i < cells.length - 1; i++) parts.push(cells[i].textContent);
+    parts.push(row.getAttribute('data-type') || '');
+    return norm(parts.join(' '));
+  }
+
+  // every word typed must be found (AND), in any order
+  function matchQuery(row, q) {
+    if (!q) return true;
+    var text = searchText(row);
+    return q.split(' ').every(function (w) { return text.indexOf(w) >= 0; });
+  }
+
   function matches(row) {
-    var q = (search.value || '').toLowerCase();
+    var q = norm(search.value);
     var tp = typeFilter.value;
     var created = row.getAttribute('data-created') || '';
     if (currentGroup && row.getAttribute('data-group') !== currentGroup) return false;
-    if (tp && row.getAttribute('data-type') !== tp) return false;
-    if (q && row.textContent.toLowerCase().indexOf(q) < 0) return false;
+    var rowType = row.getAttribute('data-type') || '';
+    if (tp && !(tp === 'APPROVAL' ? rowType.toUpperCase().indexOf('APPROVAL') === 0 : rowType === tp)) return false;
+    if (!matchQuery(row, q)) return false;
     if (dateFrom.value && (!created || created < dateFrom.value)) return false;
     if (dateTo.value && (!created || created > dateTo.value)) return false;
     return true;

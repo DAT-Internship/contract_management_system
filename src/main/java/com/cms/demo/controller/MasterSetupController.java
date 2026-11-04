@@ -10,7 +10,6 @@ import com.cms.demo.entity.MasterCurrency;
 import com.cms.demo.entity.MasterPaymentStatus;
 import com.cms.demo.entity.MasterPaymentType;
 import com.cms.demo.entity.Project;
-import com.cms.demo.entity.User;
 import com.cms.demo.repository.ProjectRepository;
 import com.cms.demo.repository.UserRepository;
 import org.springframework.format.annotation.DateTimeFormat;

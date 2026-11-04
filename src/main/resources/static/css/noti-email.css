@@ -567,3 +567,216 @@ button.ne-link { border: 0; background: transparent; padding: 0; cursor: pointer
     outline: 3px solid rgba(59, 130, 246, 0.2);
     outline-offset: 2px;
 }
+
+/* =========================================
+   NOTIFICATION LIST - ALIGNED COLUMNS
+   badge | date/time | button have fixed widths,
+   so every row lines up regardless of text length
+========================================= */
+.ne-item { align-items: center; }
+
+.ne-meta {
+    display: grid;
+    grid-template-columns: 112px 140px 124px;
+    column-gap: 14px;
+    align-items: center;
+    justify-content: end;
+    flex: 0 0 auto;
+    width: auto;
+}
+
+.ne-meta .ne-badge {
+    display: block;
+    width: 112px;
+    min-width: 0;
+    padding: .32rem .5rem;
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ne-meta .ne-time {
+    width: 140px;
+    min-width: 0;
+    text-align: left;
+    white-space: nowrap;
+}
+
+.ne-meta .ne-view-btn {
+    width: 124px;
+    justify-self: end;
+}
+
+/* keep every row the same height: max 2 lines of message */
+.ne-item .ne-msg {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+@media (max-width: 768px) {
+    .ne-meta {
+        width: 100%;
+        grid-template-columns: auto 1fr auto;
+        column-gap: 10px;
+        justify-content: stretch;
+    }
+    .ne-meta .ne-badge,
+    .ne-meta .ne-time,
+    .ne-meta .ne-view-btn { width: auto; }
+    .ne-meta .ne-badge { padding: .32rem .75rem; }
+}
+
+/* ---------- Approval result colours ---------- */
+.ne-icon.rejected { background: #fde2e2; color: #dc2626; }
+.ne-icon.approved { background: #ddf5e8; color: #059669; }
+.ne-badge.rejected { background: #fddede; color: #b91c1c; }
+.ne-badge.approved { background: #d6f5e3; color: #047857; }
+
+/* ===== Notification row alignment (screenshot match) ===== */
+.ne-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid #e5eaf2;
+}
+
+.ne-item {
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.05rem 1.25rem 1.05rem 2.1rem;
+  border-bottom: 1px solid #eef2f7;
+  background: #fff;
+}
+
+.ne-item:hover { background: #f9fbff; }
+.ne-item.unread { background: #eaf2ff; }
+.ne-item.unread:hover { background: #e2edff; }
+
+.ne-dot {
+  position: absolute;
+  left: 0.95rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #1d5cf0;
+}
+.ne-dot.read { background: transparent; }
+
+.ne-icon {
+  width: 46px;
+  height: 46px;
+  min-width: 46px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 1.1rem;
+}
+
+.ne-body {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.ne-title {
+  margin: 0 0 0.2rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #0b1b3a;
+  line-height: 1.35;
+}
+
+.ne-msg {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #64748b;
+  line-height: 1.45;
+  white-space: pre-line;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Right column: fixed widths → every row aligns */
+.ne-meta {
+  display: grid;
+  grid-template-columns: 120px 150px 130px;
+  column-gap: 12px;
+  align-items: center;
+  flex: 0 0 auto;
+  margin-left: auto;
+}
+
+.ne-meta .ne-badge {
+  width: 120px;
+  text-align: center;
+  padding: 0.3rem 0.5rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ne-meta .ne-time {
+  width: 150px;
+  font-size: 0.8rem;
+  color: #64748b;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.ne-meta .ne-view-btn {
+  width: 130px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0.4rem 0.7rem;
+  border: 1px solid #dbe3ef;
+  border-radius: 8px;
+  background: #fff;
+  color: #334155;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.ne-meta .ne-view-btn:hover {
+  background: #eff6ff;
+  border-color: #3b82f6;
+  color: #2563eb;
+}
+
+.ne-kebab-spacer { display: none !important; }
+
+@media (max-width: 900px) {
+  .ne-meta {
+    grid-template-columns: 100px 120px 120px;
+    column-gap: 8px;
+  }
+  .ne-meta .ne-badge,
+  .ne-meta .ne-time,
+  .ne-meta .ne-view-btn { width: auto; min-width: 0; }
+}
+
+@media (max-width: 768px) {
+  .ne-item {
+    flex-wrap: wrap;
+    padding-left: 1.75rem;
+  }
+  .ne-meta {
+    width: 100%;
+    grid-template-columns: auto 1fr auto;
+    margin-left: 0;
+    padding-left: 54px;
+  }
+}
