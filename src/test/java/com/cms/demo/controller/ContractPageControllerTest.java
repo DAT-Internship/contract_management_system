@@ -1,10 +1,14 @@
 package com.cms.demo.controller;
 
 import com.cms.demo.dto.ContractResponse;
+import com.cms.demo.entity.ApprovalStep;
+import com.cms.demo.entity.Contract;
 import com.cms.demo.entity.MasterContractStatus;
+import com.cms.demo.entity.User;
 import com.cms.demo.repository.*;
 import com.cms.demo.service.ContractService;
 import com.cms.demo.service.FileStorageService;
+import com.cms.demo.service.AuditLogService;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import org.junit.jupiter.api.BeforeEach;
@@ -31,6 +35,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class ContractPageControllerTest {
 
     private ContractService contractService;
+    private ApprovalStepRepository approvalStepRepository;
     private MockMvc mockMvc;
 
     @BeforeEach
@@ -40,6 +45,12 @@ class ContractPageControllerTest {
         activeStatus.setId(1);
         activeStatus.setCode("ACTIVE");
         activeStatus.setIsActive(true);
+        User submitter = new User();
+        submitter.setEmployeeCode("25-00001");
+        Contract createdContract = new Contract();
+        createdContract.setContractId(100L);
+        approvalStepRepository = mock(ApprovalStepRepository.class);
+        when(contractService.getContract(100L)).thenReturn(createdContract);
 
         ContractStatusRepository statuses = repositoryProxy(ContractStatusRepository.class, (method, args) -> {
             if ("findById".equals(method)) return Optional.of(activeStatus);
@@ -58,9 +69,11 @@ class ContractPageControllerTest {
                 repositoryProxy(CustomerSupplierRepository.class, (m, a) -> List.of()),
                 repositoryProxy(CurrencyRepository.class, (m, a) -> List.of()),
                 repositoryProxy(ProjectRepository.class, (m, a) -> List.of()),
-                repositoryProxy(UserRepository.class, (m, a) -> List.of()),
-                mock(ApprovalStepRepository.class),
-                defaultValidator());
+                repositoryProxy(UserRepository.class, (method, args) ->
+                        "findByEmployeeCode".equals(method) ? Optional.of(submitter) : null),
+                approvalStepRepository,
+                defaultValidator(),
+                mock(AuditLogService.class));
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
     }
 
@@ -77,6 +90,11 @@ class ContractPageControllerTest {
         var requestCaptor = org.mockito.ArgumentCaptor.forClass(com.cms.demo.dto.ContractRequest.class);
         verify(contractService).create(requestCaptor.capture(), any(), eq("25-00001"));
         var request = requestCaptor.getValue();
+        var approvalCaptor = org.mockito.ArgumentCaptor.forClass(ApprovalStep.class);
+        verify(approvalStepRepository).save(approvalCaptor.capture());
+        org.junit.jupiter.api.Assertions.assertEquals("PENDING", approvalCaptor.getValue().getStatus());
+        org.junit.jupiter.api.Assertions.assertEquals("Department / PMO review",
+                approvalCaptor.getValue().getCurrentApproval());
         org.junit.jupiter.api.Assertions.assertEquals("PO-2026-001", request.contractPoNo());
         org.junit.jupiter.api.Assertions.assertEquals("FY2026", request.fiscalYear());
         org.junit.jupiter.api.Assertions.assertEquals("Full contract description", request.description());

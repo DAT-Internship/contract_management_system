@@ -13,6 +13,7 @@
   <link rel="stylesheet" th:if="${page == 'contracts' or page == 'import-batches' or page == 'payments'}" th:href="@{/css/contracts.css}">
   <link rel="stylesheet" th:if="${page == 'payments'}" th:href="@{/css/payments.css}">
   <link rel="stylesheet" th:if="${page == 'audit'}" th:href="@{/css/audit.css}">
+  <link rel="stylesheet" th:if="${page == 'approvals'}" th:href="@{/css/approvals.css(v='20261103-history-columns')}">
   <meta name="employee-code"
       th:if="${#authentication != null and #authentication.authenticated}"
       th:content="${#authentication.name}"/>
@@ -57,7 +58,8 @@
   </a>
 
   <a class="side-link"
-     href="#">
+     th:href="@{/approvals}"
+     th:classappend="${page == 'approvals'} ? ' active'">
     <i class="fa-solid fa-square-check nav-icon" aria-hidden="true"></i>
     Approval Queue
   </a>
