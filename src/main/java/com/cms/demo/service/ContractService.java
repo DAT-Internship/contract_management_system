@@ -8,6 +8,7 @@ import com.cms.demo.entity.ContractAttachment;
 import com.cms.demo.entity.MasterContractStatus;
 import com.cms.demo.entity.Project;
 import com.cms.demo.entity.User;
+import com.cms.demo.event.ContractUpdatedEvent;
 import com.cms.demo.repository.AgreementForRepository;
 import com.cms.demo.repository.ContractAttachmentRepository;
 import com.cms.demo.repository.ContractCategoryRepository;
@@ -21,6 +22,7 @@ import com.cms.demo.repository.PaymentTypeRepository;
 import com.cms.demo.repository.ProjectRepository;
 import com.cms.demo.repository.UserRepository;
 import org.springframework.http.HttpStatus;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -51,6 +53,7 @@ public class ContractService {
     private final UserRepository userRepository;
     private final ContractAttachmentRepository contractAttachmentRepository;
     private final FileStorageService fileStorageService;
+    private final ApplicationEventPublisher eventPublisher;
 
     public ContractService(
             ContractRepository contractRepository,
@@ -65,7 +68,8 @@ public class ContractService {
             ProjectRepository projectRepository,
             UserRepository userRepository,
             ContractAttachmentRepository contractAttachmentRepository,
-            FileStorageService fileStorageService) {
+            FileStorageService fileStorageService,
+            ApplicationEventPublisher eventPublisher) {
         this.contractRepository = contractRepository;
         this.agreementForRepository = agreementForRepository;
         this.categoryRepository = categoryRepository;
@@ -79,6 +83,7 @@ public class ContractService {
         this.userRepository = userRepository;
         this.contractAttachmentRepository = contractAttachmentRepository;
         this.fileStorageService = fileStorageService;
+        this.eventPublisher = eventPublisher;
     }
 
     @Transactional
@@ -199,6 +204,7 @@ public class ContractService {
     @Transactional
     public ContractResponse update(Long id, ContractRequest request, String employeeCode) {
         Contract contract = getContractForUser(id, employeeCode);
+        String previousStatusCode = contract.getStatus() == null ? null : contract.getStatus().getCode();
         String contractNo = normalizeContractNo(request);
         if (!contract.getContractNo().equals(contractNo) && contractRepository.existsByContractNo(contractNo)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Contract number already exists");
@@ -212,7 +218,18 @@ public class ContractService {
 
         contract.setUpdatedBy(getUserByEmployeeCode(employeeCode));
         contract.setUpdatedAt(LocalDateTime.now());
-        return toResponse(contractRepository.save(contract));
+        Contract updated = contractRepository.save(contract);
+        String updatedStatusCode = updated.getStatus() == null ? null : updated.getStatus().getCode();
+        boolean newlyTerminated = !isTerminated(previousStatusCode) && isTerminated(updatedStatusCode);
+        eventPublisher.publishEvent(new ContractUpdatedEvent(updated.getContractId(),
+                employeeCode, newlyTerminated));
+        return toResponse(updated);
+    }
+
+    private boolean isTerminated(String statusCode) {
+        return statusCode != null && ("CS004".equalsIgnoreCase(statusCode.trim())
+                || "TERMINATED".equalsIgnoreCase(statusCode.trim())
+                || "CANCELLED".equalsIgnoreCase(statusCode.trim()));
     }
 
     private void applyDraftRequest(Contract contract, ContractRequest request, String contractNo, String employeeCode) {

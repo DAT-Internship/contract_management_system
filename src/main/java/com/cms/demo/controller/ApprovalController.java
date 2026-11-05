@@ -1,6 +1,7 @@
 package com.cms.demo.controller;
 
 import com.cms.demo.entity.ApprovalStep;
+import com.cms.demo.event.ContractApprovedEvent;
 import com.cms.demo.repository.ApprovalStepRepository;
 import com.cms.demo.repository.ContractRepository;
 import com.cms.demo.repository.ContractStatusRepository;
@@ -10,6 +11,7 @@ import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Locale;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -31,15 +33,17 @@ public class ApprovalController {
     private final ContractRepository contractRepository;
     private final ContractStatusRepository contractStatusRepository;
     private final AuditLogService auditLogService;
+    private final ApplicationEventPublisher eventPublisher;
 
     public ApprovalController(ApprovalStepRepository approvalRepository, UserRepository userRepository,
             ContractRepository contractRepository, ContractStatusRepository contractStatusRepository,
-            AuditLogService auditLogService) {
+            AuditLogService auditLogService, ApplicationEventPublisher eventPublisher) {
         this.approvalRepository = approvalRepository;
         this.userRepository = userRepository;
         this.contractRepository = contractRepository;
         this.contractStatusRepository = contractStatusRepository;
         this.auditLogService = auditLogService;
+        this.eventPublisher = eventPublisher;
     }
 
     @GetMapping
@@ -136,7 +140,10 @@ public class ApprovalController {
                 "{\"status\":\"" + auditValue(previousStatus) + "\",\"stage\":\"" + auditValue(approvalStage) + "\"}",
                 "{\"status\":\"" + normalized + "\",\"stage\":\"" + auditValue(approvalStage)
                         + "\",\"comment\":\"" + auditValue(comment == null ? "" : comment.trim()) + "\"}");
-        if ("APPROVED".equals(normalized)) flash.addFlashAttribute("success", "Contract approved.");
+        if ("APPROVED".equals(normalized)) {
+            eventPublisher.publishEvent(new ContractApprovedEvent(contract.getContractId()));
+            flash.addFlashAttribute("success", "Contract approved.");
+        }
         return "redirect:/approvals";
     }
 

@@ -127,6 +127,16 @@ Existing users are not modified. Use the Finance account to add invoices and rec
 - Every write records an `audit_logs` row with `entity_type = 'INVOICE'` and `old_value` / `new_value` JSON (`CREATED`, `INVOICE_UPDATED`, `PAYMENT_UPDATED`, `STATUS_CHANGED`).
 - A daily scheduler (`app.payment.overdue-cron`, default `0 5 0 * * *`) persists `OVERDUE` status and records a `STATUS_CHANGED` audit entry.
 
+### Notifications and email
+
+- Contract approval notifies active Finance users, the contract creator, contract manager, project in-charge, project manager, and Admin. The Finance notification links directly to the add-invoice form.
+- Routine invoice creation/edits, payment updates, and ordinary contract edits do not create noisy Admin notifications or emails; audit logs retain the changes. When an invoice payment changes and leaves a balance outstanding, Finance, Admin, the contract creator, contract manager, and project manager receive an in-app notification and email showing paid and remaining amounts. Finance is notified when each invoice becomes fully paid. Finance, the contract manager, creator, project manager, and Admin are notified when every invoice is paid and total payments cover the contract's tax-inclusive gross amount.
+- Payment reminders run 7 days before the due date, on the due date, and weekly while overdue (starting one day after the due date).
+- Active contracts receive expiry reminders 90, 60, 30, and 7 days before the end date. The creator, contract manager, project in-charge, project manager, and Admin receive these reminders.
+- Every contract edit notifies Admin. A transition to terminated/cancelled additionally notifies the contract stakeholders and Finance; terminated contracts are excluded from future expiry reminders.
+- Notifications are stored in the user's notification inbox and email attempts are recorded in Email Monitoring. Admin receives the same update emails as notifications addressed to Admin.
+- Configure `CMS_SMTP_HOST`, `CMS_SMTP_PORT`, `CMS_SMTP_USERNAME`, `CMS_SMTP_PASSWORD`, and `CMS_SMTP_FROM` for email delivery. Without valid SMTP settings, in-app notifications are still stored but email attempts are marked failed.
+
 Database migrations contain schema changes only (`V1`–`V8`). Master data is not seeded by Flyway.
 
 A ready-to-run seed is provided at `src/main/resources/db/seed/master-data.sql`. It contains all master data plus the `FINANCE`, `APPROVER`, and `OPERATOR` roles, the PMO department, and the correct currency codes. It is idempotent and can be re-run:

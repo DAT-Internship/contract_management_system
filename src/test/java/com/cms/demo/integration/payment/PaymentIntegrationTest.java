@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
@@ -160,6 +161,7 @@ class PaymentIntegrationTest {
         // Audit rows use a REQUIRES_NEW transaction, so they are committed even
         // outside the fixture transaction and have to be removed explicitly.
         deleteInvoiceAuditLogs();
+        deletePaymentNotifications();
         deleteRows("audit_logs", "actor_id", userIds);
         deleteRows("invoices", "invoice_id", invoiceIds);
         deleteRows("contracts", "contract_id", contractIds);
@@ -315,6 +317,8 @@ class PaymentIntegrationTest {
                 contract.getContractId(), financeUser.getEmployeeCode());
 
         assertEquals(contract.getContractId(), detail.contract().contractId());
+        assertEquals(contract.getContractNo(), detail.contract().contractNo());
+        assertEquals("Payment Test Supplier " + suffix, detail.contract().partyName());
         assertEquals(1, detail.contract().invoiceCount());
         assertEquals(new BigDecimal("100.00"), detail.contract().totalInvoiced());
         assertEquals(new BigDecimal("40.00"), detail.contract().totalPaid());
@@ -352,7 +356,11 @@ class PaymentIntegrationTest {
                         .with(user(financeUser.getEmployeeCode()).roles("FINANCE")))
                 .andExpect(status().isOk())
                 .andExpect(view().name("payments/list"))
-                .andExpect(model().attributeExists("overview", "contracts", "statusOptions"));
+                .andExpect(model().attributeExists("overview", "contracts", "statusOptions"))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString(contract.getContractNo())))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString(contract.getContractPoNo())))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString(
+                        "Payment Test Supplier " + suffix)));
     }
 
     @Test
@@ -364,6 +372,35 @@ class PaymentIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(view().name("payments/detail"))
                 .andExpect(model().attributeExists("detail", "invoices", "history"));
+    }
+
+    @Test
+    void fullyPaidNotificationDestinationRendersForAdminRecipient() throws Exception {
+        InvoiceResponse invoice = createInvoice(invoiceNo("ADMINPAID"), "100.00", ZERO,
+                today, today.plusDays(30));
+        paymentService.recordPayment(invoice.invoiceId(),
+                new PaymentUpdateRequest(invoice.totalAmount(), today, "Fully paid"),
+                financeUser.getEmployeeCode());
+
+        mockMvc.perform(get("/payments/{contractId}", contract.getContractId())
+                        .with(user(financeUser.getEmployeeCode()).roles("ADMIN")))
+                .andExpect(status().isOk())
+                .andExpect(view().name("payments/detail"))
+                .andExpect(model().attributeExists("detail", "invoices", "history"))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString(contract.getContractNo())));
+    }
+
+    @Test
+    void contractViewPageRendersContractWithOptionalFieldsMissing() throws Exception {
+        mockMvc.perform(get("/contracts/{contractId}", contract.getContractId())
+                        .with(user(financeUser.getEmployeeCode()).roles("FINANCE")))
+                .andExpect(status().isOk())
+                .andExpect(view().name("contracts/detail"))
+                .andExpect(model().attributeExists("paymentSummary", "attachments", "approvalSteps"))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString(contract.getContractNo())))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString(
+                        contract.getParty().getPartyName())))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Payment totals for this contract")));
     }
 
     // ------------------------------------------------------------------
@@ -512,6 +549,7 @@ class PaymentIntegrationTest {
             MasterPaymentType paymentType) {
         Contract created = new Contract();
         created.setContractNo("IT-" + suffix);
+        created.setContractPoNo("PO-" + suffix);
         created.setDescription("Payment integration test contract " + suffix);
         created.setRegisterDate(today);
         created.setStartDate(today.minusDays(1));
@@ -549,6 +587,32 @@ class PaymentIntegrationTest {
         arguments.addAll(invoiceIds);
         jdbcTemplate.update("delete from audit_logs where entity_type = ? and entity_id in ("
                 + placeholders + ")", arguments.toArray());
+    }
+
+    private void deletePaymentNotifications() {
+        List<String> conditions = new ArrayList<>();
+        List<Object> arguments = new ArrayList<>();
+        if (!userIds.isEmpty()) {
+            conditions.add("user_id in (" + userIds.stream().map(id -> "?").collect(Collectors.joining(",")) + ")");
+            arguments.addAll(userIds);
+        }
+        if (!invoiceIds.isEmpty()) {
+            conditions.add("(type = 'INVOICE_ACTIVITY' and entity_id in ("
+                    + invoiceIds.stream().map(id -> "?").collect(Collectors.joining(",")) + "))");
+            arguments.addAll(invoiceIds);
+        }
+        if (!contractIds.isEmpty()) {
+            conditions.add("(type = 'CONTRACT_PAYMENT_COMPLETED' and entity_id in ("
+                    + contractIds.stream().map(id -> "?").collect(Collectors.joining(",")) + "))");
+            arguments.addAll(contractIds);
+        }
+        if (conditions.isEmpty()) {
+            return;
+        }
+        String whereClause = String.join(" or ", conditions);
+        jdbcTemplate.update("delete from email_logs where notification_id in "
+                + "(select notification_id from notifications where " + whereClause + ")", arguments.toArray());
+        jdbcTemplate.update("delete from notifications where " + whereClause, arguments.toArray());
     }
 
     private void deleteRows(String table, String column, Collection<? extends Number> ids) {

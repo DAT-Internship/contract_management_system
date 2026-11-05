@@ -9,6 +9,7 @@ import com.cms.demo.repository.*;
 import com.cms.demo.service.ContractService;
 import com.cms.demo.service.FileStorageService;
 import com.cms.demo.service.AuditLogService;
+import com.cms.demo.service.PaymentService;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import org.junit.jupiter.api.BeforeEach;
@@ -73,7 +74,8 @@ class ContractPageControllerTest {
                         "findByEmployeeCode".equals(method) ? Optional.of(submitter) : null),
                 approvalStepRepository,
                 defaultValidator(),
-                mock(AuditLogService.class));
+                mock(AuditLogService.class),
+                mock(PaymentService.class));
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
     }
 

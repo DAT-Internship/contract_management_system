@@ -126,9 +126,10 @@
             </thead>
             <tbody>
               <tr th:each="e : ${emailLogs}"
-                  th:classappend="${e.status == 'FAILED'} ? ' failed' : (${e.status == 'SENT_UNREAD' or e.status == 'SENT'} ? ' row-unread')"
+                  th:classappend="${(e.status == 'FAILED' ? ' failed' : '') + (e.readAt == null and e.status != 'CANCELLED' ? ' row-unread' : '')}"
                   th:attr="data-status=${e.status},data-type=${e.emailType},
-                           data-group=${e.status == 'FAILED' ? 'FAILED' : (e.status == 'PENDING' ? 'PENDING' : 'SENT')}"
+                           data-group=${e.status == 'FAILED' ? 'FAILED' : (e.status == 'PENDING' ? 'PENDING' : 'SENT')},
+                           data-read=${e.readAt != null}"
                   th:data-created="${e.createdAt != null ? #temporals.format(e.createdAt, 'yyyy-MM-dd') : ''}">
                 <td th:text="${e.recipientEmail}">email</td>
                 <td th:text="${e.subject}">subject</td>
@@ -158,7 +159,11 @@
 
         <!-- Pagination -->
         <div class="ne-footer">
-          <span id="pagerInfo">Showing 0 of 0 emails</span>
+          <span id="pagerInfo"
+                th:text="${totalCount == 0 ? 'Showing 0 of 0 emails' :
+                          'Showing 1-' + (totalCount < 5 ? totalCount : 5) + ' of ' + totalCount + ' emails'}">
+            Showing 0 of 0 emails
+          </span>
           <div class="ne-pager-right">
             <label class="ne-rpp">Rows per page:
               <select id="rowsPerPage">
@@ -415,44 +420,64 @@
     document.getElementById('edErrorBox').style.display = hasErr ? 'flex' : 'none';
     document.getElementById('edError').textContent = d.errorMessage || '';
 
-    markBtn.style.display = isUnread(d.status) ? 'inline-flex' : 'none';
+    markBtn.style.display = d.canMarkRead ? 'inline-flex' : 'none';
     markBtn.disabled = false;
     
     document.getElementById('edAttempts').textContent =
         d.attemptCount != null ? d.attemptCount : '0';
   }
 
-  // View details = view only (status does not change)
+  function applyReadResult(id, res) {
+    setBadge(res.count);
+    setPill(document.getElementById('edStatus'), res.status);
+    setModalState(res.status);
+    markBtn.style.display = 'none';
+    document.querySelectorAll('.btn-view-email[data-id="' + id + '"]').forEach(function (b) {
+      var row = b.closest('tr');
+      if (!row) return;
+      row.setAttribute('data-status', res.status);
+      row.setAttribute('data-read', 'true');
+      row.classList.remove('row-unread');
+      var pill = row.querySelector('.status-pill');
+      if (pill) setPill(pill, res.status);
+    });
+  }
+
+  function markEmailRead(id) {
+    return fetch('/api/emails/' + id + '/mark-read', {
+      method: 'POST',
+      credentials: 'same-origin'
+    }).then(function (r) {
+      return r.ok ? r.json() : Promise.reject(new Error('Mark email as read failed: ' + r.status));
+    }).then(function (res) {
+      applyReadResult(id, res);
+    });
+  }
+
+  // Opening the details marks an unread email as read for its recipient.
   document.querySelectorAll('.btn-view-email').forEach(function (btn) {
     btn.addEventListener('click', function () {
       var id = btn.getAttribute('data-id');
       fetch('/api/emails/' + id, { credentials: 'same-origin' })
         .then(function (r) { return r.ok ? r.json() : Promise.reject(); })
-        .then(function (data) { fillModal(data); modal.show(); })
+        .then(function (data) {
+          fillModal(data);
+          modal.show();
+          if (data.canMarkRead) {
+            markEmailRead(data.emailLogId).catch(function (error) {
+              console.error('Unable to mark opened email as read:', error);
+            });
+          }
+        })
         .catch(function () { alert('Could not load email details'); });
     });
   });
 
-  // Status becomes Read only when this button is clicked
+  // Keep the explicit action available if automatic marking failed.
   markBtn.addEventListener('click', function () {
     if (!currentId) return;
     markBtn.disabled = true;
-    fetch('/api/emails/' + currentId + '/mark-read', { method: 'POST', credentials: 'same-origin' })
-      .then(function (r) { return r.ok ? r.json() : Promise.reject(); })
-      .then(function (res) {
-        setBadge(res.count);
-        setPill(document.getElementById('edStatus'), res.status);
-        setModalState(res.status);
-        markBtn.style.display = 'none';
-        document.querySelectorAll('.btn-view-email[data-id="' + currentId + '"]').forEach(function (b) {
-          var row = b.closest('tr');
-          if (!row) return;
-          row.setAttribute('data-status', res.status);
-          row.classList.remove('row-unread');
-          var pill = row.querySelector('.status-pill');
-          if (pill) setPill(pill, res.status);
-        });
-      })
+    markEmailRead(currentId)
       .catch(function () { markBtn.disabled = false; alert('Mark as read failed'); });
   });
 

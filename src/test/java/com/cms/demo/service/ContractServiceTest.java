@@ -3,6 +3,7 @@ package com.cms.demo.service;
 import com.cms.demo.dto.ContractRequest;
 import com.cms.demo.dto.ContractResponse;
 import com.cms.demo.entity.*;
+import com.cms.demo.event.ContractUpdatedEvent;
 import com.cms.demo.repository.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -16,6 +17,9 @@ import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
+import org.springframework.context.ApplicationEventPublisher;
+import org.mockito.ArgumentCaptor;
+import static org.mockito.Mockito.verify;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -34,6 +38,8 @@ class ContractServiceTest {
     private UserRepository userRepository;
     private ContractAttachmentRepository contractAttachmentRepository;
     private FileStorageService fileStorageService;
+    private ApplicationEventPublisher eventPublisher;
+    private final AtomicReference<MasterContractStatus> requestStatus = new AtomicReference<>();
 
     private ContractService contractService;
 
@@ -85,6 +91,7 @@ class ContractServiceTest {
         status.setId(1);
         status.setCode("ACTIVE");
         status.setName("Active");
+        requestStatus.set(status);
 
         department = new Department();
         department.setDepartmentId(1);
@@ -130,7 +137,7 @@ class ContractServiceTest {
         });
 
         statusRepository = createProxy(ContractStatusRepository.class, (name, args) -> {
-            if ("findById".equals(name)) return Optional.of(status);
+            if ("findById".equals(name)) return Optional.of(requestStatus.get());
             return null;
         });
 
@@ -181,6 +188,7 @@ class ContractServiceTest {
             }
         };
 
+        eventPublisher = org.mockito.Mockito.mock(ApplicationEventPublisher.class);
         contractService = new ContractService(
                 contractRepository,
                 agreementForRepository,
@@ -194,8 +202,25 @@ class ContractServiceTest {
                 projectRepository,
                 userRepository,
                 contractAttachmentRepository,
-                fileStorageService
+                fileStorageService,
+                eventPublisher
         );
+    }
+
+    @Test
+    void updateToTerminatedPublishesTerminatedContractUpdate() {
+        ContractResponse created = contractService.create(createSampleRequest(), "25-00001");
+        MasterContractStatus terminated = new MasterContractStatus();
+        terminated.setId(2);
+        terminated.setCode("CS004");
+        terminated.setName("Terminated");
+        requestStatus.set(terminated);
+
+        contractService.update(created.contractId(), createSampleRequest(), "25-00001");
+
+        ArgumentCaptor<ContractUpdatedEvent> eventCaptor = ArgumentCaptor.forClass(ContractUpdatedEvent.class);
+        verify(eventPublisher).publishEvent(eventCaptor.capture());
+        assertEquals(new ContractUpdatedEvent(created.contractId(), "25-00001", true), eventCaptor.getValue());
     }
 
     private ContractRequest createSampleRequest() {

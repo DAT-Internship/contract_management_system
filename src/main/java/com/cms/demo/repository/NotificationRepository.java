@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface NotificationRepository extends JpaRepository<Notification, Long> {
@@ -13,6 +14,13 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     List<Notification> findByUser_UserIdOrderByCreatedAtDesc(Long userId);
 
     long countByUser_UserIdAndIsReadFalse(Long userId);
+
+    boolean existsByUser_UserIdAndTypeAndEntityTypeAndEntityIdAndCreatedAtGreaterThanEqualAndCreatedAtLessThan(
+            Long userId, String type, String entityType, Long entityId,
+            LocalDateTime start, LocalDateTime end);
+
+    boolean existsByUser_UserIdAndTypeAndEntityTypeAndEntityId(
+            Long userId, String type, String entityType, Long entityId);
 
     @Modifying(clearAutomatically = true)
     @Query("""

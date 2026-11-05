@@ -59,6 +59,14 @@ class PaymentCalculatorTest {
     }
 
     @Test
+    void contractIsNotPaidUntilGrossIncludingTaxIsCovered() {
+        Invoice invoice = invoice("100.00", "100.00", TODAY.plusDays(3));
+
+        assertEquals(PaymentCalculator.PARTIALLY_PAID,
+                PaymentCalculator.deriveContractStatus(List.of(invoice), new BigDecimal("105.00"), TODAY));
+    }
+
+    @Test
     void contractIsPartiallyPaidWhenOnlySomeInvoicesAreSettled() {
         Invoice paid = invoice("50.00", "50.00", TODAY.plusDays(3));
         Invoice open = invoice("50.00", "0.00", TODAY.plusDays(10));

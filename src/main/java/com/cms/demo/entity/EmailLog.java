@@ -44,6 +44,10 @@ public class EmailLog {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
+    /** When the recipient opened this email in Email Monitoring; null = not yet read. */
+    @Column(name = "read_at")
+    private LocalDateTime readAt;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "notification_id", nullable = false)
     private Notification notification;

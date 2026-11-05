@@ -69,6 +69,8 @@ public class EmailMonitoringApiController {
         body.put("createdAt", e.getCreatedAt() != null ? e.getCreatedAt().toString() : "");
         body.put("sentAt", e.getSentAt() != null ? e.getSentAt().toString() : "");
         body.put("errorMessage", e.getErrorMessage() != null ? e.getErrorMessage() : "");
+        body.put("readAt", e.getReadAt() != null ? e.getReadAt().toString() : "");
+        body.put("canMarkRead", e.getReadAt() == null && isRecipient(user, e));
         return ResponseEntity.ok(body);
     }
 

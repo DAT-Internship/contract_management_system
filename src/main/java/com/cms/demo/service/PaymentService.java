@@ -7,6 +7,7 @@ import com.cms.demo.dto.InvoiceResponse;
 import com.cms.demo.dto.PaymentHistoryEntry;
 import com.cms.demo.dto.PaymentOverviewResponse;
 import com.cms.demo.dto.PaymentUpdateRequest;
+import com.cms.demo.event.InvoiceActivityEvent;
 import com.cms.demo.entity.AuditLog;
 import com.cms.demo.entity.Contract;
 import com.cms.demo.entity.Invoice;
@@ -33,6 +34,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.springframework.http.HttpStatus;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -54,6 +56,7 @@ public class PaymentService {
     private final AuditLogRepository auditLogRepository;
     private final AuditLogService auditLogService;
     private final ObjectMapper objectMapper;
+    private final ApplicationEventPublisher eventPublisher;
 
     public PaymentService(
             ContractService contractService,
@@ -63,7 +66,8 @@ public class PaymentService {
             UserRepository userRepository,
             AuditLogRepository auditLogRepository,
             AuditLogService auditLogService,
-            ObjectMapper objectMapper) {
+            ObjectMapper objectMapper,
+            ApplicationEventPublisher eventPublisher) {
         this.contractService = contractService;
         this.invoiceRepository = invoiceRepository;
         this.paymentStatusRepository = paymentStatusRepository;
@@ -72,6 +76,7 @@ public class PaymentService {
         this.auditLogRepository = auditLogRepository;
         this.auditLogService = auditLogService;
         this.objectMapper = objectMapper;
+        this.eventPublisher = eventPublisher;
     }
 
     // ------------------------------------------------------------------
@@ -201,6 +206,7 @@ public class PaymentService {
         User actor = requireWriteAccess(employeeCode);
         Contract contract = contractService.getContractForUser(contractId, employeeCode);
         ensureNotDraft(contract);
+        boolean wasContractFullyPaid = isContractFullyPaid(contractId);
         if (contract.getParty() == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "Contract has no customer/supplier; set one before adding an invoice");
@@ -253,6 +259,7 @@ public class PaymentService {
         Map<String, Object> newValue = invoiceSnapshot(saved);
         newValue.put("note", noteOrDefault(request.note(), "Invoice/schedule created."));
         auditLogService.recordEvent(actor, ENTITY_TYPE, saved.getInvoiceId(), "CREATED", null, newValue);
+        publishContractFullyPaidIfChanged(saved, wasContractFullyPaid);
         return toInvoiceResponse(saved);
     }
 
@@ -263,6 +270,7 @@ public class PaymentService {
         Contract contract = contractService.getContractForUser(
                 invoice.getContract().getContractId(), employeeCode);
         ensureNotDraft(contract);
+        boolean wasContractFullyPaid = isContractFullyPaid(contract.getContractId());
 
         LocalDate today = LocalDate.now();
         LocalDate invoiceDate = request.invoiceDate() == null
@@ -294,7 +302,6 @@ public class PaymentService {
         if (currency == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invoice currency is required");
         }
-
         Map<String, Object> oldValue = invoiceSnapshot(invoice);
 
         invoice.setInvoiceNo(invoiceNo);
@@ -316,6 +323,7 @@ public class PaymentService {
         newValue.put("note", noteOrDefault(request.note(), "Invoice details updated."));
         auditLogService.recordEvent(actor, ENTITY_TYPE, saved.getInvoiceId(),
                 "INVOICE_UPDATED", oldValue, newValue);
+        publishContractFullyPaidIfChanged(saved, wasContractFullyPaid);
         return toInvoiceResponse(saved);
     }
 
@@ -326,6 +334,10 @@ public class PaymentService {
         Contract contract = contractService.getContractForUser(
                 invoice.getContract().getContractId(), employeeCode);
         ensureNotDraft(contract);
+        boolean wasContractFullyPaid = isContractFullyPaid(contract.getContractId());
+        boolean wasInvoiceFullyPaid = PaymentCalculator.isFullyPaid(
+                invoice.getTotalAmount(), invoice.getPaidAmount());
+        BigDecimal oldPaidAmount = PaymentCalculator.money(invoice.getPaidAmount());
 
         BigDecimal total = PaymentCalculator.money(invoice.getTotalAmount());
         BigDecimal paid = PaymentCalculator.money(request.paidAmount());
@@ -338,7 +350,6 @@ public class PaymentService {
         LocalDate paidDate = paid.signum() > 0
                 ? (request.paidDate() == null ? today : request.paidDate())
                 : null;
-
         Map<String, Object> oldValue = paymentSnapshot(invoice);
 
         invoice.setPaidAmount(paid);
@@ -353,7 +364,49 @@ public class PaymentService {
         newValue.put("note", request.note().trim());
         auditLogService.recordEvent(actor, ENTITY_TYPE, saved.getInvoiceId(),
                 "PAYMENT_UPDATED", oldValue, newValue);
+        publishInvoicePartiallyPaidIfChanged(saved, oldPaidAmount);
+        publishInvoiceFullyPaidIfChanged(saved, wasInvoiceFullyPaid);
+        publishContractFullyPaidIfChanged(saved, wasContractFullyPaid);
         return toInvoiceResponse(saved);
+    }
+
+    private void publishInvoiceActivity(Invoice invoice, String eventType) {
+        eventPublisher.publishEvent(new InvoiceActivityEvent(invoice.getInvoiceId(), eventType));
+    }
+
+    private boolean isContractFullyPaid(Long contractId) {
+        List<Invoice> invoices = invoiceRepository.findByContractId(contractId);
+        if (invoices.isEmpty()) {
+            return false;
+        }
+        Contract contract = invoices.get(0).getContract();
+        BigDecimal contractGross = PaymentCalculator.grossWithTax(
+                contract.getContractValue(), contract.getCommercialTaxRate());
+        return PaymentCalculator.PAID.equals(PaymentCalculator.deriveContractStatus(
+                invoices, contractGross, LocalDate.now()));
+    }
+
+    private void publishContractFullyPaidIfChanged(Invoice invoice, boolean wasFullyPaid) {
+        if (!wasFullyPaid && isContractFullyPaid(invoice.getContract().getContractId())) {
+            publishInvoiceActivity(invoice, "CONTRACT_FULLY_PAID");
+        }
+    }
+
+    private void publishInvoiceFullyPaidIfChanged(Invoice invoice, boolean wasFullyPaid) {
+        if (!wasFullyPaid
+                && PaymentCalculator.isFullyPaid(invoice.getTotalAmount(), invoice.getPaidAmount())) {
+            publishInvoiceActivity(invoice, "INVOICE_FULLY_PAID");
+        }
+    }
+
+    private void publishInvoicePartiallyPaidIfChanged(Invoice invoice, BigDecimal oldPaidAmount) {
+        BigDecimal paidAmount = PaymentCalculator.money(invoice.getPaidAmount());
+        BigDecimal totalAmount = PaymentCalculator.money(invoice.getTotalAmount());
+        if (paidAmount.compareTo(oldPaidAmount) != 0
+                && paidAmount.signum() > 0
+                && paidAmount.compareTo(totalAmount) < 0) {
+            publishInvoiceActivity(invoice, "INVOICE_PARTIALLY_PAID");
+        }
     }
 
     /**
@@ -431,7 +484,7 @@ public class PaymentService {
         BigDecimal contractGross = PaymentCalculator.grossWithTax(
                 contract.getContractValue(), contract.getCommercialTaxRate());
         String statusCode = PaymentCalculator.deriveContractStatus(
-                invoices, contract.getContractValue(), today);
+                invoices, contractGross, today);
         long remainingDays = contract.getEndDate() == null
                 ? 0
                 : Math.max(0, ChronoUnit.DAYS.between(today, contract.getEndDate()));

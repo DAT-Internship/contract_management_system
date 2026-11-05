@@ -189,10 +189,10 @@
             credentials: 'same-origin'
         })
         .then(function (r) {
-            return r.ok ? r.json() : null;
+            return r.ok ? r.json() : Promise.reject(new Error('Mark notification as read failed: ' + r.status));
         })
         .then(function (data) {
-            if (data) updateCounts(data.count);
+            updateCounts(data.count);
             return data;
         });
     };

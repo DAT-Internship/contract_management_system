@@ -88,17 +88,34 @@ public class PasswordResetRequestController {
                         currentUser.getEmail());
 
         // Stats are computed from the SAME list that the table shows -> always consistent
-        long failed  = logs.stream().filter(e -> "FAILED".equalsIgnoreCase(e.getStatus())).count();
-        long pending = logs.stream().filter(e -> "PENDING".equalsIgnoreCase(e.getStatus())).count();
-        long sent    = logs.size() - failed - pending;   // SENT / SENT_UNREAD / SENT_READ
+        long failed = logs.stream().filter(e -> hasStatus(e, "FAILED")).count();
+        long pending = logs.stream().filter(e -> hasStatus(e, "PENDING")).count();
+        long sent = logs.stream()
+                .filter(e -> hasStatus(e, "SENT", "SENT_UNREAD", "SENT_READ"))
+                .count();
 
         model.addAttribute("emailLogs", logs);
         model.addAttribute("totalCount", logs.size());
         model.addAttribute("sentCount", sent);
         model.addAttribute("pendingCount", pending);
         model.addAttribute("failedCount", failed);
+        model.addAttribute("emailUnreadCount", currentUser.getEmail() == null
+                ? 0 : emailLogRepository.countUnreadForRecipient(currentUser.getEmail()));
         model.addAttribute("page", "email-monitoring");
         return "email-monitoring";
+    }
+
+    private boolean hasStatus(EmailLog emailLog, String... statuses) {
+        String status = emailLog.getStatus();
+        if (status == null) {
+            return false;
+        }
+        for (String candidate : statuses) {
+            if (candidate.equalsIgnoreCase(status.trim())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private User getCurrentUser(Principal principal) {

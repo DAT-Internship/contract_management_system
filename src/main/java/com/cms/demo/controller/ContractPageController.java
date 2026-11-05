@@ -6,6 +6,7 @@ import com.cms.demo.entity.MasterContractStatus;
 import com.cms.demo.service.ContractService;
 import com.cms.demo.service.FileStorageService;
 import com.cms.demo.service.AuditLogService;
+import com.cms.demo.service.PaymentService;
 import com.cms.demo.repository.AgreementForRepository;
 import com.cms.demo.repository.ContractCategoryRepository;
 import com.cms.demo.repository.ContractStatusRepository;
@@ -70,6 +71,7 @@ public class ContractPageController {
     private final ApprovalStepRepository approvalStepRepository;
     private final Validator validator;
     private final AuditLogService auditLogService;
+    private final PaymentService paymentService;
 
     public ContractPageController(
             ContractService contractService,
@@ -86,7 +88,8 @@ public class ContractPageController {
             UserRepository userRepository,
             ApprovalStepRepository approvalStepRepository,
             Validator validator,
-            AuditLogService auditLogService) {
+            AuditLogService auditLogService,
+            PaymentService paymentService) {
         this.contractService = contractService;
         this.fileStorageService = fileStorageService;
         this.agreementForRepository = agreementForRepository;
@@ -102,6 +105,7 @@ public class ContractPageController {
         this.approvalStepRepository = approvalStepRepository;
         this.validator = validator;
         this.auditLogService = auditLogService;
+        this.paymentService = paymentService;
     }
 
     @GetMapping
@@ -155,22 +159,8 @@ public class ContractPageController {
         model.addAttribute("approvalQuery", q);
         model.addAttribute("contract", contract);
         model.addAttribute("attachments", contractService.getAttachmentResponses(contractId, principal.getName()));
-        // Temporary customer-wide payment-summary sample data; replace with party-level aggregates when payment reporting is connected.
-        java.math.BigDecimal customerContractTotal = new java.math.BigDecimal("28800000.00");
-        java.math.BigDecimal customerInvoicedTotal = new java.math.BigDecimal("19200000.00");
-        java.math.BigDecimal customerPaidTotal = new java.math.BigDecimal("16800000.00");
-        model.addAttribute("customerContractTotal", customerContractTotal);
-        model.addAttribute("customerInvoicedTotal", customerInvoicedTotal);
-        model.addAttribute("customerPaidTotal", customerPaidTotal);
-        model.addAttribute("customerOutstandingTotal", customerInvoicedTotal.subtract(customerPaidTotal));
-        String currencyCode = contract.getCurrency() == null ? "" : contract.getCurrency().getCode();
-        String currencySymbol = switch (currencyCode.toUpperCase(Locale.ROOT)) {
-            case "USD" -> "$";
-            case "MMK" -> "Ks";
-            case "JPY", "CNY" -> "¥";
-            default -> currencyCode;
-        };
-        model.addAttribute("paymentCurrencySymbol", currencySymbol);
+        model.addAttribute("paymentSummary",
+                paymentService.getContractDetail(contractId, principal.getName()).contract());
         model.addAttribute("approvalSteps", approvalStepRepository.findByContractContractIdOrderByCreatedAtDesc(contractId)
                 .stream()
                 .sorted(Comparator.comparing((ApprovalStep step) -> step.getUpdatedAt() != null

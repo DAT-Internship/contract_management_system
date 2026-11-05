@@ -38,14 +38,14 @@ public final class PaymentCalculator {
         return PENDING;
     }
 
-    public static String deriveContractStatus(Collection<Invoice> invoices, BigDecimal contractValue,
+    public static String deriveContractStatus(Collection<Invoice> invoices, BigDecimal contractGross,
             LocalDate today) {
         if (invoices == null || invoices.isEmpty()) {
             return NO_INVOICES;
         }
 
         BigDecimal totalPaid = BigDecimal.ZERO;
-        BigDecimal totalValue = contractValue == null ? BigDecimal.ZERO : contractValue;
+        BigDecimal totalValue = contractGross == null ? BigDecimal.ZERO : contractGross;
         boolean allPaid = true;
 
         for (Invoice invoice : invoices) {

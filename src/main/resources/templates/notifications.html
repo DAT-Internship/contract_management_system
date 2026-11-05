@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 
@@ -18,32 +17,24 @@
 
         <div class="ne-page">
 
-            <!-- ================= HEADER ================= -->
-
+            <!-- HEADER -->
             <div class="ne-heading">
                 <div>
                     <h1>Notifications</h1>
                     <p>Stay updated on contracts, approvals, and payments.</p>
                 </div>
-
-                <button type="button"
-                        class="btn-ne-primary"
-                        id="btnMarkAllRead">
+                <button type="button" class="btn-ne-primary" id="btnMarkAllRead">
                     <i class="fa-solid fa-check-double"></i>
                     Mark all as read
                 </button>
             </div>
 
-
-            <!-- ================= SUMMARY ================= -->
-
+            <!-- SUMMARY -->
             <div class="ne-stats">
-
                 <div class="ne-stat">
                     <div class="ne-stat-icon blue">
                         <i class="fa-regular fa-bell"></i>
                     </div>
-
                     <div>
                         <p class="ne-stat-label">Total Notifications</p>
                         <p class="ne-stat-value"
@@ -51,122 +42,61 @@
                     </div>
                 </div>
 
-
                 <div class="ne-stat">
                     <div class="ne-stat-icon indigo">
                         <i class="fa-regular fa-envelope"></i>
                     </div>
-
                     <div>
                         <p class="ne-stat-label">Unread</p>
-
                         <p class="ne-stat-value"
-                           th:text="${#lists.size(notifications.?[isRead == null or !isRead])}">
-                            0
-                        </p>
+                           th:text="${#lists.size(notifications.?[isRead == null or !isRead])}">0</p>
                     </div>
                 </div>
-
 
                 <div class="ne-stat">
                     <div class="ne-stat-icon green">
                         <i class="fa-regular fa-circle-check"></i>
                     </div>
-
                     <div>
                         <p class="ne-stat-label">Approval Requests</p>
-
                         <p class="ne-stat-value"
-                           th:text="${#lists.size(notifications.?[type != null and type.startsWith('APPROVAL')])}">
-                            0
-                        </p>
+                           th:text="${#lists.size(notifications.?[type != null and type.startsWith('APPROVAL')])}">0</p>
                     </div>
                 </div>
-
 
                 <div class="ne-stat">
                     <div class="ne-stat-icon pink">
                         <i class="fa-regular fa-credit-card"></i>
                     </div>
-
                     <div>
                         <p class="ne-stat-label">Payment Alerts</p>
-
                         <p class="ne-stat-value"
-                           th:text="${#lists.size(notifications.?[type != null and type.startsWith('PAYMENT')])}">
-                            0
-                        </p>
+                           th:text="${#lists.size(notifications.?[type != null and (type.startsWith('PAYMENT') or type.startsWith('INVOICE') or type.startsWith('CONTRACT_PAYMENT'))])}">0</p>
                     </div>
                 </div>
-
             </div>
 
-
-            <!-- ================= NOTIFICATION PANEL ================= -->
-
+            <!-- PANEL -->
             <div class="ne-panel">
 
-
-                <!-- TABS -->
-
                 <div class="ne-tabs" id="notifTabs">
-
-                    <button type="button"
-                            class="ne-tab active"
-                            data-filter="all">
-                        All
-                    </button>
-
-                    <button type="button"
-                            class="ne-tab"
-                            data-filter="APPROVAL">
-                        Approvals
-                    </button>
-
-                    <button type="button"
-                            class="ne-tab"
-                            data-filter="PASSWORD_RESET_REQUEST">
-                        Password Requests
-                    </button>
-
-                    <button type="button"
-                            class="ne-tab"
-                            data-filter="CONTRACT">
-                        Contracts
-                    </button>
-
-                    <button type="button"
-                            class="ne-tab"
-                            data-filter="PAYMENT">
-                        Payments
-                    </button>
-
-                    <button type="button"
-                            class="ne-tab"
-                            data-filter="EXPIRY">
-                        Expiry Alerts
-                    </button>
-
+                    <button type="button" class="ne-tab active" data-filter="all">All</button>
+                    <button type="button" class="ne-tab" data-filter="APPROVAL">Approvals</button>
+                    <button type="button" class="ne-tab" data-filter="PASSWORD_RESET_REQUEST">Password Requests</button>
+                    <button type="button" class="ne-tab" data-filter="CONTRACT">Contracts</button>
+                    <button type="button" class="ne-tab" data-filter="PAYMENT">Payments</button>
+                    <button type="button" class="ne-tab" data-filter="EXPIRY">Expiry Alerts</button>
                 </div>
 
-
-                <!-- TOOLBAR -->
-
                 <div class="ne-toolbar">
-
                     <div class="ne-search">
                         <i class="fa-solid fa-magnifying-glass"></i>
-
-                        <input type="search"
-                               id="notifSearch"
-                               placeholder="Search notifications..."
-                               autocomplete="off">
+                        <input type="search" id="notifSearch"
+                               placeholder="Search notifications..." autocomplete="off">
                     </div>
-
 
                     <div class="ne-field">
                         <label for="notifStatus">Status</label>
-
                         <select id="notifStatus">
                             <option value="">All status</option>
                             <option value="unread">Unread</option>
@@ -174,22 +104,22 @@
                         </select>
                     </div>
 
-
                     <div class="ne-field">
                         <label for="notifType">Type</label>
-
                         <select id="notifType">
                             <option value="">All types</option>
                             <option value="PASSWORD_RESET_REQUEST">Password Reset</option>
-                            <option value="APPROVAL_REQ">Approval</option>
+                            <option value="APPROVAL">Approval (all)</option>
+                            <option value="APPROVAL_REQ">Approval request</option>
+                            <option value="APPROVAL_APPROVED">Approved</option>
+                            <option value="APPROVAL_REJECTED">Rejected</option>
+                            <option value="PAYMENT">Payment (all)</option>
                             <option value="PAYMENT_DUE">Payment</option>
                         </select>
                     </div>
 
-
                     <div class="ne-field">
                         <label for="notifDate">Date</label>
-
                         <select id="notifDate">
                             <option value="">Any time</option>
                             <option value="today">Today</option>
@@ -197,28 +127,24 @@
                             <option value="30">Last 30 days</option>
                         </select>
                     </div>
-
                 </div>
 
-
-                <!-- ================= NOTIFICATION LIST ================= -->
-
+                <!-- LIST: icon | body | meta (3 siblings only) -->
                 <ul class="ne-list" id="notifList">
 
                     <li class="ne-item"
-
                         th:each="n : ${notifications}"
-
                         th:with="
                             t=${n.type == null ? '' : n.type},
-                            kind=${t.startsWith('APPROVAL') ? 'approval' :
+                            kind=${t == 'APPROVAL_REJECTED' ? 'rejected' :
+                                   (t == 'APPROVAL_APPROVED' ? 'approved' :
+                                   (t.startsWith('APPROVAL') ? 'approval' :
                                    (t.contains('EXPIRY') ? 'warning' :
-                                   (t.startsWith('PAYMENT') ? 'payment' :
-                                   (t.contains('CONTRACT') ? 'contract' : 'info')))}
+                                   ((t.startsWith('PAYMENT') or t.startsWith('INVOICE') or t.startsWith('CONTRACT_PAYMENT')) ? 'payment' :
+                                   (t.contains('CONTRACT') ? 'contract' :
+                                   (t == 'PASSWORD_RESET_REQUEST' ? 'info' : 'info'))))))}
                         "
-
                         th:classappend="${n.isRead == null or !n.isRead ? ' unread' : ''}"
-
                         th:attr="
                             data-id=${n.notificationId},
                             data-type=${n.type},
@@ -227,933 +153,532 @@
                             data-created=${n.createdAt != null ? #temporals.formatISO(n.createdAt) : ''}
                         ">
 
-
-                        <!-- READ STATUS DOT -->
-
                         <span class="ne-dot"
-                              th:classappend="${n.isRead != null and n.isRead ? ' read' : ''}">
-                        </span>
+                              th:classappend="${n.isRead != null and n.isRead ? ' read' : ''}"></span>
 
-
-                        <!-- NOTIFICATION ICON -->
-
-                        <div class="ne-icon"
-                             th:classappend="${' ' + kind}">
-
+                        <div class="ne-icon" th:classappend="${' ' + kind}">
                             <i class="fa-solid"
-                               th:classappend="${kind == 'approval' ? ' fa-file-lines' :
+                               th:classappend="${kind == 'rejected' ? ' fa-circle-xmark' :
+                                                kind == 'approved' ? ' fa-circle-check' :
+                                                kind == 'approval' ? ' fa-file-lines' :
                                                 kind == 'warning' ? ' fa-triangle-exclamation' :
                                                 kind == 'payment' ? ' fa-credit-card' :
                                                 kind == 'contract' ? ' fa-circle-check' :
                                                 t == 'PASSWORD_RESET_REQUEST' ? ' fa-key' :
-                                                ' fa-bell'}">
-                            </i>
-
+                                                ' fa-bell'}"></i>
                         </div>
-
-
-                        <!-- NOTIFICATION BODY -->
 
                         <div class="ne-body">
-
-                            <p class="ne-title"
-                               th:text="${n.title}">
-                                Notification title
-                            </p>
-
+                            <p class="ne-title" th:text="${n.title}">Title</p>
+                            <!-- Payment rows show a short text; the paid/remaining amounts are in the details window -->
                             <p class="ne-msg"
-                               th:text="${n.message}">
-                                Notification message
-                            </p>
-
-                            <span class="ne-msg-full d-none"
-                                  th:text="${n.message}">
-                            </span>
-
-
+                               th:text="${kind == 'payment' ? #strings.substringBefore(n.message, ' Paid:') : n.message}">Message</p>
+                            <span class="ne-msg-full d-none" th:text="${n.message}"></span>
                         </div>
 
+                        <div class="ne-meta">
+                            <span class="ne-badge" th:classappend="${' ' + kind}"
+                                  th:text="${kind == 'rejected' ? 'Rejected' :
+                                            kind == 'approved' ? 'Approved' :
+                                            kind == 'approval' ? 'Approval' :
+                                            kind == 'warning' ? 'Expiry Alert' :
+                                            kind == 'payment' ? 'Payment' :
+                                            kind == 'contract' ? 'Contract' :
+                                            t == 'PASSWORD_RESET_REQUEST' ? 'Password Reset' :
+                                            'Info'}">Info</span>
 
-                        <!-- NOTIFICATION META -->
+                            <span class="ne-time"
+                                  th:text="${n.createdAt != null ? #temporals.format(n.createdAt,'MMM d, yyyy hh:mm a') : ''}">Date</span>
 
-                       <div class="ne-meta">
-
-    <span class="ne-badge"
-          th:classappend="${' ' + kind}"
-          th:text="${kind == 'approval' ? 'Approval' :
-                    kind == 'warning' ? 'Expiry Alert' :
-                    kind == 'payment' ? 'Payment' :
-                    kind == 'contract' ? 'Contract' :
-                    t == 'PASSWORD_RESET_REQUEST' ? 'Password Reset' :
-                    'Info'}">
-        Info
-    </span>
-
-    <span class="ne-time"
-          th:text="${n.createdAt != null ?
-              #temporals.format(n.createdAt,'MMM d, yyyy hh:mm a') : ''}">
-        Date
-    </span>
-
-    <!-- View Details Button -->
-    <button type="button"
-            class="btn-view-notif ne-view-btn">
-
-        <i class="fa-regular fa-eye"></i>
-        View Details
-
-    </button>
-
-</div>
-
-                            <div class="ne-kebab-spacer"
-
-                                 th:unless="${(n.isRead == null or !n.isRead)
-                                             or (n.actionUrl != null and !#strings.isEmpty(n.actionUrl))}">
-                            </div>
-
+                            <button type="button" class="btn-view-notif ne-view-btn">
+                                <i class="fa-regular fa-eye"></i>
+                                View Details
+                            </button>
                         </div>
-
                     </li>
 
-
-                    <!-- EMPTY STATE -->
-
-                    <li class="ne-empty"
-                        th:if="${#lists.isEmpty(notifications)}">
-
+                    <li class="ne-empty" th:if="${#lists.isEmpty(notifications)}">
                         No notifications found.
-
                     </li>
-
                 </ul>
 
-
-                <!-- ================= PAGINATION ================= -->
-
                 <div class="ne-footer">
-
-                    <span id="pagerInfo">
-                        Showing 0 of 0 notifications
-                    </span>
-
-
+                    <span id="pagerInfo">Showing 0 of 0 notifications</span>
                     <div class="ne-pager-right">
-
                         <label class="ne-rpp">
-
                             Rows per page:
-
                             <select id="rowsPerPage">
                                 <option value="5" selected>5</option>
-                                <option value="10" >10</option>
+                                <option value="10">10</option>
                                 <option value="25">25</option>
                                 <option value="50">50</option>
                             </select>
-
                         </label>
-
-
-                        <div class="ne-pages"
-                             id="pagerPages">
-                        </div>
-
+                        <div class="ne-pages" id="pagerPages"></div>
                     </div>
-
                 </div>
-
             </div>
-
         </div>
-
     </main>
 
-
-    <!-- ================= DETAILS MODAL ================= -->
-
-    <div class="modal fade"
-         id="notifDetailModal"
-         tabindex="-1"
-         aria-hidden="true">
-
+    <!-- DETAILS MODAL -->
+    <div class="modal fade" id="notifDetailModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered ne-modal">
-
-            <div class="modal-content ne-modal-content"
-                 id="ndContent"
-                 data-state="unread">
-
+            <div class="modal-content ne-modal-content" id="ndContent" data-state="unread">
 
                 <div class="ne-modal-head">
-
                     <h5>Notification details</h5>
-
-                    <span class="ne-badge info"
-                          id="ndBadge">
-                        Info
-                    </span>
-
-                    <button type="button"
-                            class="ne-modal-close"
-                            data-bs-dismiss="modal"
-                            aria-label="Close">
-
+                    <span class="ne-badge info" id="ndBadge">Info</span>
+                    <button type="button" class="ne-modal-close" data-bs-dismiss="modal" aria-label="Close">
                         <i class="fa-solid fa-xmark"></i>
-
                     </button>
-
                 </div>
-
 
                 <div class="ne-modal-body">
-
-                    <p class="ne-subject-text"
-                       id="ndTitle">
-                        —
-                    </p>
-
-                    <p class="ne-to"
-                       id="ndTime">
-                        —
-                    </p>
-
-                    <div class="ne-rows"
-                         id="ndRows">
-                    </div>
-
-                    <p class="ne-note"
-                       id="ndNote"
-                       style="display:none;">
-                    </p>
-
+                    <p class="ne-subject-text" id="ndTitle">—</p>
+                    <p class="ne-to" id="ndTime">—</p>
+                    <div class="ne-rows" id="ndRows"></div>
+                    <p class="ne-note" id="ndNote" style="display:none;"></p>
                 </div>
-
 
                 <div class="ne-modal-foot">
-
-                    <button type="button"
-                            class="btn-ne-outline"
-                            data-bs-dismiss="modal">
-                        Close
-                    </button>
-
-
-                    <a class="btn-ne-outline"
-                       id="ndOpen"
-                       href="#"
-                       style="display:none;">
-
-                        Open
-                        <i class="fa-solid fa-arrow-right"></i>
-
+                    <button type="button" class="btn-ne-outline" data-bs-dismiss="modal">Close</button>
+                    <a class="btn-ne-outline" id="ndOpen" href="#" style="display:none;">
+                        Open <i class="fa-solid fa-arrow-right"></i>
                     </a>
-
-
-                    <button type="button"
-                            class="btn-ne-primary"
-                            id="btnNotifMarkRead"
-                            style="display:none;">
-
+                    <button type="button" class="btn-ne-primary" id="btnNotifMarkRead" style="display:none;">
                         <i class="fa-solid fa-check"></i>
                         Mark as read
-
                     </button>
-
                 </div>
-
             </div>
-
         </div>
-
     </div>
 
 </div>
 
-
-<!-- ================= SCRIPTS ================= -->
-
 <th:block th:replace="~{fragments/layout :: scripts}"></th:block>
 
-
 <script>
-
 (function () {
-
     'use strict';
-
-
-    // ================= ELEMENTS =================
 
     var search = document.getElementById('notifSearch');
     var status = document.getElementById('notifStatus');
     var type = document.getElementById('notifType');
     var dateSel = document.getElementById('notifDate');
-
     var tabs = document.querySelectorAll('#notifTabs .ne-tab');
-
     var pageSizeSel = document.getElementById('rowsPerPage');
     var pagesBox = document.getElementById('pagerPages');
     var infoBox = document.getElementById('pagerInfo');
-
     var currentTab = 'all';
     var pageNo = 1;
+    var pageSize = parseInt(pageSizeSel.value, 10) || 5;
 
-    var pageSize = parseInt(pageSizeSel.value, 10) || 10;
-
-
-    // ================= MARK ALL READ =================
-
-    var markAll = document.getElementById('btnMarkAllRead');
-
-    if (markAll) {
-
-        markAll.addEventListener('click', function () {
-
-            if (typeof window.cmsMarkAllNotificationsRead === 'function') {
-
-                Promise.resolve(window.cmsMarkAllNotificationsRead())
-                    .then(function () {
-                        location.reload();
-                    });
-
-            }
-
-        });
-
-    }
-
-
-    // ================= MARK SINGLE READ =================
-
-    document.querySelectorAll('.btn-mark-read').forEach(function (btn) {
-
-        btn.addEventListener('click', function () {
-
-            var id = btn.getAttribute('data-id');
-
-            if (typeof window.cmsMarkNotificationRead === 'function') {
-
-                Promise.resolve(window.cmsMarkNotificationRead(id))
-                    .then(function () {
-                        location.reload();
-                    });
-
-            }
-
-        });
-
+    document.getElementById('btnMarkAllRead')?.addEventListener('click', function () {
+        if (typeof window.cmsMarkAllNotificationsRead === 'function') {
+            Promise.resolve(window.cmsMarkAllNotificationsRead()).then(function () {
+                location.reload();
+            });
+        }
     });
-
-
-    // ================= PRETTY TIME =================
 
     (function prettyTimes() {
-
         var now = new Date();
-
-        var todayStr =
-            now.getFullYear() + '-' +
-            (now.getMonth() + 1) + '-' +
-            now.getDate();
-
+        var todayStr = now.getFullYear() + '-' + (now.getMonth() + 1) + '-' + now.getDate();
         document.querySelectorAll('#notifList .ne-item').forEach(function (li) {
-
             var iso = li.getAttribute('data-created');
             var el = li.querySelector('.ne-time');
-
             if (!iso || !el) return;
-
             var d = new Date(iso);
-
             if (isNaN(d.getTime())) return;
-
-            var dStr =
-                d.getFullYear() + '-' +
-                (d.getMonth() + 1) + '-' +
-                d.getDate();
-
+            var dStr = d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate();
             if (dStr === todayStr) {
-
-                el.textContent =
-                    'Today ' +
-                    d.toLocaleTimeString('en-US', {
-                        hour: '2-digit',
-                        minute: '2-digit'
-                    });
-
+                el.textContent = 'Today ' + d.toLocaleTimeString('en-US', {
+                    hour: '2-digit', minute: '2-digit'
+                });
             }
-
         });
-
     })();
 
-
-    // ================= FILTER TABS =================
+    // Payment-type notifications: PAYMENT_*, INVOICE_*, CONTRACT_PAYMENT_*
+    function isPaymentType(t) {
+        t = (t || '').toUpperCase();
+        return t.indexOf('PAYMENT') === 0
+            || t.indexOf('INVOICE') === 0
+            || t.indexOf('CONTRACT_PAYMENT') === 0;
+    }
 
     function matchTab(t) {
-
         t = (t || '').toUpperCase();
-
         switch (currentTab) {
-
-            case 'all':
-                return true;
-
-            case 'APPROVAL':
-                return t.indexOf('APPROVAL') === 0;
-
-            case 'PASSWORD_RESET_REQUEST':
-                return t === 'PASSWORD_RESET_REQUEST';
-
-            case 'CONTRACT':
-                return t.indexOf('CONTRACT') >= 0;
-
-            case 'PAYMENT':
-                return t.indexOf('PAYMENT') === 0;
-
-            case 'EXPIRY':
-                return t.indexOf('EXPIRY') >= 0;
-
-            default:
-                return true;
-
+            case 'all': return true;
+            case 'APPROVAL': return t.indexOf('APPROVAL') === 0;
+            case 'PASSWORD_RESET_REQUEST': return t === 'PASSWORD_RESET_REQUEST';
+            case 'CONTRACT': return t.indexOf('CONTRACT') >= 0;
+            case 'PAYMENT': return isPaymentType(t);
+            case 'EXPIRY': return t.indexOf('EXPIRY') >= 0;
+            default: return true;
         }
-
     }
-
-
-    // ================= DATE FILTER =================
 
     function matchDate(iso) {
-
         var v = dateSel.value;
-
         if (!v) return true;
-
         var d = new Date(iso);
-
         if (!iso || isNaN(d.getTime())) return false;
-
         var now = new Date();
-
-        var startToday = new Date(
-            now.getFullYear(),
-            now.getMonth(),
-            now.getDate()
-        );
-
-        if (v === 'today') {
-            return d >= startToday;
-        }
-
+        var startToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        if (v === 'today') return d >= startToday;
         var days = parseInt(v, 10);
-
-        return d >= new Date(
-            startToday.getTime() -
-            (days - 1) * 86400000
-        );
-
+        return d >= new Date(startToday.getTime() - (days - 1) * 86400000);
     }
 
+    function norm(v) {
+        return (v || '').toLowerCase().replace(/_/g, ' ').replace(/\s+/g, ' ').trim();
+    }
 
-    // ================= SEARCH & FILTER =================
+    function searchText(row) {
+        var parts = [];
+        ['.ne-title', '.ne-msg-full', '.ne-badge', '.ne-time'].forEach(function (sel) {
+            var el = row.querySelector(sel);
+            if (el) parts.push(el.textContent);
+        });
+        parts.push(row.getAttribute('data-type') || '');
+        return norm(parts.join(' '));
+    }
+
+    function matchQuery(row, q) {
+        if (!q) return true;
+        var text = searchText(row);
+        return q.split(' ').every(function (w) { return text.indexOf(w) >= 0; });
+    }
+
+    // Type dropdown: "APPROVAL" and "PAYMENT" are groups; everything else is an exact match
+    function matchType(t, tp) {
+        if (!tp) return true;
+        if (tp === 'APPROVAL') return t.toUpperCase().indexOf('APPROVAL') === 0;
+        if (tp === 'PAYMENT') return isPaymentType(t);
+        return t === tp;
+    }
 
     function matches(row) {
-
-        var q = (search.value || '').toLowerCase();
-
+        var q = norm(search.value);
         var st = status.value;
         var tp = type.value;
-
         var read = row.getAttribute('data-read') === 'true';
-
         var t = row.getAttribute('data-type') || '';
-
         if (!matchTab(t)) return false;
-
-        if (q && row.textContent.toLowerCase().indexOf(q) < 0) {
-            return false;
-        }
-
+        if (!matchQuery(row, q)) return false;
         if (st === 'unread' && read) return false;
-
         if (st === 'read' && !read) return false;
-
-        if (tp && t !== tp) return false;
-
-        if (!matchDate(row.getAttribute('data-created'))) {
-            return false;
-        }
-
+        if (!matchType(t, tp)) return false;
+        if (!matchDate(row.getAttribute('data-created'))) return false;
         return true;
-
     }
-
-
-    // ================= PAGE NUMBERS =================
 
     function pageList(cur, total) {
-
         var out = [];
-
         if (total <= 7) {
-
-            for (var i = 1; i <= total; i++) {
-                out.push(i);
-            }
-
+            for (var i = 1; i <= total; i++) out.push(i);
             return out;
-
         }
-
         out.push(1);
-
         if (cur > 3) out.push('...');
-
-        for (
-            var j = Math.max(2, cur - 1);
-            j <= Math.min(total - 1, cur + 1);
-            j++
-        ) {
-            out.push(j);
-        }
-
+        for (var j = Math.max(2, cur - 1); j <= Math.min(total - 1, cur + 1); j++) out.push(j);
         if (cur < total - 2) out.push('...');
-
         out.push(total);
-
         return out;
-
     }
-
-
-    // ================= RENDER PAGER =================
 
     function renderPager(total, totalPages, start, end) {
-
         infoBox.textContent = total === 0
             ? 'Showing 0 of 0 notifications'
-            : 'Showing ' + (start + 1) + '-' + end +
-              ' of ' + total + ' notifications';
-
+            : 'Showing ' + (start + 1) + '-' + end + ' of ' + total + ' notifications';
         pagesBox.innerHTML = '';
 
-
         function add(html, target, opts) {
-
             opts = opts || {};
-
             var b = document.createElement('button');
-
             b.type = 'button';
             b.innerHTML = html;
-
             if (opts.disabled) b.disabled = true;
-
             if (opts.active) b.classList.add('active');
-
             b.addEventListener('click', function () {
-
                 if (opts.disabled) return;
-
                 pageNo = target;
-
                 render();
-
             });
-
             pagesBox.appendChild(b);
-
         }
 
-
-        add(
-            '<i class="fa-solid fa-chevron-left"></i>',
-            pageNo - 1,
-            { disabled: pageNo <= 1 }
-        );
-
-
+        add('<i class="fa-solid fa-chevron-left"></i>', pageNo - 1, { disabled: pageNo <= 1 });
         pageList(pageNo, totalPages).forEach(function (p) {
-
             if (p === '...') {
-
                 var s = document.createElement('span');
-
                 s.className = 'ne-ellipsis';
                 s.textContent = '...';
-
                 pagesBox.appendChild(s);
-
             } else {
-
-                add(String(p), p, {
-                    active: p === pageNo
-                });
-
+                add(String(p), p, { active: p === pageNo });
             }
-
         });
-
-
-        add(
-            '<i class="fa-solid fa-chevron-right"></i>',
-            pageNo + 1,
-            { disabled: pageNo >= totalPages }
-        );
-
+        add('<i class="fa-solid fa-chevron-right"></i>', pageNo + 1, { disabled: pageNo >= totalPages });
     }
-
-
-    // ================= RENDER NOTIFICATIONS =================
 
     function render() {
-
-        var rows = Array.prototype.slice.call(
-            document.querySelectorAll('#notifList .ne-item')
-        );
-
+        var rows = Array.prototype.slice.call(document.querySelectorAll('#notifList .ne-item'));
         var matched = rows.filter(matches);
-
         var total = matched.length;
-
-        var totalPages = Math.max(
-            1,
-            Math.ceil(total / pageSize)
-        );
-
-        if (pageNo > totalPages) {
-            pageNo = totalPages;
-        }
-
+        var totalPages = Math.max(1, Math.ceil(total / pageSize));
+        if (pageNo > totalPages) pageNo = totalPages;
         var start = (pageNo - 1) * pageSize;
-
-        var end = Math.min(
-            start + pageSize,
-            total
-        );
-
-        rows.forEach(function (r) {
-            r.style.display = 'none';
-        });
-
-        matched.slice(start, end).forEach(function (r) {
-            r.style.display = '';
-        });
-
+        var end = Math.min(start + pageSize, total);
+        rows.forEach(function (r) { r.style.display = 'none'; });
+        matched.slice(start, end).forEach(function (r) { r.style.display = ''; });
         renderPager(total, totalPages, start, end);
-
     }
-
 
     function filterList() {
-
         pageNo = 1;
-
         render();
-
     }
-
-
-    // ================= EVENT LISTENERS =================
 
     tabs.forEach(function (tab) {
-
         tab.addEventListener('click', function () {
-
-            tabs.forEach(function (t) {
-                t.classList.remove('active');
-            });
-
+            tabs.forEach(function (t) { t.classList.remove('active'); });
             tab.classList.add('active');
-
             currentTab = tab.getAttribute('data-filter') || 'all';
-
             filterList();
-
         });
-
     });
-
 
     search.addEventListener('input', filterList);
-
     status.addEventListener('change', filterList);
-
     type.addEventListener('change', filterList);
-
     dateSel.addEventListener('change', filterList);
-
-
     pageSizeSel.addEventListener('change', function () {
-
-        pageSize = parseInt(pageSizeSel.value, 10) || 10;
-
+        pageSize = parseInt(pageSizeSel.value, 10) || 5;
         filterList();
-
     });
-
-
-    // ================= SHORT PREVIEW =================
 
     document.querySelectorAll('#notifList .ne-item').forEach(function (li) {
-
         var full = li.querySelector('.ne-msg-full');
-
         var msg = li.querySelector('.ne-msg');
-
         if (!full || !msg) return;
-
-        var lines = full.textContent
-            .split(/\r?\n/)
-            .map(function (l) {
-                return l.trim();
-            })
-            .filter(function (l) {
-                return l;
-            });
-
+        // Payment rows already show a short text (server side); keep it, the amounts are in the detail window
+        if (li.querySelector('.ne-icon.payment')) return;
+        var lines = full.textContent.split(/\r?\n/).map(function (l) {
+            return l.trim();
+        }).filter(Boolean);
         msg.textContent = lines.slice(0, 2).join('\n');
-
     });
 
-
-    // ================= DETAILS MODAL =================
-
     var ndEl = document.getElementById('notifDetailModal');
-
-    var ndModal =
-        ndEl && window.bootstrap
-            ? new bootstrap.Modal(ndEl)
-            : null;
-
+    var ndModal = ndEl && window.bootstrap ? new bootstrap.Modal(ndEl) : null;
     var ndMarkBtn = document.getElementById('btnNotifMarkRead');
-
     var ndCurrentId = null;
 
-
     function fmtDate(v) {
-
         if (!v) return '';
-
         var d = new Date(v);
-
         if (isNaN(d.getTime())) return v;
-
         return d.toLocaleDateString('en-GB', {
-            day: '2-digit',
-            month: 'short',
-            year: 'numeric'
-        }) + ', ' +
-        d.toLocaleTimeString('en-US', {
-            hour: '2-digit',
-            minute: '2-digit'
+            day: '2-digit', month: 'short', year: 'numeric'
+        }) + ', ' + d.toLocaleTimeString('en-US', {
+            hour: '2-digit', minute: '2-digit'
         });
-
     }
-
 
     function stateOf(badge) {
-
-        if (badge.classList.contains('contract')) return 'sent';
-
+        if (!badge) return 'unread';
+        if (badge.classList.contains('approved') || badge.classList.contains('contract')) return 'sent';
         if (badge.classList.contains('warning')) return 'pending';
-
-        if (badge.classList.contains('payment')) return 'failed';
-
+        if (badge.classList.contains('rejected') || badge.classList.contains('payment')) return 'failed';
         return 'unread';
-
     }
 
+    // ================= PAYMENT DETAIL (live invoice figures) =================
+
+    var PAYMENT_DETAIL_TYPES = [
+        'PAYMENT_REMINDER',
+        'INVOICE_PAYMENT_PARTIAL',
+        'INVOICE_PAYMENT_COMPLETED',
+        'INVOICE_ACTIVITY'
+    ];
+
+    function money(v, cur) {
+        var n = Number(v) || 0;
+        return (cur ? cur + ' ' : '') + n.toLocaleString(undefined, {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+    }
+
+    function addRow(box, label, value, strong, color) {
+        var row = document.createElement('div');
+        row.className = 'ne-row';
+        var k = document.createElement('span');
+        k.textContent = label;
+        var v = document.createElement('strong');
+        v.textContent = value || '—';
+        if (color) v.style.color = color;
+        if (strong) v.style.fontSize = '1.05rem';
+        row.appendChild(k);
+        row.appendChild(v);
+        box.appendChild(row);
+    }
+
+    function loadPaymentDetail(id, notifType, rowsBox, note) {
+        if (PAYMENT_DETAIL_TYPES.indexOf(notifType) < 0) return;
+
+        var holder = document.createElement('div');
+        holder.className = 'ne-row';
+        holder.innerHTML = '<span>Loading payment details…</span>';
+        rowsBox.appendChild(holder);
+        rowsBox.style.display = '';
+
+        fetch('/api/notifications/' + id + '/payment-detail', {
+            credentials: 'same-origin'
+        })
+        .then(function (r) {
+            return r.status === 200 ? r.json() : null;
+        })
+        .then(function (d) {
+            holder.remove();
+
+            // Another notification may have been opened meanwhile
+            if (String(ndCurrentId) !== String(id)) return;
+
+            if (!d) {
+                if (!rowsBox.children.length) rowsBox.style.display = 'none';
+                return;
+            }
+
+            // The figures below replace the long text, so hide it
+            if (note) note.style.display = 'none';
+
+            var cur = d.currency;
+            var left = Number(d.daysToDue);
+            var dueText = d.dueDate +
+                (left < 0 ? '  (' + (-left) + ' day(s) overdue)'
+                : left === 0 ? '  (due today)'
+                : '  (in ' + left + ' day(s))');
+
+            addRow(rowsBox, 'Contract', d.contractNo);
+            addRow(rowsBox, 'Invoice', d.invoiceNo || ('#' + d.invoiceId));
+            addRow(rowsBox, 'Status', d.status);
+            addRow(rowsBox, 'Due date', dueText, false, left < 0 ? '#b42318' : null);
+            addRow(rowsBox, 'Invoice total', money(d.invoiceTotal, cur));
+            addRow(rowsBox, 'Paid so far', money(d.invoicePaid, cur));
+            addRow(rowsBox, 'Remaining on invoice', money(d.invoiceRemaining, cur), true,
+                   Number(d.invoiceRemaining) > 0 ? '#b42318' : '#147a45');
+            addRow(rowsBox, 'Contract gross', money(d.contractGross, cur));
+            addRow(rowsBox, 'Remaining on contract', money(d.contractRemaining, cur));
+
+            var open = document.getElementById('ndOpen');
+            if (open && d.paymentUrl) {
+                open.href = d.paymentUrl;
+                open.style.display = 'inline-flex';
+            }
+        })
+        .catch(function () {
+            holder.remove();
+        });
+    }
 
     function openDetails(li) {
-
-        if (!ndModal) {
-            console.error('Bootstrap Modal is not loaded.');
-            return;
-        }
-
+        if (!ndModal) return;
         ndCurrentId = li.getAttribute('data-id');
-
         var badge = li.querySelector('.ne-badge');
-
-        var full =
-            (li.querySelector('.ne-msg-full') || {}).textContent || '';
-
+        var full = (li.querySelector('.ne-msg-full') || {}).textContent || '';
         var read = li.getAttribute('data-read') === 'true';
-
         var url = li.getAttribute('data-url');
-
 
         document.getElementById('ndTitle').textContent =
             (li.querySelector('.ne-title') || {}).textContent || '';
-
-
         var time = fmtDate(li.getAttribute('data-created'));
-
-        document.getElementById('ndTime').textContent =
-            time ? 'Received: ' + time : '';
-
+        document.getElementById('ndTime').textContent = time ? 'Received: ' + time : '';
 
         var nb = document.getElementById('ndBadge');
-
-        nb.className = badge
-            ? badge.className
-            : 'ne-badge info';
-
-        nb.textContent = badge
-            ? badge.textContent
-            : 'Info';
-
-
-        document.getElementById('ndContent')
-            .setAttribute(
-                'data-state',
-                badge ? stateOf(badge) : 'unread'
-            );
-
-
-        // LABEL / VALUE ROWS
+        nb.className = badge ? badge.className : 'ne-badge info';
+        nb.textContent = badge ? badge.textContent : 'Info';
+        document.getElementById('ndContent').setAttribute('data-state', stateOf(badge));
 
         var rowsBox = document.getElementById('ndRows');
-
         rowsBox.innerHTML = '';
-
         var noteLines = [];
-
-
         full.split(/\r?\n/).forEach(function (line) {
-
             line = line.trim();
-
             if (!line) return;
-
             var idx = line.indexOf(':');
-
             if (idx > 0 && idx <= 30) {
-
                 var row = document.createElement('div');
-
                 row.className = 'ne-row';
-
                 var k = document.createElement('span');
-
                 k.textContent = line.slice(0, idx).trim();
-
                 var v = document.createElement('strong');
-
-                v.textContent =
-                    line.slice(idx + 1).trim() || '—';
-
+                v.textContent = line.slice(idx + 1).trim() || '—';
                 row.appendChild(k);
-
                 row.appendChild(v);
-
                 rowsBox.appendChild(row);
-
             } else {
-
                 noteLines.push(line);
-
             }
-
         });
-
-
-        rowsBox.style.display =
-            rowsBox.children.length ? '' : 'none';
-
-
+        rowsBox.style.display = rowsBox.children.length ? '' : 'none';
         var note = document.getElementById('ndNote');
-
         note.textContent = noteLines.join('\n');
-
-        note.style.display =
-            noteLines.length ? '' : 'none';
-
-
-        // OPEN URL
+        note.style.display = noteLines.length ? '' : 'none';
 
         var openBtn = document.getElementById('ndOpen');
-
         if (url) {
-
             openBtn.href = url;
-
             openBtn.style.display = 'inline-flex';
-
         } else {
-
             openBtn.style.display = 'none';
-
         }
 
-
-        // MARK READ BUTTON
-
-        ndMarkBtn.style.display =
-            read ? 'none' : 'inline-flex';
-
+        ndMarkBtn.style.display = read ? 'none' : 'inline-flex';
         ndMarkBtn.disabled = false;
 
+        // Payment figures are loaded live when the modal opens
+        loadPaymentDetail(ndCurrentId, li.getAttribute('data-type'), rowsBox, note);
 
         ndModal.show();
 
+        // Opening an unread notification marks it as read
+        if (!read && typeof window.cmsMarkNotificationRead === 'function') {
+            Promise.resolve(window.cmsMarkNotificationRead(ndCurrentId)).then(function () {
+                li.setAttribute('data-read', 'true');
+                li.classList.remove('unread');
+                var dot = li.querySelector('.ne-dot');
+                if (dot) dot.classList.add('read');
+                ndMarkBtn.style.display = 'none';
+            }).catch(function (error) {
+                console.error('Unable to mark opened notification as read:', error);
+            });
+        }
     }
 
-
-    // ================= VIEW DETAILS =================
-
     document.querySelectorAll('.btn-view-notif').forEach(function (btn) {
-
         btn.addEventListener('click', function () {
-
             var item = btn.closest('.ne-item');
-
-            if (item) {
-                openDetails(item);
-            }
-
+            if (item) openDetails(item);
         });
-
     });
-
-
-    // ================= MODAL MARK READ =================
 
     ndMarkBtn.addEventListener('click', function () {
-
         if (!ndCurrentId) return;
-
-        if (typeof window.cmsMarkNotificationRead !== 'function') {
-            console.error('cmsMarkNotificationRead function is missing.');
-            return;
-        }
-
+        if (typeof window.cmsMarkNotificationRead !== 'function') return;
         ndMarkBtn.disabled = true;
-
-        Promise.resolve(
-            window.cmsMarkNotificationRead(ndCurrentId)
-        ).then(function () {
-
-            location.reload();
-
-        }).catch(function (error) {
-
-            ndMarkBtn.disabled = false;
-
-            console.error('Unable to mark notification as read:', error);
-
-        });
-
+        Promise.resolve(window.cmsMarkNotificationRead(ndCurrentId))
+            .then(function () { location.reload(); })
+            .catch(function () { ndMarkBtn.disabled = false; });
     });
 
-
-    // ================= INITIAL RENDER =================
-
     render();
-
 })();
-
 </script>
 
 </body>

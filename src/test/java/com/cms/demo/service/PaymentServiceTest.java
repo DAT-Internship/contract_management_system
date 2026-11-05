@@ -20,6 +20,7 @@ import com.cms.demo.entity.MasterCurrency;
 import com.cms.demo.entity.MasterPaymentStatus;
 import com.cms.demo.entity.Role;
 import com.cms.demo.entity.User;
+import com.cms.demo.event.InvoiceActivityEvent;
 import com.cms.demo.repository.AuditLogRepository;
 import com.cms.demo.repository.CurrencyRepository;
 import com.cms.demo.repository.InvoiceRepository;
@@ -36,6 +37,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 import tools.jackson.databind.ObjectMapper;
@@ -59,6 +61,8 @@ class PaymentServiceTest {
     private AuditLogService auditLogService;
     @Mock
     private ObjectMapper objectMapper;
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
 
     @InjectMocks
     private PaymentService paymentService;
@@ -104,6 +108,7 @@ class PaymentServiceTest {
         when(userRepository.findByEmployeeCode("U001")).thenReturn(Optional.of(financeUser));
         when(invoiceRepository.findById(1L)).thenReturn(Optional.of(invoice));
         when(contractService.getContractForUser(1L, "U001")).thenReturn(invoice.getContract());
+        when(invoiceRepository.findByContractId(1L)).thenReturn(List.of(invoice));
         when(paymentStatusRepository.findByCodeIgnoreCase(PaymentCalculator.PARTIALLY_PAID))
                 .thenReturn(Optional.of(status(PaymentCalculator.PARTIALLY_PAID, "Partially Paid")));
         when(invoiceRepository.save(invoice)).thenReturn(invoice);
@@ -116,6 +121,71 @@ class PaymentServiceTest {
         assertEquals(PaymentCalculator.PARTIALLY_PAID, invoice.getStatus().getCode());
         verify(auditLogService).recordEvent(eq(financeUser), eq("INVOICE"), eq(1L),
                 eq("PAYMENT_UPDATED"), any(Map.class), any(Map.class));
+        verify(eventPublisher).publishEvent(new InvoiceActivityEvent(1L, "INVOICE_PARTIALLY_PAID"));
+        verify(eventPublisher, never()).publishEvent(
+                new InvoiceActivityEvent(1L, "INVOICE_FULLY_PAID"));
+    }
+
+    @Test
+    void fullyPaidContractPublishesCompletionEvent() {
+        Invoice invoice = invoice(1L, "105.00", "40.00", LocalDate.now().minusDays(1));
+        invoice.getContract().setCommercialTaxRate(new BigDecimal("5.00"));
+        when(userRepository.findByEmployeeCode("U001")).thenReturn(Optional.of(financeUser));
+        when(invoiceRepository.findById(1L)).thenReturn(Optional.of(invoice));
+        when(contractService.getContractForUser(1L, "U001")).thenReturn(invoice.getContract());
+        when(invoiceRepository.findByContractId(1L)).thenReturn(List.of(invoice));
+        when(paymentStatusRepository.findByCodeIgnoreCase(PaymentCalculator.PAID))
+                .thenReturn(Optional.of(status(PaymentCalculator.PAID, "Paid")));
+        when(invoiceRepository.save(invoice)).thenReturn(invoice);
+
+        paymentService.recordPayment(1L,
+                new PaymentUpdateRequest(new BigDecimal("105.00"), LocalDate.now(), "Paid in full"),
+                "U001");
+
+        verify(eventPublisher).publishEvent(new InvoiceActivityEvent(1L, "INVOICE_FULLY_PAID"));
+        verify(eventPublisher).publishEvent(new InvoiceActivityEvent(1L, "CONTRACT_FULLY_PAID"));
+    }
+
+    @Test
+    void invoicePaidButContractGrossNotCoveredDoesNotPublishContractCompletionEvent() {
+        Invoice invoice = invoice(1L, "100.00", "40.00", LocalDate.now().plusDays(10));
+        invoice.getContract().setCommercialTaxRate(new BigDecimal("5.00"));
+        when(userRepository.findByEmployeeCode("U001")).thenReturn(Optional.of(financeUser));
+        when(invoiceRepository.findById(1L)).thenReturn(Optional.of(invoice));
+        when(contractService.getContractForUser(1L, "U001")).thenReturn(invoice.getContract());
+        when(invoiceRepository.findByContractId(1L)).thenReturn(List.of(invoice));
+        when(paymentStatusRepository.findByCodeIgnoreCase(PaymentCalculator.PAID))
+                .thenReturn(Optional.of(status(PaymentCalculator.PAID, "Paid")));
+        when(invoiceRepository.save(invoice)).thenReturn(invoice);
+
+        paymentService.recordPayment(1L,
+                new PaymentUpdateRequest(new BigDecimal("100.00"), LocalDate.now(), "Invoice paid"),
+                "U001");
+
+        verify(eventPublisher).publishEvent(new InvoiceActivityEvent(1L, "INVOICE_FULLY_PAID"));
+        verify(eventPublisher, never()).publishEvent(
+                new InvoiceActivityEvent(1L, "CONTRACT_FULLY_PAID"));
+    }
+
+    @Test
+    void oneUnpaidInvoicePreventsContractFullyPaidEvent() {
+        Invoice invoice = invoice(1L, "100.00", "40.00", LocalDate.now().minusDays(1));
+        Invoice anotherInvoice = invoice(2L, "50.00", "0.00", LocalDate.now().plusDays(10));
+        when(userRepository.findByEmployeeCode("U001")).thenReturn(Optional.of(financeUser));
+        when(invoiceRepository.findById(1L)).thenReturn(Optional.of(invoice));
+        when(contractService.getContractForUser(1L, "U001")).thenReturn(invoice.getContract());
+        when(invoiceRepository.findByContractId(1L)).thenReturn(List.of(invoice, anotherInvoice));
+        when(paymentStatusRepository.findByCodeIgnoreCase(PaymentCalculator.PAID))
+                .thenReturn(Optional.of(status(PaymentCalculator.PAID, "Paid")));
+        when(invoiceRepository.save(invoice)).thenReturn(invoice);
+
+        paymentService.recordPayment(1L,
+                new PaymentUpdateRequest(new BigDecimal("100.00"), LocalDate.now(), "Paid invoice"),
+                "U001");
+
+        verify(eventPublisher).publishEvent(new InvoiceActivityEvent(1L, "INVOICE_FULLY_PAID"));
+        verify(eventPublisher, never()).publishEvent(
+                new InvoiceActivityEvent(1L, "CONTRACT_FULLY_PAID"));
     }
 
     @Test
