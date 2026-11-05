@@ -216,29 +216,35 @@
                       Payment type
                     </td>
                     <td class="text-nowrap">
-                      <span th:text="${contract.currencyName ?: ''}">USD</span>
                       <span
                         th:text="${#numbers.formatInteger(contract.contractGross, 1, 'COMMA')}"
-                        >0</span
-                      >
+                        >0</span>
+                      
+                      <span th:text="${contract.currencyName ?: ''}">USD</span>
                     </td>
                     <td
                       class="text-nowrap"
-                      th:text="${#numbers.formatInteger(contract.totalInvoiced, 1, 'COMMA')}"
                     >
-                      0
+                      <span
+                        th:text="${#numbers.formatInteger(contract.totalInvoiced, 1, 'COMMA')}"
+                        >0</span>
+                     <span th:text="${contract.currencyName ?: ''}">USD</span>
                     </td>
                     <td
-                      class="text-nowrap text-primary fw-semibold"
-                      th:text="${#numbers.formatInteger(contract.remainingInvoiceable, 1, 'COMMA')}"
+                      class="text-nowrap"
                     >
-                      0
+                      <span
+                        th:text="${#numbers.formatInteger(contract.remainingInvoiceable, 1, 'COMMA')}"
+                        >0</span>
+                     <span th:text="${contract.currencyName ?: ''}">USD</span>
                     </td>
                     <td
-                      class="text-nowrap text-success fw-semibold"
-                      th:text="${#numbers.formatInteger(contract.totalPaid, 1, 'COMMA')}"
+                      class="text-nowrap"
                     >
-                      0
+                       <span
+                        th:text="${#numbers.formatInteger(contract.totalPaid, 1, 'COMMA')}"
+                        >0</span>
+                     <span th:text="${contract.currencyName ?: ''}">USD</span>
                     </td>
                     <td
                       class="text-nowrap fw-semibold"
@@ -284,7 +290,7 @@
                           class="btn btn-sm btn-outline-primary payment-action-btn"
                           th:href="@{/payments/{id}(id=${contract.contractId})}"
                         >
-                          <i class="fa-solid fa-eye me-1"></i>View
+                          <i class="fa-solid fa-arrow-up-right-from-square aria-hidden me-1"></i>View
                         </a>
                         <a
                           class="btn btn-primary btn-sm payment-action-btn"
@@ -292,7 +298,7 @@
                           th:if="${contract.remainingInvoiceable != null and contract.remainingInvoiceable.signum() > 0}"
                           th:href="@{/payments/{id}(id=${contract.contractId},addInvoice=true)}"
                         >
-                          <i class="fa-solid fa-plus me-1"></i>Add Invoice
+                         Add Invoice
                         </a>
                       </div>
                     </td>
@@ -361,7 +367,7 @@
                 style="width: auto"
                 id="pageSize"
                 onchange="
-                  const u = new URL(location);
+                  const u = new window.URL(location);
                   u.searchParams.set('pageSize', this.value);
                   u.searchParams.set('page', '1');
                   location.href = u;

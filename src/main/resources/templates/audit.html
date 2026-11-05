@@ -27,7 +27,7 @@
 			</div>
 		</form>
 		<section class="audit-table-card">
-			<div class="audit-table-heading"><div><h2>Activity</h2><span th:text="${total + ' recorded events'}">0 recorded events</span></div><label class="audit-page-size">Show <select aria-label="Rows per page" onchange="const u=new URL(location);u.searchParams.set('pageSize',this.value);u.searchParams.set('page','1');location.href=u"><option th:each="size : ${pageSizes}" th:value="${size}" th:text="${size}" th:selected="${pageSize == size}"></option></select></label></div>
+			<div class="audit-table-heading"><div><h2>Activity</h2><span th:text="${total + ' recorded events'}">0 recorded events</span></div><label class="audit-page-size">Show <select aria-label="Rows per page" onchange="const u=new window.URL(location);u.searchParams.set('pageSize',this.value);u.searchParams.set('page','1');location.href=u"><option th:each="size : ${pageSizes}" th:value="${size}" th:text="${size}" th:selected="${pageSize == size}"></option></select></label></div>
 			<div class="table-responsive">
 				<table class="table audit-table align-middle mb-0">
 					<thead><tr><th>TIME</th><th>USER</th><th>ACTION</th><th>AREA / RECORD</th><th>REQUEST DETAILS</th><th>IP ADDRESS</th></tr></thead>

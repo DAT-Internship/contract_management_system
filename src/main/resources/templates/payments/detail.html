@@ -95,7 +95,7 @@
                     <div class="payment-label">CONTRACT GROSS</div>
                     <div
                       class="payment-amount"
-                      th:text="${(contract.currencyName ?: '') + ' ' + #numbers.formatInteger(contract.contractGross, 1, 'COMMA')}"
+                      th:text="${#numbers.formatInteger(contract.contractGross, 1, 'COMMA') + ' ' + (contract.currencyName ?: '')}"
                     >
                       0
                     </div>
@@ -106,7 +106,7 @@
                     <div class="payment-label">INVOICED</div>
                     <div
                       class="payment-amount"
-                      th:text="${(contract.currencyName ?: '') + ' ' + #numbers.formatInteger(contract.totalInvoiced, 1, 'COMMA')}"
+                      th:text="${#numbers.formatInteger(contract.totalInvoiced, 1, 'COMMA') + ' ' + (contract.currencyName ?: '')}"
                     >
                       0
                     </div>
@@ -117,7 +117,7 @@
                     <div class="payment-label">PAID</div>
                     <div
                       class="payment-amount paid-amount"
-                      th:text="${(contract.currencyName ?: '') + ' ' + #numbers.formatInteger(contract.totalPaid, 1, 'COMMA')}"
+                      th:text="${#numbers.formatInteger(contract.totalPaid, 1, 'COMMA') + ' ' + (contract.currencyName ?: '')}"
                     >
                       0
                     </div>
@@ -128,7 +128,7 @@
                     <div class="payment-label">OUTSTANDING</div>
                     <div
                       class="payment-amount outstanding-amount"
-                      th:text="${(contract.currencyName ?: '') + ' ' + #numbers.formatInteger(contract.outstandingAmount, 1, 'COMMA')}"
+                      th:text="${#numbers.formatInteger(contract.outstandingAmount, 1, 'COMMA') + ' ' + (contract.currencyName ?: '')}"
                     >
                       0
                     </div>
@@ -169,7 +169,7 @@
                 </div>
                <strong
     class="payment-invoiceable-value"
-    th:text="${(contract.currencyName ?: '') + ' ' + #numbers.formatInteger(contract.remainingInvoiceable, 1, 'COMMA')}"
+    th:text="${#numbers.formatInteger(contract.remainingInvoiceable, 1, 'COMMA') + ' ' + (contract.currencyName ?: '')}"
 >0</strong>
               </div>
             </section>
@@ -288,7 +288,7 @@
                                                          data-updated-at=${invoice.updatedAt != null ? #temporals.format(invoice.updatedAt, 'dd MMM yyyy HH:mm') : '-'},
                                                          data-updated-by=${invoice.updatedBy ?: '-'}"
                           >
-                            <i class="fa-solid fa-eye me-1"></i>View
+                            <i class="fa-solid fa-arrow-up-right-from-square aria-hidden me-1"></i>View
                           </button>
                           <div
                             class="d-inline-flex gap-1"
@@ -302,7 +302,7 @@
                                                              data-paid-amount=${invoice.paidAmount},
                                                              data-total-amount=${invoice.totalAmount}"
                             >
-                              <i class="fa-solid fa-arrows-rotate me-1"></i
+                              <i class="fa-solid fa-arrow-up-from-bracket me-1"></i
                               >Update
                             </button>
                           </div>
@@ -724,14 +724,14 @@
                       Remaining invoiceable
                       </span>
                       <div class="invoice-limit-amount">
-                       <span
-                          class="invoice-limit-currency"
-                          th:text="${contract.currencyName ?: ''}"
-                          >MMK</span>
                         <strong
                           id="invoiceSummaryRemaining"
                           th:text="${#numbers.formatInteger(contract.remainingInvoiceable, 1, 'COMMA')}"
                           >0</strong>
+                       <span
+                          class="invoice-limit-currency"
+                          th:text="${contract.currencyName ?: ''}"
+                          >MMK</span>
                        
                        
                       </div>
