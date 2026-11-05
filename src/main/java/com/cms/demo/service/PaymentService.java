@@ -495,6 +495,9 @@ public class PaymentService {
         String statusCode = effectiveStatusCode(invoice);
         String statusName = effectiveStatusName(invoice, statusCode);
         boolean overdue = PaymentCalculator.OVERDUE.equals(statusCode);
+        long remainingDays = invoice.getDueDate() == null
+                ? 0
+                : ChronoUnit.DAYS.between(LocalDate.now(), invoice.getDueDate());
 
         return new InvoiceResponse(
                 invoice.getInvoiceId(),
@@ -518,7 +521,8 @@ public class PaymentService {
                 invoice.getCreatedAt(),
                 invoice.getUpdatedAt(),
                 invoice.getUpdatedBy() == null ? null : invoice.getUpdatedBy().getFullName(),
-                invoice.getStatus() == null ? null : invoice.getStatus().getId());
+                invoice.getStatus() == null ? null : invoice.getStatus().getId(),
+                remainingDays);
     }
 
     private List<PaymentHistoryEntry> toHistory(List<Invoice> invoices) {
@@ -694,7 +698,8 @@ public class PaymentService {
             case "quarterly" -> invoiceDate.plusMonths(3);
             case "semi-annual" -> invoiceDate.plusMonths(6);
             case "annual" -> invoiceDate.plusMonths(12);
-            case "lump sum", "milestone-based" -> dueDate;
+            case "lump sum" -> dueDate != null ? dueDate : invoiceDate;
+            case "milestone-based" -> dueDate;
             default -> dueDate != null ? dueDate
                     : invoiceDate.plusDays(PaymentCalculator.DEFAULT_PAYMENT_TERM_DAYS);
         };
@@ -703,7 +708,7 @@ public class PaymentService {
     private void validateDates(LocalDate invoiceDate, LocalDate dueDate) {
         if (dueDate == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "Due date is required for lump sum and milestone-based payments");
+                    "Due date is required for milestone-based payments");
         }
         if (dueDate.isBefore(invoiceDate)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,

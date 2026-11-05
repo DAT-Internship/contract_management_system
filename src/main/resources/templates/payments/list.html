@@ -49,9 +49,9 @@
             <div class="col">
                 <div class="card border-0 shadow-sm p-3 h-100 payment-kpi">
                     <span class="payment-kpi-label">Outstanding</span>
-                    <div th:if="${overview.outstandingByCurrency.isEmpty()}" class="payment-kpi-value">0.00</div>
+                    <div th:if="${overview.outstandingByCurrency.isEmpty()}" class="payment-kpi-value">0</div>
                     <div th:each="entry : ${overview.outstandingByCurrency}" class="payment-kpi-currency">
-                        <strong th:text="${#numbers.formatDecimal(entry.value, 1, 2)}">0.00</strong>
+                        <strong th:text="${#numbers.formatInteger(entry.value, 1, 'COMMA')}">0</strong>
                         <span th:text="${entry.key}">USD</span>
                     </div>
                 </div>
@@ -128,15 +128,15 @@
                             <td th:text="${contract.partyName ?: '-'}">Customer</td>
                             <td th:text="${contract.paymentTypeName ?: '-'}">Payment type</td>
                             <td class="text-nowrap">
+                                <span th:text="${#numbers.formatInteger(contract.contractGross, 1, 'COMMA')}">0</span>
                                 <span th:text="${contract.currencyCode ?: ''}">USD</span>
-                                <span th:text="${#numbers.formatDecimal(contract.contractGross, 1, 2)}">0.00</span>
                             </td>
-                            <td class="text-nowrap" th:text="${#numbers.formatDecimal(contract.totalInvoiced, 1, 2)}">0.00</td>
+                            <td class="text-nowrap" th:text="${#numbers.formatInteger(contract.totalInvoiced, 1, 'COMMA')}">0</td>
                             <td class="text-nowrap text-success fw-semibold"
-                                th:text="${#numbers.formatDecimal(contract.totalPaid, 1, 2)}">0.00</td>
+                                th:text="${#numbers.formatInteger(contract.totalPaid, 1, 'COMMA')}">0</td>
                             <td class="text-nowrap fw-semibold"
                                 th:classappend="${contract.outstandingAmount != null and contract.outstandingAmount.signum() > 0} ? ' text-warning' : ' text-success'"
-                                th:text="${#numbers.formatDecimal(contract.outstandingAmount, 1, 2)}">0.00</td>
+                                th:text="${#numbers.formatInteger(contract.outstandingAmount, 1, 'COMMA')}">0</td>
                             <td style="min-width: 120px">
                                 <div class="d-flex align-items-center gap-2">
                                     <div class="progress flex-grow-1 payment-progress" role="progressbar"
@@ -158,11 +158,11 @@
                                 <div class="d-inline-flex gap-1">
                                     <a class="btn btn-sm btn-outline-primary payment-action-btn"
                                        th:href="@{/payments/{id}(id=${contract.contractId})}">
-                                        <i class="fa-solid fa-eye me-1"></i>View
+                                        <i class="fa-solid fa-arrow-up-right-from-square me-1"></i>View
                                     </a>
                                     <a class="btn btn-primary btn-sm payment-action-btn" sec:authorize="hasRole('FINANCE')"
                                        th:href="@{/payments/{id}(id=${contract.contractId},addInvoice=true)}">
-                                        <i class="fa-solid fa-plus me-1"></i>Add Invoice
+                                       Add Invoice
                                     </a>
                                 </div>
                             </td>

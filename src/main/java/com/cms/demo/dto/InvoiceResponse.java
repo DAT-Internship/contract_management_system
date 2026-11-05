@@ -26,5 +26,6 @@ public record InvoiceResponse(
         LocalDateTime createdAt,
         LocalDateTime updatedAt,
         String updatedBy,
-        Integer paymentStatusId) {
+        Integer paymentStatusId,
+        long remainingDays) {
 }

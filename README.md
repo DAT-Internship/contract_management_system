@@ -101,7 +101,7 @@ Existing users are not modified. Use the Finance account to add invoices and rec
 - `description` is required.
 - `invoiceNo` is optional and must be unique.
 - `invoiceDate` defaults to the current date.
-- `dueDate` is optional. When omitted, it defaults to the invoice date plus the backend payment term (30 days).
+- `dueDate` is optional. When omitted, it is calculated from the contract payment type: Monthly adds 1 month, Quarterly 3 months, Semi-Annual 6 months, Annual 12 months, and Lump Sum uses the invoice date. Milestone-based payments require the due date to be entered manually.
 - `amount` is the amount before tax.
 - If `taxAmount` is omitted, the contract commercial tax rate is applied. The form also recalculates tax from the amount and contract rate as you type.
 - If `currencyId` is omitted, the contract currency is used.
