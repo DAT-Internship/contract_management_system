@@ -18,7 +18,7 @@
      <div class="col"><div class="detail-label">Signed Date</div><div class="detail-value" th:text="${contract.signedDate != null ? #temporals.format(contract.signedDate,'dd MMM yyyy') : '-'}">-</div></div>
      <div class="col"><div class="detail-label">Contract Period</div><div class="detail-value"><span th:text="${#temporals.format(contract.startDate,'dd MMM yyyy')}">Start</span> - <span th:text="${#temporals.format(contract.endDate,'dd MMM yyyy')}">End</span></div></div>
      <div class="col"><div class="detail-label">Remaining</div><div class="detail-value fw-bold" id="contractRemaining" th:attr="data-end=${contract.endDate}">-</div></div>
-     <div class="col"><div class="detail-label">Contract Value</div><div class="detail-value fw-bold" th:text="${contract.currency.name + ' ' + #numbers.formatDecimal(contract.contractValue,1,2)}">Value</div></div>
+     <div class="col"><div class="detail-label">Contract Value</div><div class="detail-value fw-bold" th:text="${contract.currency.name + ' ' + #numbers.formatInteger(contract.contractValue, 1, 'COMMA')}">Value</div></div>
      <div class="col"><div class="detail-label">Project ID</div><div class="detail-value" th:text="${contract.project != null ? contract.project.projectCode : '-'}">Project</div></div>
      <div class="col"><div class="detail-label">Project In-charge</div><div class="detail-value" th:text="${contract.projectIncharge != null ? contract.projectIncharge.fullName : '-'}">-</div></div>
      <div class="col"><div class="detail-label">Contract Manager</div><div class="detail-value" th:text="${contract.contractManager != null ? contract.contractManager.fullName : '-'}">-</div></div>

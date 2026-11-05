@@ -729,11 +729,15 @@ public class PaymentService {
         if (invoiced.add(newInvoiceTotal).compareTo(gross) > 0) {
             BigDecimal remaining = PaymentCalculator.remaining(gross, invoiced);
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "Invoice total including tax (" + PaymentCalculator.money(newInvoiceTotal)
-                            + ") exceeds the remaining invoiceable amount of " + remaining
-                            + " (contract gross " + PaymentCalculator.money(gross)
-                            + ", already invoiced " + PaymentCalculator.money(invoiced) + ").");
+                    "Invoice total including tax (" + formatAmount(newInvoiceTotal)
+                            + ") exceeds the remaining invoiceable amount of " + formatAmount(remaining)
+                            + " (contract gross " + formatAmount(gross)
+                            + ", already invoiced " + formatAmount(invoiced) + ").");
         }
+    }
+
+    private String formatAmount(BigDecimal value) {
+        return PaymentCalculator.money(value).setScale(0, RoundingMode.HALF_UP).toPlainString();
     }
 
     private MasterCurrency resolveCurrency(Integer currencyId, MasterCurrency fallback) {

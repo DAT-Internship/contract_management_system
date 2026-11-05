@@ -95,9 +95,9 @@
                     <div class="payment-label">CONTRACT GROSS</div>
                     <div
                       class="payment-amount"
-                      th:text="${(contract.currencyName ?: '') + ' ' + #numbers.formatDecimal(contract.contractGross, 1, 'COMMA', 2, 'POINT')}"
+                      th:text="${(contract.currencyName ?: '') + ' ' + #numbers.formatInteger(contract.contractGross, 1, 'COMMA')}"
                     >
-                      0.00
+                      0
                     </div>
                   </div>
                 </div>
@@ -106,9 +106,9 @@
                     <div class="payment-label">INVOICED</div>
                     <div
                       class="payment-amount"
-                      th:text="${(contract.currencyName ?: '') + ' ' + #numbers.formatDecimal(contract.totalInvoiced, 1, 'COMMA', 2, 'POINT')}"
+                      th:text="${(contract.currencyName ?: '') + ' ' + #numbers.formatInteger(contract.totalInvoiced, 1, 'COMMA')}"
                     >
-                      0.00
+                      0
                     </div>
                   </div>
                 </div>
@@ -117,9 +117,9 @@
                     <div class="payment-label">PAID</div>
                     <div
                       class="payment-amount paid-amount"
-                      th:text="${(contract.currencyName ?: '') + ' ' + #numbers.formatDecimal(contract.totalPaid, 1, 'COMMA', 2, 'POINT')}"
+                      th:text="${(contract.currencyName ?: '') + ' ' + #numbers.formatInteger(contract.totalPaid, 1, 'COMMA')}"
                     >
-                      0.00
+                      0
                     </div>
                   </div>
                 </div>
@@ -128,9 +128,9 @@
                     <div class="payment-label">OUTSTANDING</div>
                     <div
                       class="payment-amount outstanding-amount"
-                      th:text="${(contract.currencyName ?: '') + ' ' + #numbers.formatDecimal(contract.outstandingAmount, 1, 'COMMA', 2, 'POINT')}"
+                      th:text="${(contract.currencyName ?: '') + ' ' + #numbers.formatInteger(contract.outstandingAmount, 1, 'COMMA')}"
                     >
-                      0.00
+                      0
                     </div>
                   </div>
                 </div>
@@ -169,8 +169,8 @@
                 </div>
                <strong
     class="payment-invoiceable-value"
-    th:text="${(contract.currencyName ?: '') + ' ' + #numbers.formatDecimal(contract.remainingInvoiceable, 1, 'COMMA', 2, 'POINT')}"
->0.00</strong>
+    th:text="${(contract.currencyName ?: '') + ' ' + #numbers.formatInteger(contract.remainingInvoiceable, 1, 'COMMA')}"
+>0</strong>
               </div>
             </section>
 
@@ -239,22 +239,22 @@
                       </td>
                       <td
                         class="text-nowrap"
-                        th:text="${(invoice.currencyName ?: '') + ' ' + #numbers.formatDecimal(invoice.totalAmount, 1, 'COMMA', 2, 'POINT')}"
+                        th:text="${(invoice.currencyName ?: '') + ' ' + #numbers.formatInteger(invoice.totalAmount, 1, 'COMMA')}"
                       >
-                        0.00
+                        0
                       </td>
                       <td
                         class="text-nowrap text-success fw-semibold"
-                        th:text="${#numbers.formatDecimal(invoice.paidAmount, 1, 'COMMA', 2, 'POINT')}"
+                        th:text="${#numbers.formatInteger(invoice.paidAmount, 1, 'COMMA')}"
                       >
-                        0.00
+                        0
                       </td>
                       <td
                         class="text-nowrap fw-semibold"
                         th:classappend="${invoice.outstandingAmount != null and invoice.outstandingAmount.signum() > 0} ? ' text-warning' : ' text-success'"
-                        th:text="${#numbers.formatDecimal(invoice.outstandingAmount, 1, 'COMMA', 2, 'POINT')}"
+                        th:text="${#numbers.formatInteger(invoice.outstandingAmount, 1, 'COMMA')}"
                       >
-                        0.00
+                        0
                       </td>
                       <td>
                         <span
@@ -277,11 +277,11 @@
                                                          data-invoice-date=${invoice.invoiceDate != null ? #temporals.format(invoice.invoiceDate, 'dd MMM yyyy') : '-'},
                                                          data-due-date=${invoice.dueDate != null ? #temporals.format(invoice.dueDate, 'dd MMM yyyy') : '-'},
                                                          data-currency=${invoice.currencyName ?: '-'},
-                                                         data-amount=${#numbers.formatDecimal(invoice.amount, 1, 'COMMA', 2, 'POINT')},
-                                                         data-tax-amount=${#numbers.formatDecimal(invoice.taxAmount, 1, 'COMMA', 2, 'POINT')},
-                                                         data-total-amount=${#numbers.formatDecimal(invoice.totalAmount, 1, 'COMMA', 2, 'POINT')},
-                                                         data-paid-amount=${#numbers.formatDecimal(invoice.paidAmount, 1, 'COMMA', 2, 'POINT')},
-                                                         data-outstanding-amount=${#numbers.formatDecimal(invoice.outstandingAmount, 1, 'COMMA', 2, 'POINT')},
+                                                         data-amount=${#numbers.formatInteger(invoice.amount, 1, 'COMMA')},
+                                                         data-tax-amount=${#numbers.formatInteger(invoice.taxAmount, 1, 'COMMA')},
+                                                         data-total-amount=${#numbers.formatInteger(invoice.totalAmount, 1, 'COMMA')},
+                                                         data-paid-amount=${#numbers.formatInteger(invoice.paidAmount, 1, 'COMMA')},
+                                                         data-outstanding-amount=${#numbers.formatInteger(invoice.outstandingAmount, 1, 'COMMA')},
                                                          data-paid-date=${invoice.paidDate != null ? #temporals.format(invoice.paidDate, 'dd MMM yyyy') : '-'},
                                                          data-status-code=${invoice.statusCode},
                                                          data-status-name=${invoice.statusName},
@@ -531,7 +531,7 @@
                             class="form-control"
                             id="amount"
                             type="number"
-                            step="0.01"
+                            step="1"
                             min="0"
                             th:field="*{amount}"
                             th:classappend="${#fields.hasErrors('amount')} ? ' is-invalid'"
@@ -544,7 +544,7 @@
                         ></div>
                         <div class="form-text">
                           Maximum
-                          <strong id="invoiceSummaryMax">0.00</strong> before
+                          <strong id="invoiceSummaryMax">0</strong> before
                           tax.
                         </div>
                       </div>
@@ -562,7 +562,7 @@
                             class="form-control"
                             id="taxAmount"
                             type="number"
-                            step="0.01"
+                            step="1"
                             min="0"
                             th:field="*{taxAmount}"
                             th:classappend="${#fields.hasErrors('taxAmount')} ? ' is-invalid'"
@@ -757,16 +757,16 @@
                         <span
                           ><strong
                             id="invoiceSummaryInvoiced"
-                            th:text="${#numbers.formatDecimal(contract.totalInvoiced, 1, 'COMMA', 2, 'POINT')}"
-                            >0.00</strong
+                            th:text="${#numbers.formatInteger(contract.totalInvoiced, 1, 'COMMA')}"
+                            >0</strong
                           >
                           invoiced</span
                         >
                         <span
                           ><strong
                             id="invoiceSummaryGross"
-                            th:text="${#numbers.formatDecimal(contract.contractGross, 1, 'COMMA', 2, 'POINT')}"
-                            >0.00</strong
+                            th:text="${#numbers.formatInteger(contract.contractGross, 1, 'COMMA')}"
+                            >0</strong
                           >
                           gross</span
                         >
@@ -776,7 +776,7 @@
                     <div class="invoice-limit-breakdown">
                       <div class="invoice-limit-row">
                         <span>Amount before tax</span>
-                        <strong id="invoiceSummaryAmount">0.00</strong>
+                        <strong id="invoiceSummaryAmount">0</strong>
                       </div>
                       <div class="invoice-limit-row">
                         <span
@@ -787,11 +787,11 @@
                             >(5%)</small
                           >
                         </span>
-                        <strong id="invoiceSummaryTax">0.00</strong>
+                        <strong id="invoiceSummaryTax">0</strong>
                       </div>
                       <div class="invoice-limit-row invoice-limit-row-total">
                         <span>This invoice total</span>
-                        <strong id="invoiceSummaryTotal">0.00</strong>
+                        <strong id="invoiceSummaryTotal">0</strong>
                       </div>
                       <div
                         class="invoice-limit-row invoice-limit-row-after"
@@ -800,8 +800,8 @@
                         <span>Remaining after this</span>
                         <strong
                           id="invoiceSummaryAfter"
-                          th:text="${#numbers.formatDecimal(contract.remainingInvoiceable, 1, 'COMMA', 2, 'POINT')}"
-                          >0.00</strong
+                          th:text="${#numbers.formatInteger(contract.remainingInvoiceable, 1, 'COMMA')}"
+                          >0</strong
                         >
                       </div>
                     </div>
@@ -963,7 +963,7 @@
                 <div class="small text-muted">
                   <span id="paymentInvoiceLabel">Invoice</span>
                   <span> - total </span>
-                  <span id="paymentTotalLabel">0.00</span>
+                  <span id="paymentTotalLabel">0</span>
                 </div>
               </div>
               <button
@@ -983,7 +983,7 @@
                   class="form-control"
                   id="paidAmount"
                   type="number"
-                  step="0.01"
+                  step="1"
                   min="0"
                   th:field="*{paidAmount}"
                   th:classappend="${#fields.hasErrors('paidAmount')} ? ' is-invalid'"
@@ -1099,8 +1099,8 @@
           if (!invoiceForm || taxManuallyEdited) return;
           const amount = parseFloat(invoiceForm.elements["amount"]?.value);
           if (Number.isNaN(amount)) return;
-          const tax = Math.round(amount * taxRate) / 100;
-          setValue(invoiceForm, "taxAmount", tax.toFixed(2));
+          const tax = Math.round((amount * taxRate) / 100);
+          setValue(invoiceForm, "taxAmount", tax);
         };
 
         const recalculateDueDate = () => {
@@ -1141,8 +1141,8 @@
         };
 
         const moneyFormatter = new Intl.NumberFormat("en-US", {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 0,
         });
         const formatMoney = (value) => moneyFormatter.format(value);
 
@@ -1171,20 +1171,20 @@
             manualTax == null
               ? available / (1 + taxRate / 100)
               : available - manualTax;
-          return Math.max(0, Math.floor(max * 100) / 100);
+          return Math.max(0, Math.floor(max));
         };
 
         const clampInvoiceAmount = (available) => {
           const amountField = invoiceForm?.elements["amount"];
           if (!amountField) return 0;
           const maxAmount = maximumAmountBeforeTax(available);
-          amountField.max = maxAmount.toFixed(2);
+          amountField.max = maxAmount;
           const typed = parseFloat(amountField.value);
           if (Number.isFinite(typed) && typed > maxAmount + 0.001) {
-            amountField.value = maxAmount.toFixed(2);
+            amountField.value = maxAmount;
             if (!taxManuallyEdited) recalculateTax();
           } else if (Number.isFinite(typed) && typed < 0) {
-            amountField.value = "0.00";
+            amountField.value = "0";
             if (!taxManuallyEdited) recalculateTax();
           }
           setSummaryText("invoiceSummaryMax", formatMoney(maxAmount));
@@ -1198,7 +1198,7 @@
           const taxInput = invoiceForm.elements["taxAmount"]?.value;
           const tax =
             taxInput === "" || taxInput == null
-              ? Math.round(amount * taxRate) / 100
+              ? Math.round((amount * taxRate) / 100)
               : parseFloat(taxInput) || 0;
           const total = amount + tax;
           const after = available - total;
@@ -1336,7 +1336,11 @@
         document.querySelectorAll(".js-pay-invoice").forEach((button) => {
           button.addEventListener("click", () => {
             setValue(paymentForm, "invoiceId", button.dataset.invoiceId);
-            setValue(paymentForm, "paidAmount", button.dataset.paidAmount);
+            setValue(
+              paymentForm,
+              "paidAmount",
+              Math.round(parseFloat(button.dataset.paidAmount) || 0),
+            );
             setValue(
               paymentForm,
               "paidDate",
@@ -1347,8 +1351,9 @@
               paymentInvoiceLabel.textContent =
                 button.dataset.invoiceNo || "Invoice";
             if (paymentTotalLabel)
-              paymentTotalLabel.textContent =
-                button.dataset.totalAmount || "0.00";
+              paymentTotalLabel.textContent = formatMoney(
+                parseFloat(button.dataset.totalAmount) || 0,
+              );
             paymentModal?.show();
           });
         });
