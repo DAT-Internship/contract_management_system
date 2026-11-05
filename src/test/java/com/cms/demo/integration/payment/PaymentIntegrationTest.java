@@ -54,6 +54,7 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.web.server.ResponseStatusException;
 
 /**
@@ -127,6 +128,9 @@ class PaymentIntegrationTest {
     private User operatorUser;
     private Contract contract;
     private MasterCurrency currency;
+    private CustomerSupplier party;
+    private MasterContractStatus contractStatus;
+    private MasterPaymentType paymentType;
 
     @BeforeEach
     void setUp() {
@@ -139,8 +143,8 @@ class PaymentIntegrationTest {
         Role operatorRole = ensureRole("OPERATOR", "Operator", "Create and view own contracts");
         Department department = ensureDepartment();
         currency = ensureCurrency();
-        MasterContractStatus contractStatus = ensureContractStatus();
-        MasterPaymentType paymentType = ensurePaymentType();
+        contractStatus = ensureContractStatus();
+        paymentType = ensurePaymentType();
 
         ensurePaymentStatus(PaymentCalculator.PENDING, "Pending");
         ensurePaymentStatus(PaymentCalculator.PARTIALLY_PAID, "Partially Paid");
@@ -151,7 +155,7 @@ class PaymentIntegrationTest {
                 "pf-" + suffix + "@cms.test", financeRole, department);
         operatorUser = createUser("PO-" + suffix, "Payment Operator " + suffix,
                 "po-" + suffix + "@cms.test", operatorRole, department);
-        CustomerSupplier party = createParty();
+        party = createParty();
         contract = createContract(party, contractStatus, paymentType);
     }
 
@@ -339,6 +343,20 @@ class PaymentIntegrationTest {
         assertEquals(1, summaries.get(0).invoiceCount());
     }
 
+    @Test
+    void contractSummariesAreSortedMonotonicallyByContractNumber() {
+        String prefix = "ORD-" + suffix + "-";
+        createContractWithNo(prefix + "C");
+        createContractWithNo(prefix + "A");
+        createContractWithNo(prefix + "B");
+
+        List<ContractPaymentSummaryResponse> summaries = paymentService.findContractSummaries(
+                financeUser.getEmployeeCode(), prefix, null, null, null);
+
+        assertEquals(List.of(prefix + "A", prefix + "B", prefix + "C"),
+                summaries.stream().map(ContractPaymentSummaryResponse::contractNo).toList());
+    }
+
     // ------------------------------------------------------------------
     // Controller smoke tests
     // ------------------------------------------------------------------
@@ -353,6 +371,47 @@ class PaymentIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(view().name("payments/list"))
                 .andExpect(model().attributeExists("overview", "contracts", "statusOptions"));
+    }
+
+    @Test
+    void paymentsListPaginatesInStableMonotoneOrder() throws Exception {
+        String prefix = "PAG-" + suffix + "-";
+        List<String> orderedNumbers = List.of(
+                "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L");
+        orderedNumbers.forEach(letter -> createContractWithNo(prefix + letter));
+
+        MvcResult firstPage = mockMvc.perform(get("/payments")
+                        .param("q", prefix)
+                        .param("page", "1")
+                        .param("pageSize", "10")
+                        .with(user(financeUser.getEmployeeCode()).roles("FINANCE")))
+                .andExpect(status().isOk())
+                .andExpect(view().name("payments/list"))
+                .andExpect(model().attribute("total", 12))
+                .andExpect(model().attribute("pageNumber", 1))
+                .andExpect(model().attribute("totalPages", 2))
+                .andExpect(model().attribute("showingStart", 1))
+                .andExpect(model().attribute("showingEnd", 10))
+                .andReturn();
+
+        assertEquals(orderedNumbers.stream().limit(10).map(prefix::concat).toList(),
+                contractNumbers(firstPage));
+
+        MvcResult secondPage = mockMvc.perform(get("/payments")
+                        .param("q", prefix)
+                        .param("page", "2")
+                        .param("pageSize", "10")
+                        .with(user(financeUser.getEmployeeCode()).roles("FINANCE")))
+                .andExpect(status().isOk())
+                .andExpect(model().attribute("total", 12))
+                .andExpect(model().attribute("pageNumber", 2))
+                .andExpect(model().attribute("totalPages", 2))
+                .andExpect(model().attribute("showingStart", 11))
+                .andExpect(model().attribute("showingEnd", 12))
+                .andReturn();
+
+        assertEquals(orderedNumbers.stream().skip(10).map(prefix::concat).toList(),
+                contractNumbers(secondPage));
     }
 
     @Test
@@ -533,6 +592,39 @@ class PaymentIntegrationTest {
         Contract saved = contractRepository.save(created);
         contractIds.add(saved.getContractId());
         return saved;
+    }
+
+    private Contract createContractWithNo(String contractNo) {
+        Contract created = new Contract();
+        created.setContractNo(contractNo);
+        created.setDescription("Payment integration test contract " + contractNo);
+        created.setRegisterDate(today);
+        created.setStartDate(today.minusDays(1));
+        created.setEndDate(today.plusMonths(6));
+        created.setPeriodMonths(6);
+        created.setTotalManMonths(new BigDecimal("6.00"));
+        created.setContractValue(new BigDecimal("1000.00"));
+        created.setCommercialTaxRate(new BigDecimal("5.00"));
+        created.setMissingAttachment("NO");
+        created.setPaymentRisk("LOW");
+        created.setRenewalRisk("LOW");
+        created.setStatus(contractStatus);
+        created.setParty(party);
+        created.setCurrency(currency);
+        created.setPaymentType(paymentType);
+        created.setCreatedBy(financeUser);
+        created.setCreatedAt(LocalDateTime.now());
+        created.setUpdatedAt(LocalDateTime.now());
+        Contract saved = contractRepository.save(created);
+        contractIds.add(saved.getContractId());
+        return saved;
+    }
+
+    private List<String> contractNumbers(MvcResult result) {
+        @SuppressWarnings("unchecked")
+        List<ContractPaymentSummaryResponse> contracts = (List<ContractPaymentSummaryResponse>) result
+                .getModelAndView().getModel().get("contracts");
+        return contracts.stream().map(ContractPaymentSummaryResponse::contractNo).toList();
     }
 
     private String lastDigits(String value, int count) {

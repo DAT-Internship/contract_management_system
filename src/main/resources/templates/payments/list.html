@@ -102,6 +102,7 @@
             </div>
           </div>
           <input type="hidden" name="page" value="1" />
+          <input type="hidden" name="pageSize" th:value="${pageSize}" />
           <div class="row g-2 align-items-end contract-filter-row">
             <div class="col-12 col-lg-4">
               <label class="form-label small fw-semibold text-secondary" for="q"
@@ -312,14 +313,14 @@
           <div class="payment-table-footer p-3 border-top">
             <span
               class="text-muted small"
-              th:text="${'Showing ' + showingStart + '-' + showingEnd + ' of ' + total + ' contract(s)'}"
-              >Showing 0-0 of 0 contract(s)</span
+              th:text="${'Showing ' + showingStart + '-' + showingEnd + ' of ' + total + ' contract(s) - page ' + pageNumber + ' of ' + totalPages}"
+              >Showing 0-0 of 0 contract(s) - page 1 of 1</span
             >
             <nav class="payment-pagination" aria-label="Payment pages">
               <ul class="pagination pagination-sm mb-0">
                 <li
                   class="page-item"
-                  th:classappend="${pageNumber <= 1} ? ' disabled'"
+                  th:classappend="${pageNumber == 1} ? ' disabled'"
                 >
                   <a
                     class="page-link"
@@ -341,7 +342,7 @@
                 </li>
                 <li
                   class="page-item"
-                  th:classappend="${pageNumber >= totalPages} ? ' disabled'"
+                  th:classappend="${pageNumber == totalPages} ? ' disabled'"
                 >
                   <a
                     class="page-link"

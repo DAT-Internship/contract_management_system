@@ -105,8 +105,9 @@ public class PaymentService {
                         || normalizedStatus.equals(summary.paymentStatus()))
                 .filter(summary -> normalizedQuery.isEmpty() || matchesQuery(summary, normalizedQuery))
                 .sorted(Comparator.comparing(
-                        ContractPaymentSummaryResponse::contractNo,
-                        Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER)))
+                                ContractPaymentSummaryResponse::contractNo,
+                                Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER))
+                        .thenComparing(ContractPaymentSummaryResponse::contractId))
                 .toList();
     }
 
