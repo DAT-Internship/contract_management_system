@@ -9,6 +9,6 @@ public class HomeController {
     /** Route the application root to the available landing page. */
     @GetMapping("/")
     public String home() {
-        return "redirect:/master-setup";
+        return "redirect:/dashboard";
     }
 }

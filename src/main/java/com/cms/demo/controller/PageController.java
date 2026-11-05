@@ -31,9 +31,10 @@ public class PageController {
         return "auth/login";
     }
 
-    // Dashboard ကို ပြဖို့
+    // Display the Dashboard
     @GetMapping("/dashboard")
-    public String showDashboard() {
+    public String showDashboard(Model model) {
+        model.addAttribute("page", "dashboard");
         return "dashboard";
     }
 

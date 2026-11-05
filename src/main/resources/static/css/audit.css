@@ -914,3 +914,40 @@
 .audit-value-modal-body::-webkit-scrollbar-thumb:hover {
     background-color: #15805e;
 }
+
+/* View Details / View More modal trigger */
+.audit-view-details-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    padding: 0;
+    color: #15805e;
+    cursor: pointer;
+    background-color: transparent;
+    border: 0;
+    font-family: inherit;
+    font-size: 10px;
+    font-weight: 500;
+    text-decoration: none;
+    
+}
+
+.audit-view-details-button:hover {
+    color: #126b4f;
+    text-decoration: underline;
+}
+
+.audit-view-details-button:focus-visible {
+    outline: 2px solid rgba(21, 128, 94, 0.28);
+    outline-offset: 3px;
+    border-radius: 3px;
+}
+
+.audit-value-modal {
+    z-index: 1060;
+}
+
+.modal-backdrop {
+    z-index: 1050;
+}
