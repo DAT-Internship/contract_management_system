@@ -34,16 +34,18 @@ public class SecurityConfig {
         authProvider.setPasswordEncoder(passwordEncoder()); 
         return authProvider;
     }
-    // ၃။ Security စည်းမျဉ်းများ
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/audit", "/audit/**").hasRole("ADMIN")
+                // 🔴 "ROOT" နဲ့ "ADMIN" အစား "Root" နဲ့ "Admin" ကို သုံးမယ်
+                .requestMatchers("/audit", "/audit/**").hasAnyRole("Root", "Admin")
                 .requestMatchers("/uploads/**").denyAll()
-                .requestMatchers("/", "/login", "/css/**", "/js/**", "/images/**").permitAll() 
-                .requestMatchers("/admin/**").hasRole("ADMIN")
+                .requestMatchers("/", "/login","/forgot-password", "/css/**", "/js/**", "/images/**").permitAll() 
+                
+                .requestMatchers("/admin/**", "/users/**").hasAnyRole("Root", "Admin")
+                
                 .anyRequest().authenticated() 
             )
             .formLogin(form -> form

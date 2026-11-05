@@ -32,52 +32,65 @@ public class DataInitializer implements CommandLineRunner {
     @Override
     @Transactional
     public void run(String... args) throws Exception {
-        System.out.println("🔍 Checking for Default User...");
-        
-        // ၁။ Admin User ရှိပြီးသားလား အရင်စစ်မယ်
+        System.out.println("🔍 System Roles နှင့် Default Admin ကို စတင်ဖန်တီးနေပါသည်...");
+
+        // ၁။ Migration ထဲက ROOT Department ကို ရှာမယ် (မရှိရင် Error ပြမယ်)
+        Department rootDept = departmentRepository.findByDeptCodeIgnoreCase("ROOT")
+                .orElseThrow(() -> new IllegalStateException(
+                        "ROOT department မရှိပါ။ Database Migration ကို အရင် Run ပေးပါ။"));
+
+        // ၂။ Management (MGMT) Department ကို ဆောက်မယ် (ROOT အောက်မှာ)
+        Department mgmtDept = departmentRepository.findByDeptCodeIgnoreCase("MGMT").orElseGet(() -> {
+            Department newDept = new Department();
+            newDept.setDeptCode("MGMT");
+            newDept.setDeptName("Management");
+            newDept.setIsActive(true);
+            newDept.setCreatedAt(LocalDateTime.now());
+            newDept.setParentDepartment(rootDept); // Migration ထဲက ROOT အောက်မှာ ချိတ်မယ်
+            return departmentRepository.save(newDept);
+        });
+
+        // ၃။ သင့်ပုံထဲက Roles ၆ ခုလုံးကို Database ထဲမှာ သေချာဆောက်မယ်
+        createRoleIfNotFound("ROOT", "Root");
+        createRoleIfNotFound("PMO", "Admin");
+        createRoleIfNotFound("CM", "Admin");
+        createRoleIfNotFound("APPROVER", "Approver");
+        createRoleIfNotFound("FINANCE", "Finance");
+        createRoleIfNotFound("PM", "Operator (PM)");
+
+        // ၄။ Default ROOT User ကို ဖန်တီးမယ်
         if (userRepository.findByEmployeeCode("25-00001").isEmpty()) {
             
-            // ၂။ Department မရှိရင် "Management" ဆိုတဲ့ ဌာန ဆောက်မယ်
-            Department dept = departmentRepository.findByDeptCodeIgnoreCase("MGMT").orElseGet(() -> {
-                // parent_dept_id is NOT NULL; attach new departments to the seeded ROOT row.
-                Department root = departmentRepository.findByDeptCodeIgnoreCase("ROOT")
-                        .orElseThrow(() -> new IllegalStateException(
-                                "ROOT department is missing; verify database migrations have run"));
+            // Database ထဲက ROOT Role ကို ပြန်ဆွဲထုတ်မယ်
+            Role rootRole = roleRepository.findByRoleCode("ROOT")
+                    .orElseThrow(() -> new IllegalStateException("ROOT role မရှိပါ"));
 
-                Department newDept = new Department();
-                newDept.setDeptCode("MGMT");
-                newDept.setDeptName("Management");
-                newDept.setIsActive(true);
-                newDept.setCreatedAt(LocalDateTime.now());
-                newDept.setParentDepartment(root);
-                return departmentRepository.save(newDept);
-            });
-
-            // ၃။ Role မရှိရင် "ADMIN" Role ဆောက်မယ်
-            Role role = roleRepository.findByRoleCode("ADMIN").orElseGet(() -> {
-                Role newRole = new Role();
-                newRole.setRoleCode("ADMIN");
-                newRole.setRoleName("Administrator");
-                return roleRepository.save(newRole);
-            });
-
-            // ၄။ Default Admin User ကို ဖန်တီးမယ်
             User admin = new User();
             admin.setEmployeeCode("25-00001"); 
             admin.setFullName("System Administrator");
             admin.setEmail("admin@cms.com");
             admin.setPasswordHash(passwordEncoder.encode("admin123")); 
-            admin.setDepartment(dept);
-            admin.setRole(role);
+            admin.setDepartment(mgmtDept); // Management ဌာနအောက်မှာ ထားမယ်
+            admin.setRole(rootRole);       // ROOT Role ကို ပေးမယ်
             admin.setIsActive(true);
             admin.setCreatedAt(LocalDateTime.now());
             admin.setUpdatedAt(LocalDateTime.now());
 
-            // ၅။ Database ထဲ သိမ်းမယ်
             userRepository.save(admin);
-            System.out.println("✅ Default Admin User (25-00001) created successfully in Database!");
+            System.out.println("✅ Default ROOT User (25-00001) ကို အောင်မြင်စွာ ဖန်တီးပြီးပါပြီ!");
         } else {
-            System.out.println("ℹ️ Default Admin User already exists in Database.");
+            System.out.println("ℹ️ Default Admin User ရှိပြီးသား ဖြစ်ပါသည်။");
+        }
+    }
+
+    // Role တွေ မရှိသေးရင် ဆောက်ပေးမယ့် Helper Method
+    private void createRoleIfNotFound(String code, String name) {
+        if (roleRepository.findByRoleCode(code).isEmpty()) {
+            Role role = new Role();
+            role.setRoleCode(code);
+            role.setRoleName(name);
+            roleRepository.save(role);
+            System.out.println("✅ Role အသစ်ဆောက်ပြီး: " + code + " - " + name);
         }
     }
 }

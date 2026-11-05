@@ -520,6 +520,50 @@
 					</button>
 				</div>
 
+<!-- ================= ROLE ================= -->
+<div class="master-card">
+    <div class="card-top-content">
+        <div class="master-card-header">
+            <div>
+                <div class="master-icon">
+                    <i class="fa-solid fa-user-shield"></i>
+                </div>
+                <h3>User Roles</h3>
+            </div>
+            <span class="count-badge"
+                th:text="${roles != null ? roles.size() : 0}">0</span>
+        </div>
+
+        <div class="master-items">
+            <div class="master-item" th:each="item : ${roles}">
+                <div class="d-flex flex-column">
+                    <span class="fw-semibold" th:text="${item.roleName}">Role Name</span>
+                    <small class="text-muted" th:text="${item.roleCode}">Code</small>
+                </div>
+                <div class="master-actions">
+                    <form th:action="@{/master-setup/delete}" method="post"
+                        onsubmit="return confirm('Delete this role?');"
+                        class="d-inline">
+                        <input type="hidden" name="type" value="role">
+                        <input type="hidden" name="id" th:value="${item.roleId}">
+                        <button type="submit" class="btn btn-sm btn-outline-danger"
+                            title="Delete">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+            <div class="empty-message"
+                th:if="${roles == null || roles.isEmpty()}">
+                No role found.</div>
+        </div>
+    </div>
+
+    <button type="button" class="btn btn-primary add-btn"
+        onclick="openAddModal('role')">
+        <i class="fa-solid fa-plus me-1"></i> Add
+    </button>
+</div>
 
 			</div>
 
