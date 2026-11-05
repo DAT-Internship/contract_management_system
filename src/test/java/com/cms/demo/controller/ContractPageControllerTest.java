@@ -62,7 +62,8 @@ class ContractPageControllerTest {
                 repositoryProxy(UserRepository.class, (m, a) -> List.of()),
                 mock(ApprovalStepRepository.class),
                 defaultValidator(),
-                mock(AuditLogService.class));
+                mock(AuditLogService.class),
+                mock(com.cms.demo.service.ApprovalNotificationService.class));
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
     }
 

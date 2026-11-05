@@ -6,6 +6,7 @@ import com.cms.demo.entity.MasterContractStatus;
 import com.cms.demo.service.ContractService;
 import com.cms.demo.service.FileStorageService;
 import com.cms.demo.service.AuditLogService;
+import com.cms.demo.service.ApprovalNotificationService;
 import com.cms.demo.repository.AgreementForRepository;
 import com.cms.demo.repository.ContractCategoryRepository;
 import com.cms.demo.repository.ContractStatusRepository;
@@ -70,6 +71,7 @@ public class ContractPageController {
     private final ApprovalStepRepository approvalStepRepository;
     private final Validator validator;
     private final AuditLogService auditLogService;
+    private final ApprovalNotificationService approvalNotificationService;
 
     public ContractPageController(
             ContractService contractService,
@@ -86,7 +88,8 @@ public class ContractPageController {
             UserRepository userRepository,
             ApprovalStepRepository approvalStepRepository,
             Validator validator,
-            AuditLogService auditLogService) {
+            AuditLogService auditLogService,
+            ApprovalNotificationService approvalNotificationService) {
         this.contractService = contractService;
         this.fileStorageService = fileStorageService;
         this.agreementForRepository = agreementForRepository;
@@ -102,6 +105,7 @@ public class ContractPageController {
         this.approvalStepRepository = approvalStepRepository;
         this.validator = validator;
         this.auditLogService = auditLogService;
+        this.approvalNotificationService = approvalNotificationService;
     }
 
     @GetMapping
@@ -219,6 +223,7 @@ public class ContractPageController {
         model.addAttribute("page", "contracts");
         model.addAttribute("contractForm", form);
         model.addAttribute("isDraft", false);
+        model.addAttribute("submitForApproval", false);
         addFormOptions(model);
         return "contracts/form";
     }
@@ -228,6 +233,8 @@ public class ContractPageController {
         model.addAttribute("page", "contracts");
         var contract = contractService.getContractForUser(contractId, principal.getName());
         model.addAttribute("isDraft", contract.getStatus() != null && "DRAFT".equalsIgnoreCase(contract.getStatus().getCode()));
+        // Waiting Sign contracts are edited with a "Submit for Approval" button; Active (and other) contracts with "Save Changes".
+        model.addAttribute("submitForApproval", isWaitingSignStatus(contract.getStatus()));
         model.addAttribute("contractForm", toForm(contract));
         addFormOptions(model);
         return "contracts/form";
@@ -245,11 +252,17 @@ public class ContractPageController {
             RedirectAttributes redirectAttributes) {
 
         boolean isDraftContract = false;
+        boolean waitingSignContract = false;
         if (contractId != null) {
             var existing = contractService.getContractForUser(contractId, principal.getName());
             isDraftContract = existing.getStatus() != null && "DRAFT".equalsIgnoreCase(existing.getStatus().getCode());
+            waitingSignContract = isWaitingSignStatus(existing.getStatus());
+            // A Waiting Sign contract keeps its status until it is approved (the status select is locked in the form).
+            if (waitingSignContract) form.setStatusId(existing.getStatus().getId());
         }
         model.addAttribute("isDraft", isDraftContract);
+        model.addAttribute("submitForApproval", waitingSignContract);
+        boolean sentToApproval = false;
 
         boolean saveAsDraft = "draft".equalsIgnoreCase(action);
         if (saveAsDraft) {
@@ -281,7 +294,10 @@ public class ContractPageController {
                 return "redirect:/contracts/" + draft.contractId() + "/edit";
             } else if (contractId == null) {
                 var created = contractService.create(form.toRequest(), files, principal.getName());
-                if ("submit".equalsIgnoreCase(action)) createApprovalStep(created.contractId(), principal.getName());
+                if ("submit".equalsIgnoreCase(action)) {
+                    createApprovalStep(created.contractId(), principal.getName());
+                    sentToApproval = true;
+                }
             } else {
                 var contractBeforeUpdate = contractService.getContractForUser(contractId, principal.getName());
                 boolean paymentDetailsChanged = !java.util.Objects.equals(
@@ -290,12 +306,15 @@ public class ContractPageController {
                         || !java.util.Objects.equals(contractBeforeUpdate.getCommercialTaxRate(), form.getCommercialTaxRate())
                         || !java.util.Objects.equals(contractBeforeUpdate.getCurrency() == null ? null : contractBeforeUpdate.getCurrency().getId(), form.getCurrencyId());
                 contractService.update(contractId, form.toRequest(), principal.getName());
-                ensureSinglePendingApproval(contractId, principal.getName());
+                // Only Draft / Waiting Sign contracts go to the approval stage.
+                // Editing an Active (or any other status) contract just saves the changes.
+                sentToApproval = isDraftContract || waitingSignContract;
+                if (sentToApproval) ensureSinglePendingApproval(contractId, principal.getName());
                 if (paymentDetailsChanged) createPaymentUpdatedHistory(contractId, principal.getName());
                 if (files != null) files.stream().filter(file -> file != null && !file.isEmpty())
                         .forEach(file -> contractService.addAttachment(contractId, file, principal.getName()));
             }
-            String successMessage = "submit".equalsIgnoreCase(action) ? "Contract submitted for approval."
+            String successMessage = sentToApproval ? "Contract submitted for approval."
                     : contractId != null ? "Contract updated successfully."
                     : "draft".equalsIgnoreCase(action) ? "Contract draft saved successfully." : "Contract registered successfully.";
             redirectAttributes.addFlashAttribute("success", successMessage);
@@ -327,6 +346,8 @@ public class ContractPageController {
         step.setUpdatedAt(LocalDateTime.now());
         approvalStepRepository.save(step);
         recordApprovalChange(employeeCode, contractId, "", "PENDING", step.getCurrentApproval(), "");
+        // NEW: notification + e-mail to the relevant approvers
+        approvalNotificationService.notifyApproversSubmitted(contract, submitter, false);
     }
 
     private void createPaymentUpdatedHistory(Long contractId, String employeeCode) {
@@ -377,6 +398,8 @@ public class ContractPageController {
             step.setUpdatedAt(LocalDateTime.now());
             approvalStepRepository.save(step);
             recordApprovalChange(employeeCode, contractId, "RETURNED", "PENDING", step.getCurrentApproval(), "");
+            // NEW: resubmitted after a rejection -> notify the approvers again
+            approvalNotificationService.notifyApproversSubmitted(contractService.getContract(contractId), reviser, true);
         } else {
             createApprovalStep(contractId, employeeCode);
         }
@@ -500,11 +523,25 @@ public class ContractPageController {
         return MediaTypeFactory.getMediaType(fileName).orElse(MediaType.APPLICATION_OCTET_STREAM);
     }
 
+    /** "WAITING_SIGN", "Waiting Sign", "waiting-sign" ... all become WAITINGSIGN. */
+    private String normalizeStatusKey(String value) {
+        return value == null ? "" : value.replaceAll("[^A-Za-z]", "").toUpperCase(Locale.ROOT);
+    }
+
+    /** Statuses are maintained in Master Setup, so match on the code OR the displayed name. */
+    private boolean isWaitingSignStatus(MasterContractStatus status) {
+        return status != null
+                && ("WAITINGSIGN".equals(normalizeStatusKey(status.getCode()))
+                || "WAITINGSIGN".equals(normalizeStatusKey(status.getName())));
+    }
+
     private Optional<MasterContractStatus> resolveStatusByCandidateCodes(List<String> codes) {
         List<MasterContractStatus> all = statusRepository.findAll();
         for (String code : codes) {
+            String key = normalizeStatusKey(code);
             for (MasterContractStatus s : all) {
-                if (code.equalsIgnoreCase(s.getCode()) && Boolean.TRUE.equals(s.getIsActive())) {
+                if ((key.equals(normalizeStatusKey(s.getCode())) || key.equals(normalizeStatusKey(s.getName())))
+                        && Boolean.TRUE.equals(s.getIsActive())) {
                     return Optional.of(s);
                 }
             }
