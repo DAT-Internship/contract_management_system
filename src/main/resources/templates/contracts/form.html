@@ -98,7 +98,8 @@
 				<div class="contract-form-actions">
 					<a class="btn btn-outline-secondary" th:href="@{/contracts}">Cancel</a>
 					<button th:if="${contractForm.contractId == null or isDraft}" class="btn btn-outline-secondary" type="submit" name="action" value="draft" formnovalidate>Save Draft</button>
-					<button class="btn btn-primary" type="submit" name="action" value="submit">Submit for Approval</button>
+					<button th:if="${contractForm.contractId == null}" class="btn btn-primary" type="submit" name="action" value="submit">Submit for Approval</button>
+					<button th:if="${contractForm.contractId != null}" class="btn btn-primary" type="submit" name="action" value="save">Save Changes</button>
 				</div>
 			</form>
 		</main>

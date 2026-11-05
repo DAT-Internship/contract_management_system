@@ -50,33 +50,14 @@
 	box-shadow: 0 0 0 3px #1688d21c
 }
 
-.approval-search button {
-	height: 38px;
-	min-width: 92px;
-	border: 1px solid #0875ba;
-	border-radius: 8px;
-	background: #0875ba;
-	color: #fff;
-	font-size: 12px;
-	font-weight: 650;
-	transition: background-color .18s ease, border-color .18s ease,
-		box-shadow .18s ease, transform .18s ease
-}
-
-.approval-search button:hover {
-	border-color: #075f98;
-	background: #075f98;
-	box-shadow: 0 3px 9px #0875ba35;
-	transform: translateY(-1px)
-}
-
-.approval-search button:focus-visible {
-	outline: 3px solid #93c5fd;
-	outline-offset: 2px
-}
-
-.approval-search button:active {
-	transform: translateY(0)
+.approval-search .approval-search-button {
+	min-width: 160px;
+	padding-right: 24px;
+	padding-left: 24px;
+	border: 1px solid #0d6efd;
+	border-radius: .375rem;
+	font-size: 14px;
+	font-weight: 600
 }
 
 .approval-panel {
@@ -264,83 +245,19 @@
 .approval-actions {
 	display: flex;
 	align-items: center;
-	gap: 9px
+	gap: 6px
 }
 
 .approval-actions form {
 	margin: 0
 }
 
-.approval-actions button, .approval-actions a {
-	height: 29px;
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	padding: 0 16px;
-	border-radius: 8px;
+.approval-actions .btn {
+	padding: 4px 8px;
+	border-radius: 7px;
 	font-size: 11px;
-	font-weight: 650;
-	text-decoration: none;
+	font-weight: 600;
 	white-space: nowrap
-}
-
-.approval-actions .btn-view {
-	border: 1px solid #bfdbfe;
-	background: #eff6ff;
-	color: #1d4ed8;
-	transition: background-color .18s ease, border-color .18s ease, color
-		.18s ease, transform .18s ease, box-shadow .18s ease
-}
-
-.approval-actions .btn-view:hover {
-	border-color: #2563eb;
-	background: #2563eb;
-	color: #fff;
-	box-shadow: 0 3px 9px #2563eb30;
-	transform: translateY(-1px)
-}
-
-.approval-actions .btn-approve {
-	border: 1px solid #a7f3d0;
-	background: #ecfdf5;
-	color: #047857;
-	transition: background-color .18s ease, border-color .18s ease, color
-		.18s ease, transform .18s ease, box-shadow .18s ease
-}
-
-.approval-actions .btn-approve:hover {
-	border-color: #059669;
-	background: #059669;
-	color: #fff;
-	box-shadow: 0 3px 9px #05966930;
-	transform: translateY(-1px)
-}
-
-.approval-actions .btn-return {
-	border: 1px solid #fecaca;
-	background: #fff1f2;
-	color: #be123c;
-	transition: background-color .18s ease, border-color .18s ease, color
-		.18s ease, transform .18s ease, box-shadow .18s ease
-}
-
-.approval-actions .btn-return:hover {
-	border-color: #e11d48;
-	background: #e11d48;
-	color: #fff;
-	box-shadow: 0 3px 9px #e11d4830;
-	transform: translateY(-1px)
-}
-
-.approval-actions .btn-view:focus-visible, .approval-actions .btn-approve:focus-visible,
-	.approval-actions .btn-return:focus-visible {
-	outline: 3px solid #93c5fd;
-	outline-offset: 2px
-}
-
-.approval-actions .btn-view:active, .approval-actions .btn-approve:active,
-	.approval-actions .btn-return:active {
-	transform: translateY(0)
 }
 
 .return-form {
