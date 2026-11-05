@@ -20,9 +20,17 @@
           <p>Track email delivery and quickly resolve failed messages.</p>
         </div>
         <div class="ne-actions">
-          <button type="button" class="btn-ne-outline" onclick="location.reload()">
-            <i class="fa-solid fa-rotate"></i> Refresh
-          </button>
+         <div class="ne-actions">
+    <button type="button" class="btn-ne-outline" onclick="location.reload()">
+        <i class="fa-solid fa-rotate"></i>
+        Refresh
+    </button>
+
+    <button type="button" class="btn-ne-primary" id="btnMarkAllEmailsRead">
+        <i class="fa-solid fa-check-double"></i>
+        Mark all as read
+    </button>
+</div>
           <button type="button" class="btn-ne-primary" id="btnExportCsv">
             <i class="fa-solid fa-download"></i> Export CSV
           </button>
@@ -477,6 +485,21 @@
       })
       .catch(function () { markBtn.disabled = false; alert('Mark as read failed'); });
   });
+
+  // Mark all of MY unread emails as read, then reload so rows, stats and sidebar badge refresh
+  var markAllBtn = document.getElementById('btnMarkAllEmailsRead');
+  if (markAllBtn) {
+    markAllBtn.addEventListener('click', function () {
+      markAllBtn.disabled = true;
+      fetch('/api/emails/mark-all-read', { method: 'POST', credentials: 'same-origin' })
+        .then(function (r) { return r.ok ? r.json() : Promise.reject(); })
+        .then(function (res) {
+          setBadge(res.count);
+          location.reload();
+        })
+        .catch(function () { markAllBtn.disabled = false; alert('Mark all as read failed'); });
+    });
+  }
 
   render();   // first paint
 })();

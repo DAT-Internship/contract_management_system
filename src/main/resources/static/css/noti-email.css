@@ -8,22 +8,146 @@
 .ne-actions { display: flex; gap: .6rem; flex-wrap: wrap; }
 
 /* ---------- Buttons ---------- */
-.btn-ne-primary, .btn-ne-outline {
-  display: inline-flex; align-items: center; gap: .45rem;
-  border-radius: 10px; padding: .6rem 1.1rem; font-size: .875rem; font-weight: 600; cursor: pointer; line-height: 1.2;
+/* Primary & Outline Buttons */
+.btn-ne-primary,
+.btn-ne-outline {
+    display: inline-flex;
+    align-items: center;
+    gap: .45rem;
+    border-radius: 10px;
+    padding: .6rem 1.1rem;
+    font-size: .875rem;
+    font-weight: 600;
+    cursor: pointer;
+    line-height: 1.2;
+    transition: all .2s ease;
 }
-.btn-ne-primary { background: #1d5cf0; color: #fff; border: 1px solid #1d5cf0; box-shadow: 0 2px 6px rgba(29,92,240,.25); }
-.btn-ne-primary:hover { background: #1a4fd0; color: #fff; }
-.btn-ne-primary:disabled { opacity: .6; cursor: not-allowed; }
-.btn-ne-outline { background: #fff; color: #1d5cf0; border: 1px solid #bcd0fb; }
-.btn-ne-outline:hover { background: #f3f7ff; }
-.btn-ne-sm {
-  border: 1px solid #dbe3ee; background: #fff; border-radius: 8px;
-  padding: .35rem .8rem; font-size: .8rem; color: #1e293b; cursor: pointer; font-weight: 500;
-}
-.btn-ne-sm:hover { background: #f1f5f9; }
-.btn-ne-retry { color: #1d5cf0; border-color: #bcd0fb; }
 
+/* Primary Button */
+.btn-ne-primary {
+    background: #142B4A;
+    color: #fff;
+    border: 1px solid #142B4A;
+    box-shadow: 0 2px 6px rgba(20, 43, 74, .25);
+}
+
+.btn-ne-primary:hover {
+    background: #0D1F36;
+    color: #fff;
+    border-color: #0D1F36;
+}
+
+.btn-ne-primary:disabled {
+    opacity: .6;
+    cursor: not-allowed;
+}
+
+/* Outline Button */
+.btn-ne-outline {
+    background: #fff;
+    color: #142B4A;
+    border: 1px solid #AABBD0;
+}
+
+.btn-ne-outline:hover {
+    background: #EEF3F9;
+    color: #0D1F36;
+    border-color: #142B4A;
+}
+
+/* Small Button */
+.btn-ne-sm {
+    border: 1px solid #CBD5E1;
+    background: #fff;
+    border-radius: 8px;
+    padding: .35rem .8rem;
+    font-size: .8rem;
+    color: #1E293B;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all .2s ease;
+}
+
+.btn-ne-sm:hover {
+    background: #EEF3F9;
+    border-color: #AABBD0;
+}
+
+/* Retry Button */
+.btn-ne-retry {
+    color: #142B4A;
+    border-color: #AABBD0;
+}
+
+.btn-ne-retry:hover {
+    background: #EEF3F9;
+    border-color: #142B4A;
+}
+
+/* Action Buttons Container */
+.ne-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+/* Common Button Style */
+.ne-actions button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 18px;
+    border-radius: 9px;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.2;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+/* Refresh Button */
+.btn-ne-outline {
+    background: #ffffff;
+    color: #142B4A;
+    border: 1px solid #B8C6D8;
+}
+
+.btn-ne-outline:hover {
+    background: #EEF3F9;
+    border-color: #142B4A;
+    transform: translateY(-1px);
+}
+
+/* Mark All as Read Button */
+.btn-ne-primary {
+    background: #142B4A;
+    color: #ffffff;
+    border: 1px solid #142B4A;
+    box-shadow: 0 2px 5px rgba(20, 43, 74, 0.18);
+}
+
+.btn-ne-primary:hover {
+    background: #0D1F36;
+    border-color: #0D1F36;
+    transform: translateY(-1px);
+}
+
+.btn-ne-primary i,
+.btn-ne-outline i {
+    font-size: 14px;
+}
+
+/* Responsive */
+@media (max-width: 576px) {
+    .ne-actions {
+        flex-wrap: wrap;
+    }
+
+    .ne-actions button {
+        flex: 1;
+    }
+}
 /* ---------- Stat cards ---------- */
 .ne-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
 @media (max-width: 992px) { .ne-stats { grid-template-columns: repeat(2, 1fr); } }
@@ -124,6 +248,32 @@
 .status-pill.unread { background: #dbeafe; color: #1d4ed8; }
 .status-pill.pending { background: #ffe9c2; color: #b45309; }
 .status-pill.failed { background: #fde0e0; color: #b91c1c; }
+
+/* All Column Headers - Center */
+.ne-table th {
+    text-align: center;
+    padding: .85rem 1rem;
+    color: #475569;
+    font-weight: 600;
+    font-size: .8rem;
+    border-bottom: 1px solid #e5eaf2;
+    background: #f6f8fc;
+    white-space: nowrap;
+}
+
+/* All Table Data - Left */
+.ne-table td {
+    text-align: left;
+    padding: .95rem 1rem;
+    border-bottom: 1px solid #eef2f7;
+    color: #1e293b;
+    vertical-align: middle;
+}
+
+/* Subject Data - Left */
+.ne-table td:nth-child(2) {
+    text-align: left;
+}
 
 /* ---------- Footer / pagination ---------- */
 .ne-footer {
@@ -470,6 +620,10 @@ button.ne-link { border: 0; background: transparent; padding: 0; cursor: pointer
 .ne-footer,
 .ne-rpp {
     font-size: 11px;
+}
+#emailTable 
+tbody td:first-child {
+    text-align: left;
 }
 
 .ne-rpp select,

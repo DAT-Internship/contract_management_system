@@ -48,6 +48,19 @@ public class EmailMonitoringApiController {
         return Map.of("count", unreadCount(me(auth)));
     }
 
+    // ===== Mark ALL of my unread emails as read =====
+    @PostMapping("/mark-all-read")
+    @Transactional
+    public Map<String, Object> markAllRead(Authentication auth) {
+        User user = me(auth);
+        int updated = user.getEmail() == null ? 0 : emailLogRepository.markAllAsRead(user.getEmail());
+
+        Map<String, Object> body = new HashMap<>();
+        body.put("updated", updated);
+        body.put("count", unreadCount(user));   // new badge number (0)
+        return body;
+    }
+
     // ===== Details =====
     @GetMapping("/{id}")
     public ResponseEntity<?> details(@PathVariable Long id, Authentication auth) {

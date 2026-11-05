@@ -36,6 +36,17 @@ public interface EmailLogRepository extends JpaRepository<EmailLog, Long> {
           AND e.status IN ('SENT_UNREAD', 'SENT')
         """)
     int markAsRead(@Param("id") Long id, @Param("email") String email);
+
+    // "Mark all as read": every unread email addressed to this user (never other people's emails)
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Transactional
+    @Query("""
+        UPDATE EmailLog e
+        SET e.status = 'SENT_READ'
+        WHERE LOWER(e.recipientEmail) = LOWER(:email)
+          AND e.status IN ('SENT_UNREAD', 'SENT')
+        """)
+    int markAllAsRead(@Param("email") String email);
     
     
 }
