@@ -63,7 +63,7 @@ public class PaymentController {
             @RequestParam(required = false) Integer categoryId,
             @RequestParam(required = false) Long contractId,
             @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "10") int pageSize,
+            @RequestParam(defaultValue = "25") int pageSize,
             Model model,
             Principal principal) {
         if (contractId != null) {

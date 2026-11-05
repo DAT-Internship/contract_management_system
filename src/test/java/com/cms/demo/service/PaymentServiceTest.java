@@ -195,6 +195,23 @@ class PaymentServiceTest {
     }
 
     @Test
+    void contractSummaryComparesPaidGrossAgainstContractGross() {
+        Contract contract = contract(1L, "ACTIVE");
+        contract.setContractNo("C-1");
+        contract.setCommercialTaxRate(new BigDecimal("5.00"));
+        Invoice invoice = invoice(1L, "100.00", "100.00", LocalDate.now().plusDays(10));
+
+        when(contractService.findVisibleContracts("U001")).thenReturn(List.of(contract));
+        when(invoiceRepository.findByContractIdIn(any())).thenReturn(List.of(invoice));
+
+        var summaries = paymentService.findContractSummaries("U001", null, null, null, null);
+
+        assertEquals(1, summaries.size());
+        assertEquals(new BigDecimal("5.00"), summaries.get(0).remainingInvoiceable());
+        assertEquals(PaymentCalculator.PARTIALLY_PAID, summaries.get(0).paymentStatus());
+    }
+
+    @Test
     void overdueSweepUpdatesStatusAndAuditsAsSystem() {
         Invoice invoice = invoice(1L, "100.00", "0.00", LocalDate.now().minusDays(1));
         invoice.setStatus(status(PaymentCalculator.PENDING, "Pending"));

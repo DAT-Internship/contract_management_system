@@ -11,7 +11,7 @@ public record InvoiceResponse(
         String invoiceNo,
         String description,
         String partyName,
-        String currencyCode,
+        String currencyName,
         LocalDate invoiceDate,
         LocalDate dueDate,
         BigDecimal amount,

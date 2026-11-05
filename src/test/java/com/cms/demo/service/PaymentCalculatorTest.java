@@ -85,6 +85,22 @@ class PaymentCalculatorTest {
     }
 
     @Test
+    void contractIsNotPaidWhenGrossIsNotCoveredEvenIfNetValueIs() {
+        Invoice invoice = invoice("100.00", "100.00", TODAY.plusDays(3));
+
+        assertEquals(PaymentCalculator.PARTIALLY_PAID,
+                PaymentCalculator.deriveContractStatus(List.of(invoice), new BigDecimal("105.00"), TODAY));
+    }
+
+    @Test
+    void remainingNeverGoesNegative() {
+        assertEquals(new BigDecimal("2.50"),
+                PaymentCalculator.remaining(new BigDecimal("10.00"), new BigDecimal("7.50")));
+        assertEquals(new BigDecimal("0.00"),
+                PaymentCalculator.remaining(new BigDecimal("10.00"), new BigDecimal("15.00")));
+    }
+
+    @Test
     void outstandingNeverGoesNegative() {
         assertEquals(new BigDecimal("0.00"),
                 PaymentCalculator.outstanding(new BigDecimal("10.00"), new BigDecimal("15.00")));

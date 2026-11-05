@@ -140,7 +140,7 @@ public class PaymentService {
                 BigDecimal total = PaymentCalculator.money(invoice.getTotalAmount());
                 BigDecimal paid = PaymentCalculator.money(invoice.getPaidAmount());
                 BigDecimal outstanding = PaymentCalculator.outstanding(total, paid);
-                String currency = currencyCode(invoice);
+                String currency = currencyName(invoice);
                 invoicedByCurrency.merge(currency, total, BigDecimal::add);
                 paidByCurrency.merge(currency, paid, BigDecimal::add);
                 outstandingByCurrency.merge(currency, outstanding, BigDecimal::add);
@@ -430,8 +430,9 @@ public class PaymentService {
 
         BigDecimal contractGross = PaymentCalculator.grossWithTax(
                 contract.getContractValue(), contract.getCommercialTaxRate());
+        BigDecimal remainingInvoiceable = PaymentCalculator.remaining(contractGross, totalInvoiced);
         String statusCode = PaymentCalculator.deriveContractStatus(
-                invoices, contract.getContractValue(), today);
+                invoices, contractGross, today);
         long remainingDays = contract.getEndDate() == null
                 ? 0
                 : Math.max(0, ChronoUnit.DAYS.between(today, contract.getEndDate()));
@@ -451,10 +452,11 @@ public class PaymentService {
                 contract.getProject() == null ? null : contract.getProject().getProjectCode(),
                 contract.getPaymentType() == null ? null : contract.getPaymentType().getId(),
                 contract.getPaymentType() == null ? null : contract.getPaymentType().getName(),
-                contract.getCurrency() == null ? null : contract.getCurrency().getCode(),
+                contract.getCurrency() == null ? null : contract.getCurrency().getName(),
                 PaymentCalculator.money(contract.getContractValue()),
                 contract.getCommercialTaxRate(),
                 contractGross,
+                remainingInvoiceable,
                 PaymentCalculator.money(totalInvoiced),
                 PaymentCalculator.money(totalPaid),
                 PaymentCalculator.money(outstanding),
@@ -506,7 +508,7 @@ public class PaymentService {
                 invoice.getInvoiceNo(),
                 invoice.getDescription(),
                 invoice.getParty() == null ? null : invoice.getParty().getPartyName(),
-                currencyCode(invoice),
+                currencyName(invoice),
                 invoice.getInvoiceDate(),
                 invoice.getDueDate(),
                 PaymentCalculator.money(invoice.getAmount()),
@@ -608,12 +610,12 @@ public class PaymentService {
         return date == null ? null : date.toString();
     }
 
-    private String currencyCode(Invoice invoice) {
+    private String currencyName(Invoice invoice) {
         if (invoice.getCurrency() != null) {
-            return invoice.getCurrency().getCode();
+            return invoice.getCurrency().getName();
         }
         if (invoice.getContract() != null && invoice.getContract().getCurrency() != null) {
-            return invoice.getContract().getCurrency().getCode();
+            return invoice.getContract().getCurrency().getName();
         }
         return "UNKNOWN";
     }
@@ -725,9 +727,12 @@ public class PaymentService {
         BigDecimal gross = PaymentCalculator.grossWithTax(
                 contract.getContractValue(), contract.getCommercialTaxRate());
         if (invoiced.add(newInvoiceTotal).compareTo(gross) > 0) {
+            BigDecimal remaining = PaymentCalculator.remaining(gross, invoiced);
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "Total invoiced amount cannot exceed the contract gross amount of "
-                            + PaymentCalculator.money(gross));
+                    "Invoice total including tax (" + PaymentCalculator.money(newInvoiceTotal)
+                            + ") exceeds the remaining invoiceable amount of " + remaining
+                            + " (contract gross " + PaymentCalculator.money(gross)
+                            + ", already invoiced " + PaymentCalculator.money(invoiced) + ").");
         }
     }
 

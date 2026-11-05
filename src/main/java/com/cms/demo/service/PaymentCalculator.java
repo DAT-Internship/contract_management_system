@@ -38,14 +38,14 @@ public final class PaymentCalculator {
         return PENDING;
     }
 
-    public static String deriveContractStatus(Collection<Invoice> invoices, BigDecimal contractValue,
+    public static String deriveContractStatus(Collection<Invoice> invoices, BigDecimal contractGross,
             LocalDate today) {
         if (invoices == null || invoices.isEmpty()) {
             return NO_INVOICES;
         }
 
         BigDecimal totalPaid = BigDecimal.ZERO;
-        BigDecimal totalValue = contractValue == null ? BigDecimal.ZERO : contractValue;
+        BigDecimal grossAmount = contractGross == null ? BigDecimal.ZERO : contractGross;
         boolean allPaid = true;
 
         for (Invoice invoice : invoices) {
@@ -67,7 +67,7 @@ public final class PaymentCalculator {
             }
         }
 
-        if (allPaid && totalPaid.compareTo(totalValue) >= 0) {
+        if (allPaid && totalPaid.compareTo(grossAmount) >= 0) {
             return PAID;
         }
         if (totalPaid.signum() > 0) {
@@ -87,6 +87,16 @@ public final class PaymentCalculator {
         BigDecimal paid = paidAmount == null ? BigDecimal.ZERO : paidAmount;
         BigDecimal outstanding = total.subtract(paid);
         return outstanding.signum() < 0 ? money(BigDecimal.ZERO) : money(outstanding);
+    }
+
+    /**
+     * Amount still available under a limit, never negative.
+     */
+    public static BigDecimal remaining(BigDecimal limit, BigDecimal used) {
+        BigDecimal max = limit == null ? BigDecimal.ZERO : limit;
+        BigDecimal consumed = used == null ? BigDecimal.ZERO : used;
+        BigDecimal remaining = max.subtract(consumed);
+        return remaining.signum() < 0 ? money(BigDecimal.ZERO) : money(remaining);
     }
 
     public static BigDecimal grossWithTax(BigDecimal value, BigDecimal taxRate) {

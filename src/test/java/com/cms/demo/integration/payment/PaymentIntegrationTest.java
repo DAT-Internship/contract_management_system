@@ -188,7 +188,7 @@ class PaymentIntegrationTest {
         assertEquals(new BigDecimal("105.00"), response.totalAmount());
         assertEquals(PaymentCalculator.PENDING, response.statusCode());
         assertEquals("Pending", response.statusName());
-        assertEquals(currency.getCode(), response.currencyCode());
+        assertEquals(currency.getName(), response.currencyName());
 
         Invoice persisted = invoiceRepository.findById(response.invoiceId()).orElseThrow();
         assertEquals(new BigDecimal("105.00"), persisted.getTotalAmount());
