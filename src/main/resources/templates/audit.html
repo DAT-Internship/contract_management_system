@@ -150,9 +150,7 @@
 							        
 							        <!-- 🔴 CREATE ဖြစ်ရင် View Details လင့်ခ်ပဲ ပြမယ် (အသစ်ထည့်ထားတယ်) -->
 							        <div th:if="${entry.action == 'CREATE'}">
-							            <button type="button" class="audit-view-details-button" data-bs-toggle="modal" th:attr="data-bs-target='#newModal' + ${entry.id}" aria-label="View new value details">																		
-										    <span>View Details</span>										
-										</button>
+							            <a href="#" class="text-success small fw-bold text-decoration-none" data-bs-toggle="modal" th:attr="data-bs-target='#newModal'+${entry.id}">View Details</a>
 							        </div>
 							
 							        <!-- 🔴 UPDATE ဖြစ်ရင် မင်း ရဲ့ မူရင်း Code အတိုင်း (Field ၂ ခုအထိ တိုက်ရိုက်ပြ၊ ၃ ခုအထက် View More) -->
@@ -167,9 +165,7 @@
 							            </div>
 							
 							            <!-- Field ၃ ခုအထက် ဆိုရင် View More လင့်ခ်ပြမယ် -->
-							            <button type="button" class="audit-view-details-button" th:if="${#strings.length(entry.newValue) - #strings.replace(entry.newValue, ',', '').length() > 1}" data-bs-toggle="modal" th:attr="data-bs-target='#newModal' + ${entry.id}">																			
-										    <span>View More</span>										
-										</button>
+							            <a th:if="${#strings.length(entry.newValue) - #strings.replace(entry.newValue, ',', '').length() > 1}" href="#" class="text-success small fw-bold text-decoration-none" data-bs-toggle="modal" th:attr="data-bs-target='#newModal'+${entry.id}">View More...</a>
 							        </div>						
 							    </div>
 							</td>
@@ -198,7 +194,7 @@
 							<!-- Old Value Box -->
 							<div class="modal-body">
 							    <ol class="bg-light p-3 rounded text-danger mb-0">
-							        <li th:each="pair : ${#strings.arraySplit(#strings.replace(#strings.replace(entry.newValue, '{', ''), '}', ''), ',')}">
+							        <li th:each="pair : ${#strings.arraySplit(#strings.replace(#strings.replace(entry.oldValue, '{', ''), '}', ''), ',')}">
 							            <!-- 🔴 CSS သုံးပြီး အကြီးပြောင်းမယ် -->
 							            <strong style="text-transform: capitalize;" th:text="${#strings.trim(#strings.substringBefore(pair, ':'))}">
 							            </strong>: 
@@ -212,32 +208,40 @@
 			    
 			    <!-- ================= NEW VALUE MODAL ================= -->
 				<div class="modal fade audit-value-modal" th:id="'newModal' + ${entry.id}" tabindex="-1" th:attr="aria-labelledby='newModalTitle' + ${entry.id}" aria-hidden="true">				
-				    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">			
-				        <div class="modal-content audit-value-modal-content">			
+				    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">				
+				        <div class="modal-content audit-value-modal-content">
+				
+				            <!-- Header -->
 				            <div class="modal-header audit-new-value-header">				
-				                <div class="audit-value-modal-heading">				
+				                <div class="audit-value-modal-heading">			
 				                    <div class="audit-value-modal-icon">
 				                        <i class="fa-solid fa-circle-plus" aria-hidden="true"></i>
 				                    </div>				
 				                    <div class="audit-value-modal-title-group">				
-				                        <span class="audit-value-modal-eyebrow">Audit Record</span>			
+				                        <span class="audit-value-modal-eyebrow">Audit Record</span>				
 				                        <h5 class="modal-title" th:id="'newModalTitle' + ${entry.id}">New Value Data</h5>				
 				                        <p>Values recorded after this activity.</p>				
 				                    </div>				
 				                </div>				
-				                <button type="button" class="btn-close audit-value-header-close" data-bs-dismiss="modal" aria-label="Close"></button>			
-				            </div>				
+				                <button type="button" class="btn-close audit-value-header-close" data-bs-dismiss="modal" aria-label="Close"></button>				
+				            </div>
+				
+				            <!-- Keep all values inside one box -->
 				            <div class="modal-body audit-value-modal-body">				
-				                <ol class="audit-new-value-box" th:if="${entry.newValue != null and !#strings.isEmpty(entry.newValue)}">				
-				                    <li th:each="pair : ${#strings.arraySplit(#strings.replace(#strings.replace(entry.newValue, '{', ''), '}', ''), ',')}">				
+				                <ol class="audit-new-value-box">				
+				                    <li th:each="pair : ${#strings.arraySplit(#strings.replace(#strings.replace(entry.newValue, '{', ''), '}', ), ',' )}">				
 				                        <strong th:text="${#strings.trim(#strings.substringBefore(pair, ':'))}">Field</strong>				
 				                        <span th:text="${#strings.trim(#strings.substringAfter(pair, ':'))}">Value</span>				
-				                    </li>				
+				                    </li>			
 				                </ol>				
 				                <div class="audit-value-empty" th:if="${entry.newValue == null or #strings.isEmpty(entry.newValue)}">No new value data is available.</div>				
-				            </div>				
+				            </div>
+				
+				            <!-- Footer -->
 				            <div class="modal-footer audit-value-modal-footer">				
-				                <button type="button" class="audit-value-close-button" data-bs-dismiss="modal">Close</button>				
+				                <button type="button" class="audit-value-close-button" data-bs-dismiss="modal">				
+				                    <span>Close</span>				
+				                </button>				
 				            </div>				
 				        </div>				
 				    </div>				
