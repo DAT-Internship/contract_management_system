@@ -6,11 +6,30 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title th:text="${title}">Contract Management</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+<!-- သူ့ရဲ့ UI CSS ကို ထည့်မယ် -->
+<link rel="stylesheet" th:href="@{/css/password-requests.css}">
 <link rel="stylesheet" href="https://use.fontawesome.com/releases/v7.3.1/css/all.css" />
 <link rel="stylesheet" th:href="@{/css/app.css}">
 <link rel="stylesheet" th:if="${page == 'master-setup'}" th:href="@{/css/master-setup.css}">
 <link rel="stylesheet" th:if="${page == 'contracts' or page == 'import-batches'}" th:href="@{/css/contracts.css}">
 <link rel="stylesheet" th:if="${page == 'audit'}" th:href="@{/css/audit.css}">
+<script>
+    (() => {
+        try {
+            const isDesktop = window.innerWidth >= 701;
+            const isCollapsed =
+                localStorage.getItem('sidebarCollapsed') === 'true';
+
+            if (isDesktop && isCollapsed) {
+                document.documentElement.classList.add(
+                    'sidebar-collapsed-loading'
+                );
+            }
+        } catch (error) {
+            // Continue with the normal expanded sidebar.
+        }
+    })();
+</script>
 </head>
 <body>
 	<th:block th:fragment="scripts">
@@ -24,59 +43,253 @@
 				else showSuccessToasts();
 			})();
 		</script>
+		<script>
+    (() => {
+        const initializeSidebar = () => {
+            const toggleButton = document.getElementById('sidebarToggle');
+            const desktopBreakpoint = 701;
+            
+            const sidebarLinks = document.querySelectorAll(
+           	    '.sidebar .side-link[data-sidebar-label]'
+           	);
+
+           	let sidebarTooltips = [];
+
+           	const destroySidebarTooltips = () => {
+           	    sidebarTooltips.forEach((tooltip) => tooltip.dispose());
+           	    sidebarTooltips = [];
+           	};
+
+           	const updateSidebarTooltips = () => {
+           	    destroySidebarTooltips();
+
+           	    const shouldShowTooltips =
+           	        window.innerWidth >= desktopBreakpoint &&
+           	        document.body.classList.contains('sidebar-collapsed');
+
+           	    if (!shouldShowTooltips || typeof bootstrap === 'undefined') {
+           	        return;
+           	    }
+
+           	    sidebarLinks.forEach((link) => {
+           	        link.setAttribute(
+           	            'title',
+           	            link.dataset.sidebarLabel
+           	        );
+
+           	        const tooltip = new bootstrap.Tooltip(link, {
+           	            title: link.dataset.sidebarLabel,
+           	            placement: 'right',
+           	            trigger: 'hover focus',
+           	            container: 'body',
+           	            boundary: 'viewport',
+           	            delay: {
+           	                show: 120,
+           	                hide: 50
+           	            }
+           	        });
+
+           	        sidebarTooltips.push(tooltip);
+           	    });
+           	};
+
+            if (!toggleButton) {
+                return;
+            }
+
+            const savedState = localStorage.getItem('sidebarCollapsed');
+
+             if (
+                 window.innerWidth >= desktopBreakpoint &&
+                 savedState === 'true'
+             ) {
+                 document.body.classList.add('sidebar-collapsed');
+                 toggleButton.setAttribute('aria-expanded', 'false');
+             }
+
+             document.documentElement.classList.remove(
+                 'sidebar-collapsed-loading'
+             );
+             
+             updateSidebarTooltips();
+
+            toggleButton.addEventListener('click', () => {
+                if (window.innerWidth >= desktopBreakpoint) {
+                    document.body.classList.toggle('sidebar-collapsed');
+
+                    const isCollapsed =
+                        document.body.classList.contains('sidebar-collapsed');
+
+                    localStorage.setItem(
+                        'sidebarCollapsed',
+                        String(isCollapsed)
+                    );
+
+                    toggleButton.setAttribute(
+                        'aria-expanded',
+                        String(!isCollapsed)
+                    );
+                    updateSidebarTooltips();
+                } else {
+                    document.body.classList.toggle('sidebar-open');
+
+                    const isOpen =
+                        document.body.classList.contains('sidebar-open');
+
+                    toggleButton.setAttribute(
+                        'aria-expanded',
+                        String(isOpen)
+                    );
+                }
+            });
+
+            document.querySelectorAll('.sidebar .side-link')
+                .forEach((link) => {
+                    link.addEventListener('click', () => {
+                        if (window.innerWidth < desktopBreakpoint) {
+                            document.body.classList.remove('sidebar-open');
+                            toggleButton.setAttribute(
+                                'aria-expanded',
+                                'false'
+                            );
+                        }
+                    });
+                });
+
+            window.addEventListener('resize', () => {
+                if (window.innerWidth >= desktopBreakpoint) {
+                    document.body.classList.remove('sidebar-open');
+
+                    const isCollapsed =
+                        document.body.classList.contains(
+                            'sidebar-collapsed'
+                        );
+
+                    toggleButton.setAttribute(
+                        'aria-expanded',
+                        String(!isCollapsed)
+                    );
+                } else {
+                    toggleButton.setAttribute(
+                        'aria-expanded',
+                        String(
+                            document.body.classList.contains('sidebar-open')
+                        )
+                    );
+                }
+                updateSidebarTooltips();
+            });
+        };
+
+        if (document.readyState === 'loading') {
+            document.addEventListener(
+                'DOMContentLoaded',
+                initializeSidebar,
+                { once: true }
+            );
+        } else {
+            initializeSidebar();
+        }
+    })();
+</script>
 	</th:block>
 	
-	<aside th:fragment="sidebar" class="sidebar">
-		<a class="brand" th:href="@{/}"><img class="brand-logo"
-			th:src="@{/images/dat-logo.png}" alt="DAT logo"><span><strong>Contract
-					Management</strong><small>Enterprise CMS</small></span></a>
-		<div class="nav-caption">WORKSPACE</div>
-		<a class="side-link" th:classappend="${page == 'dashboard'} ? ' active'" th:href="@{/}"><i class="fa-solid fa-display nav-icon" aria-hidden="true"></i>Dashboard</a>
-		<a class="side-link" th:href="@{/contracts}" th:classappend="${page == 'contracts'} ? ' active'"><i class="fa-solid fa-file-contract nav-icon" aria-hidden="true"></i>Contracts</a>
-		<a class="side-link" href="#"><i class="fa-solid fa-credit-card nav-icon" aria-hidden="true"></i>Payments</a>
-		<a class="side-link" href="#"><i class="fa-solid fa-square-check nav-icon" aria-hidden="true"></i>Approval Queue</a>
-		<a class="side-link" href="#"><i class="fa-solid fa-envelope nav-icon" aria-hidden="true"></i>Email Monitoring</a>
-		<a class="side-link" href="#"><i class="fa-solid fa-bell nav-icon" aria-hidden="true"></i>Notifications</a>
-		<a class="side-link" href="#"><i class="fa-solid fa-chart-column nav-icon" aria-hidden="true"></i>Reports</a>
-		<div class="nav-caption nav-section-gap">MASTER SETUP</div>
-		<a class="side-link" th:href="@{/master-setup}" th:classappend="${page == 'master-setup'} ? ' active'"><i class="fa-solid fa-sliders nav-icon" aria-hidden="true"></i>Master Setup</a>
-		<a class="side-link" th:href="@{/master-setup/import-batches}" th:classappend="${page == 'import-batches'} ? ' active'"><i class="fa-solid fa-file-import nav-icon" aria-hidden="true"></i>Import Batches</a>
+	<!-- သူ့ရဲ့ UI Design (Sidebar) ကို ယူပြီး သင့် Security Role တွေ ထည့်မယ် -->
+	<aside th:fragment="sidebar" class="sidebar" id="appSidebar">
+		<a class="brand" th:href="@{/}">
+			<img class="brand-logo" th:src="@{/images/dat-logo.png}" alt="DAT logo">
+			<span><strong>Contract Management</strong>
+			<small>Enterprise CMS</small></span>
+		</a>
 		
-		<div class="nav-caption nav-section-gap">ADMINISTRATION</div>
-		<!-- 🔴 ROOT နဲ့ ADMIN ကို ခွင့်ပြုမယ် -->
-		<!-- 🔴 ROOT, ADMIN အစား Root, Admin ကို သုံးမယ် -->
-<a class="side-link" th:href="@{/users}" sec:authorize="hasAnyRole('Root', 'Admin')" th:classappend="${page == 'users'} ? ' active'"><i class="fa-solid fa-users-gear nav-icon" aria-hidden="true"></i>User management</a>
-
-<a class="side-link" th:href="@{/admin/password-resets}" sec:authorize="hasAnyRole('Root', 'Admin')" th:classappend="${page == 'resets'} ? ' active'"><i class="fa-solid fa-key nav-icon" aria-hidden="true"></i>Password requests <span class="badge rounded-pill text-bg-primary ms-auto" th:if="${pendingResetCount > 0}" th:text="${pendingResetCount}"></span></a>
-
-<a class="side-link" th:href="@{/audit}" sec:authorize="hasAnyRole('Root', 'Admin')" th:classappend="${page == 'audit'} ? ' active'"><i class="fa-solid fa-clipboard-list nav-icon" aria-hidden="true"></i>Audit Log</a>
-		<a class="side-link" th:href="@{/change-password}"><i class="fa-solid fa-lock nav-icon" aria-hidden="true"></i>Change password</a>
-		<div class="workspace-card mt-auto">
-			<small>FY2026</small><strong>Contract Control Center</strong><small>PMO
-				governed workflow</small>
+		<div class="nav-caption">WORKSPACE</div>
+		<a class="side-link" th:classappend="${page == 'dashboard'} ? ' active'" th:href="@{/}" data-sidebar-label="Dashboard" aria-label="Dashboard">
+		    <i class="fa-solid fa-display nav-icon" aria-hidden="true"></i>
+		    <span class="side-link-text">Dashboard</span>
+		</a>
+		
+		<a class="side-link" th:href="@{/contracts}" th:classappend="${page == 'contracts'} ? ' active'" data-sidebar-label="Contracts" aria-label="Contracts">
+		    <i class="fa-solid fa-file-contract nav-icon" aria-hidden="true"></i>
+		    <span class="side-link-text">Contracts</span>
+		</a>
+		
+		<a class="side-link" href="#" data-sidebar-label="Payments" aria-label="Payments">
+		    <i class="fa-solid fa-credit-card nav-icon" aria-hidden="true"></i>
+		    <span class="side-link-text">Payments</span>
+		</a>
+		
+		<a class="side-link" href="#" data-sidebar-label="Approval Queue" aria-label="Approval Queue">
+		    <i class="fa-solid fa-square-check nav-icon" aria-hidden="true"></i>
+		    <span class="side-link-text">Approval Queue</span>
+		</a>
+		
+		<a class="side-link" href="#" data-sidebar-label="Email Monitoring" aria-label="Email Monitoring">
+		    <i class="fa-solid fa-envelope nav-icon" aria-hidden="true"></i>
+		    <span class="side-link-text">Email Monitoring</span>
+		</a>
+		
+		<a class="side-link" href="#" data-sidebar-label="Notifications" aria-label="Notifications">
+		    <i class="fa-solid fa-bell nav-icon" aria-hidden="true"></i>
+		    <span class="side-link-text">Notifications</span>
+		</a>
+		
+		<a class="side-link" href="#" data-sidebar-label="Reports" aria-label="Reports">
+		    <i class="fa-solid fa-chart-column nav-icon" aria-hidden="true"></i>
+		    <span class="side-link-text">Reports</span>
+		</a>
+		
+		<div class="nav-caption nav-section-gap">MASTER SETUP</div>		
+		<a class="side-link" th:href="@{/master-setup}" th:classappend="${page == 'master-setup'} ? ' active'" data-sidebar-label="Master Setup" aria-label="Master Setup">
+		    <i class="fa-solid fa-sliders nav-icon" aria-hidden="true"></i>
+		    <span class="side-link-text">Master Setup</span>
+		</a>
+		
+		<a class="side-link" th:href="@{/master-setup/import-batches}" th:classappend="${page == 'import-batches'} ? ' active'" data-sidebar-label="Import Batches" aria-label="Import Batches">
+		    <i class="fa-solid fa-file-import nav-icon" aria-hidden="true"></i>
+		    <span class="side-link-text">Import Batches</span>
+		</a>
+		
+		<div class="nav-caption nav-section-gap">ADMINISTRATION</div>		
+		
+		<!-- 🔴 သင့် Security Role (Root, Admin) တွေကို ဒီမှာ ထည့်ထားပါတယ် -->
+		<a class="side-link" th:href="@{/users}" sec:authorize="hasAnyRole('Root', 'Admin')" th:classappend="${page == 'users'} ? ' active'" data-sidebar-label="User Management" aria-label="User Management">
+		    <i class="fa-solid fa-users-gear nav-icon" aria-hidden="true"></i>
+		    <span class="side-link-text">User Management</span>
+		</a>
+		
+		<a class="side-link" th:href="@{/admin/password-resets}" sec:authorize="hasAnyRole('Root', 'Admin')" th:classappend="${page == 'resets'} ? ' active'" data-sidebar-label="Password Requests" aria-label="Password Requests">
+		    <i class="fa-solid fa-key nav-icon" aria-hidden="true"></i>
+		    <span class="side-link-text">Password Requests</span>		
+		    <span class="badge rounded-pill text-bg-primary ms-auto side-link-badge" th:if="${pendingResetCount > 0}" th:text="${pendingResetCount}"></span>
+		</a>
+		
+		<a class="side-link" th:href="@{/audit}" sec:authorize="hasAnyRole('Root', 'Admin')" th:classappend="${page == 'audit'} ? ' active'" data-sidebar-label="Audit Log" aria-label="Audit Log">
+		    <i class="fa-solid fa-clipboard-list nav-icon" aria-hidden="true"></i>
+		    <span class="side-link-text">Audit Log</span>
+		</a>
+		
+		<a class="side-link" th:href="@{/change-password}" th:classappend="${page == 'change-password'} ? ' active'" data-sidebar-label="Change Password" aria-label="Change Password" style="margin-bottom: 20px;">
+		    <i class="fa-solid fa-lock nav-icon" aria-hidden="true"></i>
+		    <span class="side-link-text">Change Password</span>
+		</a>
+		<div class="workspace-card mt-auto" style="margin-bottom: 20px;">
+			<small>FY2026</small>
+			<strong>Contract Control Center</strong>
+			<small>PMO governed workflow</small>
 		</div>
 	</aside>
 
 	<header th:fragment="topbar" class="topbar">
-		<button class="btn btn-light menu-toggle" type="button"
-			aria-label="Toggle navigation"
-			onclick="document.body.classList.toggle('sidebar-open')">
-			<i class="fa-solid fa-bars" aria-hidden="true"></i>
-		</button>
+		<button class="btn btn-light menu-toggle" id="sidebarToggle" type="button" aria-label="Toggle sidebar" aria-controls="appSidebar" aria-expanded="true"><i class="fa-solid fa-bars" aria-hidden="true"></i></button>
 
 		<strong class="top-title">Contract Management</strong>
 
+		<!-- 🔴 သင့် Dynamic User နာမည်နဲ့ သူ့ရဲ့ UI Design ကို ပေါင်းထားပါတယ် -->
 		<div class="dropdown ms-auto">
-			<button class="profile-button" type="button"
-				data-bs-toggle="dropdown" aria-expanded="false">
-				
-				<!-- 🔴 Database ထဲက User ရဲ့ ပထမဆုံးစာလုံးကို ယူပြမယ် -->
+			<button class="profile-button" type="button" data-bs-toggle="dropdown" aria-expanded="false">
 				<span class="avatar" th:text="${#strings.substring(#authentication.principal.fullName, 0, 1)}">U</span> 
-				
 				<span class="profile-copy"> 
-				    <!-- 🔴 Database ထဲက တကယ့် User နာမည်ကို ပြမယ် -->
 					<strong sec:authentication="principal.fullName">User Name</strong>
-					<!-- 🔴 Database ထဲက တကယ့် Role ကို ပြမယ် -->
 					<small sec:authentication="principal.authorities">Role</small>
 				</span> 
 				<span class="chevron"> <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>

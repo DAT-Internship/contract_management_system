@@ -2,65 +2,591 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org"
 	xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head th:replace="~{fragments/layout :: head('Edit User')}"></head>
+<style>
+	/* Edit User page layout */	
+	.edit-user-topbar {
+	    position: fixed;
+	    top: 0;
+	    right: 0;
+	    left: 292px;
+	    z-index: 1000;
+	}
+	
+	.edit-user-wrapper {
+	    width: auto;
+	    min-width: 0;
+	    min-height: 100vh;	
+	    margin-left: 292px;
+	    margin-top: 80px;
+	    padding: 30px;	
+	    transition: margin-left 0.22s ease;
+	}
+	
+	/* Collapsed desktop sidebar */
+	@media (min-width: 701px) {
+	    body.sidebar-collapsed .edit-user-topbar {
+	        left: 76px;
+	    }
+	
+	    body.sidebar-collapsed .edit-user-wrapper {
+	        margin-left: 76px;
+	    }
+	
+	    /* Prevent the brief expanded-position flash between pages */
+	    html.sidebar-collapsed-loading .edit-user-topbar {
+	        left: 76px;
+	    }
+	
+	    html.sidebar-collapsed-loading .edit-user-wrapper {
+	        margin-left: 76px;
+	    }
+	}
+	
+	
+	/* Edit User Form */	
+	.edit-user-content {
+	    width: 100%;
+	    padding: 0;
+	}
+	
+	.edit-user-card {
+	    width: 100%;
+	    max-width: 920px;
+	    margin: 0 auto;
+	    background: #ffffff;
+	    border: 1px solid #e5e7eb;
+	    border-radius: 12px;
+	    box-shadow: 0 4px 18px rgba(15, 23, 42, 0.06);
+	    overflow: hidden;
+	}
+	
+	/* Header */	
+	.edit-user-card-header {
+	    display: flex;
+	    align-items: flex-start;
+	    justify-content: space-between;
+	    gap: 20px;
+	    padding: 24px 28px;
+	    border-bottom: 1px solid #e5e7eb;
+	}
+	
+	.edit-user-title {
+	    margin: 0;
+	    color: #1f2937;
+	    font-size: 21px;
+	    font-weight: 650;
+	}
+	
+	.edit-user-subtitle {
+	    margin: 6px 0 0;
+	    color: #6b7280;
+	    font-size: 14px;
+	    line-height: 1.5;
+	}
+	
+	.edit-user-close {
+	    display: inline-flex;
+	    flex: 0 0 36px;
+	    align-items: center;
+	    justify-content: center;
+	    width: 36px;
+	    height: 36px;
+	    color: #6b7280;
+	    text-decoration: none;
+	    background: #f3f4f6;
+	    border-radius: 8px;
+	    transition: color 0.18s ease, background-color 0.18s ease;
+	}
+	
+	.edit-user-close:hover {
+	    color: #1f2937;
+	    background: #e5e7eb;
+	}
+	
+	/* Form */
+	.edit-user-form {
+	    padding: 28px;
+	}
+	
+	.edit-user-form-grid {
+	    display: grid;
+	    grid-template-columns: repeat(2, minmax(0, 1fr));
+	    gap: 22px 24px;
+	}
+	
+	.edit-user-field {
+	    min-width: 0;
+	}
+	
+	.edit-user-field-full {
+	    grid-column: 1 / -1;
+	}
+	
+	.edit-user-field .form-label {
+	    display: block;
+	    margin-bottom: 8px;
+	    color: #374151;
+	    font-size: 13px;
+	    font-weight: 600;
+	}
+	
+	.required-mark {
+	    color: #dc3545;
+	}
+	
+	.edit-user-field .form-control,
+	.edit-user-field .form-select {
+	    min-height: 44px;
+	    color: #1f2937;
+	    font-size: 14px;
+	    background-color: #ffffff;
+	    border: 1px solid #d1d5db;
+	    border-radius: 8px;
+	    box-shadow: none;
+	    transition: border-color 0.18s ease, box-shadow 0.18s ease;
+	}
+	
+	.edit-user-field .form-control:focus,
+	.edit-user-field .form-select:focus {
+	    border-color: #1e3c72;
+	    box-shadow: 0 0 0 3px rgba(30, 60, 114, 0.12);
+	}
+	
+	.edit-user-field .form-control:disabled {
+	    color: #6b7280;
+	    background-color: #f3f4f6;
+	    border-color: #e5e7eb;
+	    cursor: not-allowed;
+	    opacity: 1;
+	}
+	
+	.edit-user-help-text {
+	    display: block;
+	    margin-top: 6px;
+	    color: #6b7280;
+	    font-size: 12px;
+	}
+	
+	/* Actions */	
+	.edit-user-actions {
+	    display: flex;
+	    align-items: center;
+	    justify-content: flex-end;
+	    gap: 12px;
+	    margin-top: 30px;
+	    padding-top: 22px;
+	    border-top: 1px solid #e5e7eb;
+	}
+	
+	.edit-user-cancel-btn,
+	.edit-user-submit-btn {
+	    min-height: 42px;
+	    padding: 9px 20px;
+	    font-size: 14px;
+	    font-weight: 600;
+	    border-radius: 8px;
+	}
+	
+	.edit-user-cancel-btn {
+	    color: #374151;
+	    background: #ffffff;
+	    border: 1px solid #d1d5db;
+	}
+	
+	.edit-user-cancel-btn:hover {
+	    color: #111827;
+	    background: #f3f4f6;
+	    border-color: #9ca3af;
+	}
+	
+	.edit-user-submit-btn {
+	    min-width: 150px;
+	    background-color: #1e3c72;
+	    border-color: #1e3c72;
+	}
+	
+	.edit-user-submit-btn:hover,
+	.edit-user-submit-btn:focus {
+	    background-color: #172f5b;
+	    border-color: #172f5b;
+	}
+	
+	/* ========================================
+	   Responsive Edit User Page
+	======================================== */
+	
+	*,
+	*::before,
+	*::after {
+	    box-sizing: border-box;
+	}
+	
+	html,
+	body {
+	    width: 100%;
+	    max-width: 100%;
+	    margin: 0;
+	    overflow-x: hidden;
+	}
+	
+	.edit-user-topbar,
+	.edit-user-wrapper,
+	.edit-user-content,
+	.edit-user-card,
+	.edit-user-form,
+	.edit-user-form-grid,
+	.edit-user-field {
+	    min-width: 0;
+	}
+	
+	/* Prevent long text from breaking the layout */
+	.edit-user-title,
+	.edit-user-subtitle,
+	.edit-user-help-text {
+	    overflow-wrap: anywhere;
+	}
+	
+	/* Ensure all form controls fit their containers */
+	.edit-user-field .form-control,
+	.edit-user-field .form-select {
+	    width: 100%;
+	    max-width: 100%;
+	}
+	
+	/* ========================================
+	   Small laptop and large tablet
+	======================================== */
+	
+	@media (min-width: 992px) and (max-width: 1199px) {
+	    .edit-user-wrapper {
+	        padding: 26px 22px;
+	    }
+	
+	    .edit-user-card {
+	        max-width: 860px;
+	    }
+	
+	    .edit-user-card-header {
+	        padding: 22px 24px;
+	    }
+	
+	    .edit-user-form {
+	        padding: 24px;
+	    }
+	}
+	
+	/* ========================================
+	   Tablet
+	======================================== */
+	
+	@media (min-width: 701px) and (max-width: 991px) {
+	    .edit-user-wrapper {
+	        margin-top: 76px;
+	        padding: 22px 18px;
+	    }
+	
+	    .edit-user-card {
+	        max-width: 100%;
+	    }
+	
+	    .edit-user-card-header {
+	        padding: 20px 22px;
+	    }
+	
+	    .edit-user-title {
+	        font-size: 20px;
+	    }
+	
+	    .edit-user-form {
+	        padding: 22px;
+	    }
+	
+	    .edit-user-form-grid {
+	        gap: 20px;
+	    }
+	
+	    .edit-user-actions {
+	        margin-top: 26px;
+	    }
+	}
+	
+	/* ========================================
+	   Mobile
+	======================================== */
+	
+	@media (max-width: 700px) {
+	    /*
+	       On mobile the sidebar should work as an overlay,
+	       so the topbar and content use the full screen width.
+	    */
+	    .edit-user-topbar,
+	    body.sidebar-collapsed .edit-user-topbar,
+	    html.sidebar-collapsed-loading .edit-user-topbar {
+	        right: 0;
+	        left: 0;
+	        width: 100%;
+	    }
+	
+	    .edit-user-wrapper,
+	    body.sidebar-collapsed .edit-user-wrapper,
+	    html.sidebar-collapsed-loading .edit-user-wrapper {
+	        width: 100%;
+	        min-height: 100dvh;
+	        margin-top: 68px;
+	        margin-left: 0;
+	        padding: 20px 16px;
+	    }
+	
+	    .edit-user-card {
+	        width: 100%;
+	        max-width: 100%;
+	        border-radius: 10px;
+	    }
+	
+	    /* Card header */
+	    .edit-user-card-header {
+	        align-items: flex-start;
+	        gap: 14px;
+	        padding: 20px;
+	    }
+	
+	    .edit-user-card-header > div {
+	        min-width: 0;
+	    }
+	
+	    .edit-user-title {
+	        font-size: 20px;
+	    }
+	
+	    .edit-user-subtitle {
+	        margin-top: 5px;
+	        padding-right: 4px;
+	        font-size: 13px;
+	    }
+	
+	    .edit-user-close {
+	        flex: 0 0 38px;
+	        width: 38px;
+	        height: 38px;
+	    }
+	
+	    /* Form becomes one column */
+	    .edit-user-form {
+	        padding: 20px;
+	    }
+	
+	    .edit-user-form-grid {
+	        grid-template-columns: minmax(0, 1fr);
+	        gap: 18px;
+	    }
+	
+	    .edit-user-field-full {
+	        grid-column: auto;
+	    }
+	
+	    /*
+	       16px prevents automatic zoom when focusing
+	       inputs in mobile Safari.
+	    */
+	    .edit-user-field .form-control,
+	    .edit-user-field .form-select {
+	        min-height: 46px;
+	        font-size: 16px;
+	    }
+	
+	    .edit-user-actions {
+	        margin-top: 24px;
+	        padding-top: 18px;
+	    }
+	}
+	
+	/* ========================================
+	   Small mobile
+	======================================== */
+	
+	@media (max-width: 480px) {
+	    .edit-user-wrapper,
+	    body.sidebar-collapsed .edit-user-wrapper,
+	    html.sidebar-collapsed-loading .edit-user-wrapper {
+	        padding: 14px 12px;
+	    }
+	
+	    .edit-user-card {
+	        border-radius: 9px;
+	    }
+	
+	    .edit-user-card-header {
+	        gap: 10px;
+	        padding: 17px 15px;
+	    }
+	
+	    .edit-user-title {
+	        font-size: 18px;
+	    }
+	
+	    .edit-user-subtitle {
+	        font-size: 12px;
+	        line-height: 1.45;
+	    }
+	
+	    .edit-user-close {
+	        flex-basis: 36px;
+	        width: 36px;
+	        height: 36px;
+	    }
+	
+	    .edit-user-form {
+	        padding: 17px 15px;
+	    }
+	
+	    .edit-user-form-grid {
+	        gap: 16px;
+	    }
+	
+	    .edit-user-field .form-label {
+	        margin-bottom: 6px;
+	        font-size: 12px;
+	    }
+	
+	    .edit-user-help-text {
+	        font-size: 11px;
+	        line-height: 1.4;
+	    }
+	
+	    /* Stack the action buttons */
+	    .edit-user-actions {
+	        align-items: stretch;
+	        flex-direction: column-reverse;
+	        gap: 10px;
+	        margin-top: 22px;
+	        padding-top: 16px;
+	    }
+	
+	    .edit-user-cancel-btn,
+	    .edit-user-submit-btn {
+	        display: inline-flex;
+	        align-items: center;
+	        justify-content: center;
+	        width: 100%;
+	        min-width: 0;
+	        min-height: 44px;
+	    }
+	}
+	
+	/* ========================================
+	   Very small phones
+	======================================== */
+	
+	@media (max-width: 360px) {
+	    .edit-user-wrapper,
+	    body.sidebar-collapsed .edit-user-wrapper,
+	    html.sidebar-collapsed-loading .edit-user-wrapper {
+	        padding-right: 8px;
+	        padding-left: 8px;
+	    }
+	
+	    .edit-user-card-header {
+	        padding: 15px 13px;
+	    }
+	
+	    .edit-user-title {
+	        font-size: 17px;
+	    }
+	
+	    .edit-user-form {
+	        padding: 15px 13px;
+	    }
+	}
+	
+	/* ========================================
+	   Short screens
+	======================================== */
+	
+	@media (max-height: 600px) and (max-width: 700px) {
+	    .edit-user-wrapper,
+	    body.sidebar-collapsed .edit-user-wrapper,
+	    html.sidebar-collapsed-loading .edit-user-wrapper {
+	        padding-top: 12px;
+	        padding-bottom: 12px;
+	    }
+	
+	    .edit-user-card-header {
+	        padding-top: 15px;
+	        padding-bottom: 15px;
+	    }
+	
+	    .edit-user-form {
+	        padding-top: 15px;
+	        padding-bottom: 15px;
+	    }
+	}
+</style>
 <body>
 	<aside th:replace="~{fragments/layout :: sidebar}"></aside>
-	<div style="margin-left: 292px; width: calc(100% - 292px); position: fixed; top: 0; z-index: 1000;">
-		<header th:replace="~{fragments/layout :: topbar}"></header>
+	<div class="edit-user-topbar">
+	    <header th:replace="~{fragments/layout :: topbar}"></header>
 	</div>
 
-	<div class="main-wrapper" style="margin-left: 292px; width: calc(100% - 292px); padding: 30px; margin-top: 80px;">
-		<main class="content">
-			<div class="card shadow-sm w-50" style="margin-left: 40px;">
-				<div class="card-header bg-white">
-					<h4 class="mb-0">Edit User</h4>
-				</div>
-				<div class="card-body">
-					<form th:action="@{/users/update/{id}(id=${user.userId})}" method="post">
-						
-						<div class="mb-3">
-							<label class="form-label">Staff ID (Cannot change)</label>
-							<input type="text" class="form-control" th:value="${user.employeeCode}" disabled>
-						</div>
-						
-						<div class="mb-3">
-							<label class="form-label">Full Name</label>
-							<input type="text" name="fullName" class="form-control" th:value="${user.fullName}" required>
-						</div>
-						
-						<div class="mb-3">
-							<label class="form-label">Email</label>
-							<input type="email" name="email" class="form-control" th:value="${user.email}" required>
-						</div>
-
-						<div class="mb-3">
-							<label class="form-label">Department</label>
-							<select name="departmentId" class="form-select" required>
-								<option th:each="dept : ${departments}" 
-										th:value="${dept.departmentId}" 
-										th:text="${dept.deptName}"
-										th:selected="${dept.departmentId == user.department.departmentId}">
-								</option>
-							</select>
-						</div>
-
-						<div class="mb-3">
-							<label class="form-label">Role</label>
-							<select name="roleId" class="form-select" required>
-								<option th:each="role : ${roles}" 
-										th:value="${role.roleId}" 
-										th:text="${role.roleName}"
-										th:selected="${role.roleId == user.role.roleId}">
-								</option>
-							</select>
-						</div>
-
-						<div class="d-flex justify-content-between">
-							<a th:href="@{/users}" class="btn btn-secondary">Cancel</a>
-							<button type="submit" class="btn btn-primary">Update User</button>
-						</div>
-					</form>
-				</div>
-			</div>
+	<div class="main-wrapper edit-user-wrapper">
+		<main class="content edit-user-content">
+		    <div class="edit-user-card">
+		
+		        <!-- Form header -->
+		        <div class="edit-user-card-header">
+		            <div>
+		                <h4 class="edit-user-title">Edit User</h4>
+		                <p class="edit-user-subtitle">Update the user's personal and account information.</p>
+		            </div>		
+		            <a th:href="@{/users}" class="edit-user-close" aria-label="Back to User Management" title="Back to User Management"><i class="fa-solid fa-xmark" aria-hidden="true"></i></a>
+		        </div>
+		
+		        <!-- Form body -->
+		        <form th:action="@{/users/update/{id}(id=${user.userId})}" method="post" class="edit-user-form">	
+		            <div class="edit-user-form-grid">
+		
+		                <!-- Staff ID -->
+		                <div class="edit-user-field">
+		                    <label for="employeeCode" class="form-label">Staff ID</label>	
+		                    <input id="employeeCode" type="text" class="form-control" th:value="${user.employeeCode}" disabled>		
+		                    <small class="edit-user-help-text">Staff ID cannot be changed.</small>
+		                </div>
+		
+		                <!-- Full name -->
+		                <div class="edit-user-field">
+		                    <label for="fullName" class="form-label">Full Name <span class="required-mark">*</span></label>		
+		                    <input id="fullName" type="text" name="fullName" class="form-control" th:value="${user.fullName}" autocomplete="name" required>
+		                </div>
+		
+		                <!-- Email -->
+		                <div class="edit-user-field edit-user-field-full">
+		                    <label for="email" class="form-label">Email Address <span class="required-mark">*</span></label>		
+		                    <input id="email" type="email" name="email" class="form-control" th:value="${user.email}" autocomplete="email" required>
+		                </div>
+		
+		                <!-- Department -->
+		                <div class="edit-user-field">
+		                    <label for="departmentId" class="form-label">Department <span class="required-mark">*</span></label>		
+		                    <select id="departmentId" name="departmentId" class="form-select" required>		
+		                        <option th:each="dept : ${departments}" th:value="${dept.departmentId}" th:text="${dept.deptName}" th:selected="${dept.departmentId == user.department.departmentId}"></option>	
+		                    </select>
+		                </div>
+		
+		                <!-- Role -->
+		                <div class="edit-user-field">
+		                    <label for="roleId" class="form-label">Role <span class="required-mark">*</span></label>		
+		                    <select id="roleId" name="roleId" class="form-select" required>		
+		                        <option th:each="role : ${roles}" th:value="${role.roleId}" th:text="${role.roleName}" th:selected="${role.roleId == user.role.roleId}"></option>		
+		                    </select>
+		                </div>		
+		            </div>
+		
+		            <!-- Form actions -->
+		            <div class="edit-user-actions">
+		                <a th:href="@{/users}" class="btn edit-user-cancel-btn">Cancel</a>		
+		                <button type="submit" class="btn btn-primary edit-user-submit-btn"><i class="fa-solid fa-check me-2" aria-hidden="true"></i>Update User</button>
+		            </div>
+		        </form>
+		    </div>
 		</main>
 	</div>
 	<th:block th:replace="~{fragments/layout :: scripts}"></th:block>

@@ -72,6 +72,8 @@ public class MasterSetupService {
         data.put("departments", departmentRepository.findAll(Sort.by(Sort.Direction.ASC, "deptName")).stream().filter(item -> Boolean.TRUE.equals(item.getIsActive())).toList());
         data.put("projects", projectRepository.findAll(Sort.by(Sort.Direction.ASC, "projectName")).stream().filter(item -> item.getStatus() == null || !"INACTIVE".equalsIgnoreCase(item.getStatus())).toList());
         data.put("allUsers", userRepository.findAll(Sort.by(Sort.Direction.ASC, "fullName")).stream().filter(item -> Boolean.TRUE.equals(item.getIsActive())).toList());
+        
+        // Role တွေကို ကြည့်ရုံပဲပြဖို့ Data ဆွဲထုတ်မယ်
         data.put("roles", roleRepository.findAll(Sort.by(Sort.Direction.ASC, "roleName")));
 
         return data;
@@ -205,12 +207,8 @@ public class MasterSetupService {
                 break;
 
             case "role":
-                if (roleRepository.findByRoleCode(code).isPresent()) throw new Exception("Role code already exists: " + code);
-                Role role = new Role();
-                role.setRoleCode(code);
-                role.setRoleName(name);
-                roleRepository.save(role);
-                break;
+                // 🔴 Role အသစ် ထည့်ခွင့်မပြုတော့ပါဘူး
+                throw new Exception("Adding new roles is not permitted.");
 
             default:
                 throw new Exception("Unknown master type: " + type);
@@ -316,14 +314,8 @@ public class MasterSetupService {
                 break;
 
             case "role":
-                Role role = roleRepository.findById(Integer.parseInt(id)).orElseThrow();
-                if (!role.getRoleCode().equalsIgnoreCase(code) && roleRepository.findByRoleCode(code).isPresent()) {
-                    throw new Exception("Role code already exists: " + code);
-                }
-                role.setRoleCode(code);
-                role.setRoleName(name);
-                roleRepository.save(role);
-                break;
+                // 🔴 Role ကို ပြင်ခွင့်မပြုတော့ပါဘူး
+                throw new Exception("Updating roles is not permitted.");
 
             default:
                 throw new Exception("Unknown master type: " + type);
@@ -397,9 +389,8 @@ public class MasterSetupService {
                 break;
 
             case "role":
-                Role role = roleRepository.findById(Integer.parseInt(id)).orElseThrow();
-                roleRepository.delete(role); // Role ကို လုံးဝ ဖျက်မယ်
-                break;
+                // 🔴 Role ကို ဖျက်ခွင့်မပြုတော့ပါဘူး
+                throw new Exception("Deleting roles is not permitted.");
 
             default:
                 throw new Exception("Unknown master type: " + type);
