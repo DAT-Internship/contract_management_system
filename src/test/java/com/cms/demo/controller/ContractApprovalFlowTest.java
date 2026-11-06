@@ -21,6 +21,7 @@ import com.cms.demo.repository.UserRepository;
 import com.cms.demo.service.AuditLogService;
 import com.cms.demo.service.ContractService;
 import com.cms.demo.service.FileStorageService;
+import com.cms.demo.service.ApprovalNotificationService;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import jakarta.servlet.http.HttpServletRequest;
@@ -68,7 +69,8 @@ class ContractApprovalFlowTest {
                 mock(ContractTypeRepository.class), mock(PaymentTypeRepository.class),
                 mock(ContractStatusRepository.class), mock(DepartmentRepository.class),
                 mock(CustomerSupplierRepository.class), mock(CurrencyRepository.class), mock(ProjectRepository.class),
-                userRepository, approvalRepository, validator(), auditLogService);
+                userRepository, approvalRepository, validator(), auditLogService,
+                mock(ApprovalNotificationService.class));
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
                 .setViewResolvers(testViewResolver())
                 .build();
@@ -211,7 +213,7 @@ class ContractApprovalFlowTest {
         contract.setContractId(100L);
         contract.setContractNo("26-00001");
         MasterContractStatus status = new MasterContractStatus();
-        status.setCode("ACTIVE");
+        status.setCode("DRAFT");
         contract.setStatus(status);
         MasterPaymentType paymentType = new MasterPaymentType();
         paymentType.setId(1);

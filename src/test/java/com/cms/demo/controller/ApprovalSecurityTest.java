@@ -7,6 +7,7 @@ import com.cms.demo.repository.ContractStatusRepository;
 import com.cms.demo.repository.UserRepository;
 import com.cms.demo.security.CustomUserDetailsService;
 import com.cms.demo.service.AuditLogService;
+import com.cms.demo.service.ApprovalNotificationService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -43,6 +44,9 @@ class ApprovalSecurityTest {
 
     @MockitoBean
     private AuditLogService auditLogService;
+
+    @MockitoBean
+    private ApprovalNotificationService approvalNotificationService;
 
     @Test
     void unauthenticatedQueueRequestRedirectsToLogin() throws Exception {

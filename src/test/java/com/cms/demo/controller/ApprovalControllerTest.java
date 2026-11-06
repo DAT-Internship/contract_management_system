@@ -12,6 +12,7 @@ import com.cms.demo.repository.ContractRepository;
 import com.cms.demo.repository.ContractStatusRepository;
 import com.cms.demo.repository.UserRepository;
 import com.cms.demo.service.AuditLogService;
+import com.cms.demo.service.ApprovalNotificationService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.List;
@@ -24,6 +25,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.servlet.ViewResolver;
 import org.springframework.web.servlet.view.AbstractView;
@@ -42,6 +44,7 @@ class ApprovalControllerTest {
     private ContractRepository contractRepository;
     private ContractStatusRepository contractStatusRepository;
     private AuditLogService auditLogService;
+    private ApprovalNotificationService approvalNotificationService;
     private MockMvc mockMvc;
 
     @BeforeEach
@@ -51,8 +54,9 @@ class ApprovalControllerTest {
         contractRepository = mock(ContractRepository.class);
         contractStatusRepository = mock(ContractStatusRepository.class);
         auditLogService = mock(AuditLogService.class);
+        approvalNotificationService = mock(ApprovalNotificationService.class);
         mockMvc = MockMvcBuilders.standaloneSetup(new ApprovalController(approvalRepository, userRepository,
-                contractRepository, contractStatusRepository, auditLogService))
+                contractRepository, contractStatusRepository, auditLogService, approvalNotificationService))
                 .setViewResolvers(testViewResolver())
                 .build();
     }
@@ -173,8 +177,8 @@ class ApprovalControllerTest {
         ApprovalStep rejected = step("REJECTED", "26-100", "Acme", null, LocalDateTime.of(2026, 1, 2, 0, 0));
         ApprovalStep paymentUpdated = step("PAYMENT_UPDATED", "26-100", "Acme", null, LocalDateTime.of(2026, 1, 3, 0, 0));
         when(userRepository.findByEmployeeCodeAndIsActiveTrue("reviewer")).thenReturn(Optional.of(reviewer));
-        when(approvalRepository.findForDepartments(eq(List.of("PENDING", "RETURNED")), eq(true), eq(-1)))
-                .thenReturn(List.of(pending, returned));
+        when(approvalRepository.searchQueue(eq(List.of("PENDING")), eq(true), eq(-1), eq("acme"), any()))
+                .thenReturn(new PageImpl<>(List.of(pending)));
         when(approvalRepository.findForDepartments(
                 eq(List.of("APPROVED", "REJECTED", "PAYMENT_UPDATED")), eq(true), eq(-1)))
                 .thenReturn(List.of(approved, rejected, paymentUpdated));
@@ -184,8 +188,8 @@ class ApprovalControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(view().name("approvals"))
                 .andExpect(model().attribute("page", "approvals"))
-                .andExpect(model().attribute("query", " acme "))
-                .andExpect(model().attribute("pendingCount", 1))
+                .andExpect(model().attribute("query", "acme"))
+                .andExpect(model().attribute("pendingCount", 1L))
                 .andExpect(model().attribute("approvedCount", 1L))
                 .andExpect(model().attribute("rejectedCount", 1L))
                 .andReturn();
@@ -193,7 +197,7 @@ class ApprovalControllerTest {
         @SuppressWarnings("unchecked")
         List<ApprovalStep> history = (List<ApprovalStep>) result.getModelAndView().getModel().get("history");
         assertEquals(List.of(paymentUpdated, rejected, approved), history);
-        verify(approvalRepository).findForDepartments(List.of("PENDING", "RETURNED"), true, -1);
+        verify(approvalRepository).searchQueue(eq(List.of("PENDING")), eq(true), eq(-1), eq("acme"), any());
         verify(approvalRepository).findForDepartments(List.of("APPROVED", "REJECTED", "PAYMENT_UPDATED"), true, -1);
     }
 
@@ -201,22 +205,23 @@ class ApprovalControllerTest {
     void queuePageWithNoSearchMatchesReturnsEmptyQueueAndHistory() throws Exception {
         User reviewer = user("reviewer", "PMO", null);
         when(userRepository.findByEmployeeCodeAndIsActiveTrue("reviewer")).thenReturn(Optional.of(reviewer));
-        when(approvalRepository.findForDepartments(anyList(), eq(true), eq(-1)))
-                .thenReturn(List.of(pendingStep()));
+        when(approvalRepository.searchQueue(anyList(), eq(true), eq(-1), eq("no-such-contract"), any()))
+                .thenReturn(new PageImpl<>(List.of()));
 
         mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/approvals")
                         .principal(() -> "reviewer").param("q", "no-such-contract"))
                 .andExpect(status().isOk())
                 .andExpect(model().attribute("queue", List.of()))
                 .andExpect(model().attribute("history", List.of()))
-                .andExpect(model().attribute("pendingCount", 0));
+                .andExpect(model().attribute("pendingCount", 0L));
     }
 
     @Test
     void privilegedReviewerQueueUsesAllDepartmentScope() throws Exception {
         User reviewer = user("reviewer", "PMO", department(8));
         when(userRepository.findByEmployeeCodeAndIsActiveTrue("reviewer")).thenReturn(Optional.of(reviewer));
-        when(approvalRepository.findForDepartments(anyList(), eq(true), eq(-1))).thenReturn(List.of());
+        when(approvalRepository.searchQueue(anyList(), eq(true), eq(-1), isNull(), any()))
+                .thenReturn(new PageImpl<>(List.of()));
 
         mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/approvals")
                         .principal(() -> "reviewer"))
@@ -224,7 +229,7 @@ class ApprovalControllerTest {
                 .andExpect(model().attribute("queue", List.of()))
                 .andExpect(model().attribute("history", List.of()));
 
-        verify(approvalRepository).findForDepartments(List.of("PENDING", "RETURNED"), true, -1);
+        verify(approvalRepository).searchQueue(eq(List.of("PENDING")), eq(true), eq(-1), isNull(), any());
         verify(approvalRepository).findForDepartments(List.of("APPROVED", "REJECTED", "PAYMENT_UPDATED"), true, -1);
     }
 
@@ -233,7 +238,8 @@ class ApprovalControllerTest {
         Department department = department(8);
         when(userRepository.findByEmployeeCodeAndIsActiveTrue("reviewer"))
                 .thenReturn(Optional.of(user("reviewer", "APPROVER", department)));
-        when(approvalRepository.findForDepartments(anyList(), eq(false), eq(8))).thenReturn(List.of());
+        when(approvalRepository.searchQueue(anyList(), eq(false), eq(8), isNull(), any()))
+                .thenReturn(new PageImpl<>(List.of()));
 
         mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/approvals")
                         .principal(() -> "reviewer"))
@@ -241,7 +247,7 @@ class ApprovalControllerTest {
                 .andExpect(model().attribute("queue", List.of()))
                 .andExpect(model().attribute("history", List.of()));
 
-        verify(approvalRepository).findForDepartments(List.of("PENDING", "RETURNED"), false, 8);
+        verify(approvalRepository).searchQueue(eq(List.of("PENDING")), eq(false), eq(8), isNull(), any());
         verify(approvalRepository).findForDepartments(List.of("APPROVED", "REJECTED", "PAYMENT_UPDATED"), false, 8);
     }
 
@@ -255,7 +261,7 @@ class ApprovalControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(model().attribute("queue", List.of()))
                 .andExpect(model().attribute("history", List.of()))
-                .andExpect(model().attribute("pendingCount", 0));
+                .andExpect(model().attribute("pendingCount", 0L));
 
         verifyNoInteractions(approvalRepository);
     }
@@ -371,7 +377,7 @@ class ApprovalControllerTest {
     }
 
     @Test
-    void returnedApprovalStepCanBeApproved() throws Exception {
+    void returnedApprovalStepCannotBeApprovedUntilResubmitted() throws Exception {
         ApprovalStep step = pendingStep();
         step.setStatus("RETURNED");
         when(userRepository.findByEmployeeCodeAndIsActiveTrue("reviewer"))
@@ -382,12 +388,11 @@ class ApprovalControllerTest {
         when(contractStatusRepository.findAll()).thenReturn(List.of(activeStatus));
 
         mockMvc.perform(post("/approvals/7/decision").principal(() -> "reviewer").param("decision", "APPROVED"))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/approvals"));
+                .andExpect(status().isConflict());
 
-        assertEquals("APPROVED", step.getStatus());
-        verify(approvalRepository).save(step);
-        verify(contractRepository).save(step.getContract());
+        assertEquals("RETURNED", step.getStatus());
+        verify(approvalRepository, never()).save(any());
+        verify(contractRepository, never()).save(any());
     }
 
     @ParameterizedTest
@@ -403,9 +408,11 @@ class ApprovalControllerTest {
         when(contractStatusRepository.findAll()).thenReturn(List.of(activeStatus));
 
         mockMvc.perform(post("/approvals/7/decision").principal(() -> "reviewer").param("decision", "APPROVED"))
-                .andExpect(status().is3xxRedirection());
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/approvals"));
 
         assertEquals("APPROVED", step.getStatus());
+        verify(approvalRepository).save(step);
         verify(contractRepository).save(step.getContract());
     }
 
@@ -469,13 +476,14 @@ class ApprovalControllerTest {
         ApprovalStep step = pendingStep();
         step.getContract().setDepartment(department);
         when(userRepository.findByEmployeeCodeAndIsActiveTrue("reviewer")).thenReturn(Optional.of(reviewer));
-        when(approvalRepository.findForDepartments(anyList(), eq(false), eq(1))).thenReturn(List.of(step));
+        when(approvalRepository.searchQueue(anyList(), eq(false), eq(1), isNull(), any()))
+                .thenReturn(new PageImpl<>(List.of(step)));
         when(approvalRepository.findById(7L)).thenReturn(Optional.of(step));
 
         mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/approvals")
                         .principal(() -> "reviewer"))
                 .andExpect(status().isOk())
-                .andExpect(model().attribute("pendingCount", 1));
+                .andExpect(model().attribute("pendingCount", 1L));
         mockMvc.perform(post("/approvals/7/decision").principal(() -> "reviewer").param("decision", "APPROVED"))
                 .andExpect(status().isForbidden());
     }

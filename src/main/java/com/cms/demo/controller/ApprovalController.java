@@ -55,7 +55,7 @@ public class ApprovalController {
         var user = userRepository.findByEmployeeCodeAndIsActiveTrue(principal.getName())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED));
         String roleCode = user.getRole() == null ? "" : user.getRole().getRoleCode();
-        boolean privileged = hasRoleCode(roleCode, "PMO", "CM", "ADMIN");
+        boolean privileged = hasRoleCode(roleCode, "PMO", "ADMIN", "CM");
         boolean deptHead = hasRoleCode(roleCode, "HR", "DEPT_HEAD", "FI", "DEPARTMENT_HEAD", "APPROVER");
         boolean canReview = privileged || (deptHead && user.getDepartment() != null
                 && Boolean.TRUE.equals(user.getDepartment().getIsActive()));
@@ -80,7 +80,7 @@ public class ApprovalController {
         var user = userRepository.findByEmployeeCodeAndIsActiveTrue(principal.getName())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED));
         String roleCode = user.getRole() == null ? "" : user.getRole().getRoleCode();
-        boolean privileged = hasRoleCode(roleCode, "PMO", "CM", "ADMIN");
+        boolean privileged = hasRoleCode(roleCode, "PMO", "ADMIN", "CM");
         boolean deptHead = hasRoleCode(roleCode, "HR", "DEPT_HEAD", "FI", "DEPARTMENT_HEAD", "APPROVER");
         boolean canReview = privileged || (deptHead && user.getDepartment() != null
                 && Boolean.TRUE.equals(user.getDepartment().getIsActive()));
@@ -127,7 +127,7 @@ public class ApprovalController {
         if (!QUEUE_STATUSES.contains(currentStatus))
             throw new ResponseStatusException(HttpStatus.CONFLICT, "This approval has already been decided");
         boolean deptHead = hasRoleCode(roleCode, "HR", "DEPT_HEAD", "DEPARTMENT_HEAD", "APPROVER");
-        boolean privileged = hasRoleCode(roleCode, "PMO", "CM", "ADMIN");
+        boolean privileged = hasRoleCode(roleCode,"PMO", "ADMIN", "CM");
         if (!privileged && !(deptHead && user.getDepartment() != null && Boolean.TRUE.equals(user.getDepartment().getIsActive()) && contract.getDepartment() != null
                 && user.getDepartment().getDepartmentId().equals(contract.getDepartment().getDepartmentId())))
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You cannot decide this contract");
