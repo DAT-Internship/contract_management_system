@@ -1,0 +1,508 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Email Monitoring')}"></head>
+<body>
+
+<aside th:replace="~{fragments/layout :: sidebar}"></aside>
+
+<div class="main-area">
+  <header th:replace="~{fragments/layout :: topbar}"></header>
+
+  <main class="page-content">
+    <div th:replace="~{fragments/layout :: alerts}"></div>
+
+    <div class="ne-page">
+
+      <!-- Heading -->
+      <div class="ne-heading">
+        <div>
+          <h1>Email Monitoring</h1>
+          <p>Track email delivery and quickly resolve failed messages.</p>
+        </div>
+        <div class="ne-actions">
+         <div class="ne-actions">
+    <button type="button" class="btn-ne-outline" onclick="location.reload()">
+        <i class="fa-solid fa-rotate"></i>
+        Refresh
+    </button>
+
+    <button type="button" class="btn-ne-primary" id="btnMarkAllEmailsRead">
+        <i class="fa-solid fa-check-double"></i>
+        Mark all as read
+    </button>
+</div>
+          <button type="button" class="btn-ne-primary" id="btnExportCsv">
+            <i class="fa-solid fa-download"></i> Export CSV
+          </button>
+        </div>
+      </div>
+
+      <!-- Stats : Total = Sent + Pending + Failed -->
+      <div class="ne-stats round">
+        <div class="ne-stat">
+          <div class="ne-stat-icon blue"><i class="fa-regular fa-envelope"></i></div>
+          <div>
+            <p class="ne-stat-label">Total Emails</p>
+            <p class="ne-stat-value" th:text="${totalCount}">0</p>
+          </div>
+        </div>
+        <div class="ne-stat">
+          <div class="ne-stat-icon green"><i class="fa-solid fa-check"></i></div>
+          <div>
+            <p class="ne-stat-label">Sent</p>
+            <p class="ne-stat-value" th:text="${sentCount}">0</p>
+          </div>
+        </div>
+        <div class="ne-stat">
+          <div class="ne-stat-icon amber"><i class="fa-regular fa-clock"></i></div>
+          <div>
+            <p class="ne-stat-label">Pending</p>
+            <p class="ne-stat-value" th:text="${pendingCount}">0</p>
+          </div>
+        </div>
+        <div class="ne-stat">
+          <div class="ne-stat-icon red"><i class="fa-solid fa-triangle-exclamation"></i></div>
+          <div>
+            <p class="ne-stat-label">Failed</p>
+            <p class="ne-stat-value" th:text="${failedCount}">0</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="ne-panel">
+        <!-- Tabs -->
+        <div class="ne-tabs" id="emailTabs">
+          <button type="button" class="ne-tab active" data-group="">
+            All emails <span class="pill blue" th:text="${totalCount}">0</span>
+          </button>
+          <button type="button" class="ne-tab" data-group="SENT">
+            Sent <span class="pill green" th:text="${sentCount}">0</span>
+          </button>
+          <button type="button" class="ne-tab" data-group="PENDING">
+            Pending <span class="pill amber" th:text="${pendingCount}">0</span>
+          </button>
+          <button type="button" class="ne-tab" data-group="FAILED">
+            Failed <span class="pill red" th:text="${failedCount}">0</span>
+          </button>
+        </div>
+
+        <!-- Toolbar -->
+        <div class="ne-toolbar">
+          <div class="ne-search">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="search" id="emailSearch" placeholder="Search by recipient, subject or contract..." autocomplete="off">
+          </div>
+
+          <div class="ne-field">
+            <label for="emailTypeFilter">Email type</label>
+            <select id="emailTypeFilter">
+              <option value="">All types</option>
+              <option value="PASSWORD_RESET_REQUEST">Password Reset</option>
+              <option value="APPROVAL">Approval</option>
+              <option value="PAYMENT_DUE">Payment Due</option>
+            </select>
+          </div>
+
+          <div class="ne-field range">
+            <label>Date range</label>
+            <div class="ne-range-row">
+              <i class="fa-regular fa-calendar"></i>
+              <input type="date" id="dateFrom" aria-label="From date">
+              <span class="sep">–</span>
+              <input type="date" id="dateTo" aria-label="To date">
+            </div>
+          </div>
+
+          <button type="button" class="ne-clear" id="btnClearFilters">
+    <i class="fa-solid fa-filter-circle-xmark"></i>
+    Clear filters
+</button>
+        </div>
+
+        <!-- Table -->
+        <div class="ne-table-wrap">
+          <table class="ne-table" id="emailTable">
+            <thead>
+              <tr>
+                <th>Recipient</th>
+                <th>Subject</th>
+                <th>Contract</th>
+                <th>Status</th>
+                <th>Created</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr th:each="e : ${emailLogs}"
+                  th:classappend="${e.status == 'FAILED'} ? ' failed' : (${e.status == 'SENT_UNREAD' or e.status == 'SENT'} ? ' row-unread')"
+                  th:attr="data-status=${e.status},data-type=${e.emailType},
+                           data-group=${e.status == 'FAILED' ? 'FAILED' : (e.status == 'PENDING' ? 'PENDING' : 'SENT')}"
+                  th:data-created="${e.createdAt != null ? #temporals.format(e.createdAt, 'yyyy-MM-dd') : ''}">
+                <td th:text="${e.recipientEmail}">email</td>
+                <td th:text="${e.subject}">subject</td>
+                <td th:text="${e.contract != null ? e.contract.contractNo : '—'}">—</td>
+                <td>
+                  <span class="status-pill"
+                        th:classappend="${e.status == 'SENT_READ'} ? ' sent'
+                                      : (${e.status == 'SENT_UNREAD' or e.status == 'SENT'} ? ' unread'
+                                      : (${e.status == 'PENDING'} ? ' pending' : ' failed'))"
+                        th:text="${e.status == 'SENT_READ'} ? 'Read'
+                               : (${e.status == 'SENT_UNREAD' or e.status == 'SENT'} ? 'Unread'
+                               : (${e.status == 'PENDING'} ? 'Pending' : 'Failed'))">Unread</span>
+                </td>
+                <td th:text="${e.createdAt != null ? #temporals.format(e.createdAt,'dd MMM yyyy HH:mm') : '—'}">date</td>
+                <td>
+                  <button type="button" class="btn-ne-sm btn-view-email"
+                          th:attr="data-id=${e.emailLogId}">        <i class="fa-regular fa-eye"></i>
+                          View details</button>
+                </td>
+              </tr>
+              <tr th:if="${#lists.isEmpty(emailLogs)}">
+                <td colspan="8" class="ne-empty">No email records found.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="ne-footer">
+          <span id="pagerInfo">Showing 0 of 0 emails</span>
+          <div class="ne-pager-right">
+            <label class="ne-rpp">Rows per page:
+              <select id="rowsPerPage">
+                <option value="5" selected>5</option>
+                <option value="10" >10</option>
+                <option value="25">25</option>
+                <option value="50">50</option>
+              </select>
+            </label>
+            <div class="ne-pages" id="pagerPages"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Email Details Modal -->
+  <div class="modal fade" id="emailDetailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered ne-modal">
+      <div class="modal-content ne-modal-content" id="edContent" data-state="unread">
+
+        <div class="ne-modal-head">
+          <h5>Email details</h5>
+          <span class="status-pill" id="edStatus">—</span>
+          <button type="button" class="ne-modal-close" data-bs-dismiss="modal" aria-label="Close">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <div class="ne-modal-body">
+          <p class="ne-subject-text" id="edSubject">—</p>
+          <p class="ne-to">To: <span id="edRecipient">—</span></p>
+
+          <div class="ne-rows">
+            <div class="ne-row"><span>Type</span><strong id="edType">—</strong></div>
+            <div class="ne-row"><span>Created</span><strong id="edCreated">—</strong></div>
+                <div class="ne-row">
+        <span>Attempts</span>
+        <strong id="edAttempts">—</strong>
+    </div>
+            
+            <div class="ne-row"><span>Sent at</span><strong id="edSent">—</strong></div>
+          </div>
+
+          <!-- Shown only when the email has an error -->
+          <div class="ne-error-box" id="edErrorBox" style="display:none;">
+            <i class="fa-solid fa-circle-exclamation"></i>
+            <p class="ne-error-text" id="edError">—</p>
+          </div>
+        </div>
+
+        <div class="ne-modal-foot">
+          <button type="button" class="btn-ne-outline" data-bs-dismiss="modal">Close</button>
+          <button type="button" class="btn-ne-primary" id="btnMarkEmailRead" style="display:none;">
+            <i class="fa-solid fa-check"></i> Mark as read
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+
+<script>
+(function () {
+  var tabs = document.querySelectorAll('#emailTabs .ne-tab');
+  var search = document.getElementById('emailSearch');
+  var typeFilter = document.getElementById('emailTypeFilter');
+  var dateFrom = document.getElementById('dateFrom');
+  var dateTo = document.getElementById('dateTo');
+  var pageSizeSel = document.getElementById('rowsPerPage');
+  var pagesBox = document.getElementById('pagerPages');
+  var infoBox = document.getElementById('pagerInfo');
+  var currentGroup = '';
+  var pageNo = 1;
+  var pageSize = parseInt(pageSizeSel.value, 10) || 10;
+
+  // ---------- Filtering ----------
+  function norm(v) {
+    return (v || '').toLowerCase().replace(/_/g, ' ').replace(/\s+/g, ' ').trim();
+  }
+
+  // Search recipient, subject, contract, status and date only - the last "Actions" cell
+  // ("View details") is excluded so typing "view" or "details" does not match every row.
+  function searchText(row) {
+    var cells = row.querySelectorAll('td');
+    var parts = [];
+    for (var i = 0; i < cells.length - 1; i++) parts.push(cells[i].textContent);
+    parts.push(row.getAttribute('data-type') || '');
+    return norm(parts.join(' '));
+  }
+
+  // every word typed must be found (AND), in any order
+  function matchQuery(row, q) {
+    if (!q) return true;
+    var text = searchText(row);
+    return q.split(' ').every(function (w) { return text.indexOf(w) >= 0; });
+  }
+
+  function matches(row) {
+    var q = norm(search.value);
+    var tp = typeFilter.value;
+    var created = row.getAttribute('data-created') || '';
+    if (currentGroup && row.getAttribute('data-group') !== currentGroup) return false;
+    var rowType = row.getAttribute('data-type') || '';
+    if (tp && !(tp === 'APPROVAL' ? rowType.toUpperCase().indexOf('APPROVAL') === 0 : rowType === tp)) return false;
+    if (!matchQuery(row, q)) return false;
+    if (dateFrom.value && (!created || created < dateFrom.value)) return false;
+    if (dateTo.value && (!created || created > dateTo.value)) return false;
+    return true;
+  }
+
+  function allRows() {
+    return Array.prototype.slice.call(document.querySelectorAll('#emailTable tbody tr[data-group]'));
+  }
+
+  // ---------- Pagination ----------
+  function pageList(cur, total) {
+    var out = [], i;
+    if (total <= 7) { for (i = 1; i <= total; i++) out.push(i); return out; }
+    out.push(1);
+    if (cur > 3) out.push('...');
+    for (i = Math.max(2, cur - 1); i <= Math.min(total - 1, cur + 1); i++) out.push(i);
+    if (cur < total - 2) out.push('...');
+    out.push(total);
+    return out;
+  }
+
+  function renderPager(total, totalPages, start, end) {
+    infoBox.textContent = total === 0
+      ? 'Showing 0 of 0 emails'
+      : 'Showing ' + (start + 1) + '-' + end + ' of ' + total + ' emails';
+
+    pagesBox.innerHTML = '';
+    function add(html, target, opts) {
+      opts = opts || {};
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.innerHTML = html;
+      if (opts.disabled) b.disabled = true;
+      if (opts.active) b.classList.add('active');
+      b.addEventListener('click', function () { pageNo = target; render(); });
+      pagesBox.appendChild(b);
+    }
+    add('<i class="fa-solid fa-chevron-left"></i>', pageNo - 1, { disabled: pageNo <= 1 });
+    pageList(pageNo, totalPages).forEach(function (p) {
+      if (p === '...') {
+        var s = document.createElement('span');
+        s.className = 'ne-ellipsis'; s.textContent = '...';
+        pagesBox.appendChild(s);
+      } else {
+        add(String(p), p, { active: p === pageNo });
+      }
+    });
+    add('<i class="fa-solid fa-chevron-right"></i>', pageNo + 1, { disabled: pageNo >= totalPages });
+  }
+
+  function render() {
+    var rows = allRows();
+    var matched = rows.filter(matches);
+    var total = matched.length;
+    var totalPages = Math.max(1, Math.ceil(total / pageSize));
+    if (pageNo > totalPages) pageNo = totalPages;
+    var start = (pageNo - 1) * pageSize;
+    var end = Math.min(start + pageSize, total);
+
+    rows.forEach(function (r) { r.style.display = 'none'; });
+    matched.slice(start, end).forEach(function (r) { r.style.display = ''; });
+    renderPager(total, totalPages, start, end);
+  }
+  function applyFilter() { pageNo = 1; render(); }
+
+  tabs.forEach(function (tab) {
+    tab.addEventListener('click', function () {
+      tabs.forEach(function (t) { t.classList.remove('active'); });
+      tab.classList.add('active');
+      currentGroup = tab.getAttribute('data-group') || '';
+      applyFilter();
+    });
+  });
+  search.addEventListener('input', applyFilter);
+  typeFilter.addEventListener('change', applyFilter);
+  dateFrom.addEventListener('change', applyFilter);
+  dateTo.addEventListener('change', applyFilter);
+  pageSizeSel.addEventListener('change', function () {
+    pageSize = parseInt(pageSizeSel.value, 10) || 10;
+    applyFilter();
+  });
+
+  document.getElementById('btnClearFilters').addEventListener('click', function () {
+    search.value = ''; typeFilter.value = ''; dateFrom.value = ''; dateTo.value = '';
+    currentGroup = '';
+    tabs.forEach(function (t, i) { t.classList.toggle('active', i === 0); });
+    applyFilter();
+  });
+
+  // ---------- Export CSV (all rows that match the current filters) ----------
+  document.getElementById('btnExportCsv').addEventListener('click', function () {
+    var head = ['Email ID', 'Recipient', 'Subject', 'Contract', 'Status', 'Attempts', 'Created'];
+    var lines = [head.join(',')];
+    allRows().filter(matches).forEach(function (r) {
+      var cells = r.querySelectorAll('td');
+      var vals = [];
+      for (var i = 0; i < 7; i++) {
+        var v = (cells[i] ? cells[i].textContent : '').replace(/\s+/g, ' ').trim();
+        vals.push('"' + v.replace(/"/g, '""') + '"');
+      }
+      lines.push(vals.join(','));
+    });
+    var blob = new Blob(['\uFEFF' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'email-monitoring.csv';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 500);
+  });
+
+  // ---------- Details modal + Mark as read ----------
+  var currentId = null;
+  var modalEl = document.getElementById('emailDetailModal');
+  var modal = modalEl ? new bootstrap.Modal(modalEl) : null;
+  var markBtn = document.getElementById('btnMarkEmailRead');
+
+  function isUnread(st) { st = (st || '').toUpperCase(); return st === 'SENT_UNREAD' || st === 'SENT'; }
+  function label(st) {
+    st = (st || '').toUpperCase();
+    if (st === 'SENT_READ') return 'Read';
+    if (isUnread(st)) return 'Unread';
+    if (st === 'PENDING') return 'Pending';
+    return 'Failed';
+  }
+  function cls(st) {
+    st = (st || '').toUpperCase();
+    if (st === 'SENT_READ') return 'sent';
+    if (isUnread(st)) return 'unread';
+    if (st === 'PENDING') return 'pending';
+    return 'failed';
+  }
+  function setPill(el, st) { el.textContent = label(st); el.className = 'status-pill ' + cls(st); }
+  function setBadge(n) {
+    var b = document.getElementById('navEmailCount');
+    if (!b) return;
+    n = Number(n) || 0;
+    b.textContent = n > 99 ? '99+' : String(n);
+    b.style.display = n > 0 ? 'inline-block' : 'none';
+  }
+
+  function fmtDate(v) {
+    if (!v) return null;
+    var d = new Date(v);
+    if (isNaN(d)) return v;
+    return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+         + ', ' + d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+  }
+  function typeLabel(t) {
+    if (!t) return '—';
+    var map = { PASSWORD_RESET_REQUEST: 'Password Reset', APPROVAL_REQ: 'Approval', PAYMENT_DUE: 'Payment Due' };
+    return map[t] || t.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, function (c) { return c.toUpperCase(); });
+  }
+  function setModalState(st) {
+    document.getElementById('edContent').setAttribute('data-state', cls(st));
+  }
+
+  function fillModal(d) {
+    currentId = d.emailLogId;
+    document.getElementById('edSubject').textContent = d.subject || '—';
+    document.getElementById('edRecipient').textContent = d.recipientEmail || '—';
+    document.getElementById('edType').textContent = typeLabel(d.emailType);
+    setPill(document.getElementById('edStatus'), d.status);
+    setModalState(d.status);
+    document.getElementById('edCreated').textContent = fmtDate(d.createdAt) || '—';
+    document.getElementById('edSent').textContent = fmtDate(d.sentAt) || 'Not sent yet';
+
+    var hasErr = !!d.errorMessage;
+    document.getElementById('edErrorBox').style.display = hasErr ? 'flex' : 'none';
+    document.getElementById('edError').textContent = d.errorMessage || '';
+
+    markBtn.style.display = isUnread(d.status) ? 'inline-flex' : 'none';
+    markBtn.disabled = false;
+    
+    document.getElementById('edAttempts').textContent =
+        d.attemptCount != null ? d.attemptCount : '0';
+  }
+
+  // View details = view only (status does not change)
+  document.querySelectorAll('.btn-view-email').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var id = btn.getAttribute('data-id');
+      fetch('/api/emails/' + id, { credentials: 'same-origin' })
+        .then(function (r) { return r.ok ? r.json() : Promise.reject(); })
+        .then(function (data) { fillModal(data); modal.show(); })
+        .catch(function () { alert('Could not load email details'); });
+    });
+  });
+
+  // Status becomes Read only when this button is clicked
+  markBtn.addEventListener('click', function () {
+    if (!currentId) return;
+    markBtn.disabled = true;
+    fetch('/api/emails/' + currentId + '/mark-read', { method: 'POST', credentials: 'same-origin' })
+      .then(function (r) { return r.ok ? r.json() : Promise.reject(); })
+      .then(function (res) {
+        setBadge(res.count);
+        setPill(document.getElementById('edStatus'), res.status);
+        setModalState(res.status);
+        markBtn.style.display = 'none';
+        document.querySelectorAll('.btn-view-email[data-id="' + currentId + '"]').forEach(function (b) {
+          var row = b.closest('tr');
+          if (!row) return;
+          row.setAttribute('data-status', res.status);
+          row.classList.remove('row-unread');
+          var pill = row.querySelector('.status-pill');
+          if (pill) setPill(pill, res.status);
+        });
+      })
+      .catch(function () { markBtn.disabled = false; alert('Mark as read failed'); });
+  });
+
+  // Mark all of MY unread emails as read, then reload so rows, stats and sidebar badge refresh
+  var markAllBtn = document.getElementById('btnMarkAllEmailsRead');
+  if (markAllBtn) {
+    markAllBtn.addEventListener('click', function () {
+      markAllBtn.disabled = true;
+      fetch('/api/emails/mark-all-read', { method: 'POST', credentials: 'same-origin' })
+        .then(function (r) { return r.ok ? r.json() : Promise.reject(); })
+        .then(function (res) {
+          setBadge(res.count);
+          location.reload();
+        })
+        .catch(function () { markAllBtn.disabled = false; alert('Mark all as read failed'); });
+    });
+  }
+
+  render();   // first paint
+})();
+</script>
+</body>
+</html>

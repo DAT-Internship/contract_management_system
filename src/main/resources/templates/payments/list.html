@@ -282,27 +282,28 @@
                         >Pending</span
                       >
                     </td>
-                  </tr>
-                  <tr class="payment-actions-row">
-                    <td colspan="10" class="text-end">
-                      <div class="d-inline-flex gap-1">
+                      <td colspan="10" class="text-end">
+                      <div class="contract-row-actions justify-content-end">
                         <a
-                          class="btn btn-sm btn-outline-primary payment-action-btn"
+                          class="btn btn-sm btn-outline-primary"
                           th:href="@{/payments/{id}(id=${contract.contractId})}"
+                          aria-label="View payment"
                         >
-                          <i class="fa-solid fa-arrow-up-right-from-square aria-hidden me-1"></i>View
+                          <i class="fa-solid fa-arrow-up-right-from-square me-1" aria-hidden="true"></i>View
                         </a>
                         <a
-                          class="btn btn-primary btn-sm payment-action-btn"
+                          class="btn btn-sm btn-outline-secondary"
                           sec:authorize="hasRole('FINANCE')"
                           th:if="${contract.remainingInvoiceable != null and contract.remainingInvoiceable.signum() > 0}"
                           th:href="@{/payments/{id}(id=${contract.contractId},addInvoice=true)}"
+                          aria-label="Add invoice"
                         >
-                         Add Invoice
+						Add Invoice
                         </a>
                       </div>
                     </td>
                   </tr>
+                  
                 </th:block>
                 <tr th:if="${#lists.isEmpty(contracts)}">
                   <td colspan="10" class="empty-state text-center">

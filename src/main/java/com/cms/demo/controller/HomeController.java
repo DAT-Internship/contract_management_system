@@ -7,8 +7,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 public class HomeController {
 
     /** Route the application root to the available landing page. */
-    @GetMapping("/")
-    public String home() {
-        return "redirect:/master-setup";
-    }
+	@GetMapping("/")
+	public String home() {
+	    return "redirect:/dashboard";
+	}
 }

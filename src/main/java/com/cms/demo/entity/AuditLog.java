@@ -31,8 +31,7 @@ public class AuditLog {
     @Column(name = "new_value", columnDefinition="json")
     private String newValue;
 
-    @Column(name = "ip_address", length=45)
-    private String ipAddress;
+    
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;

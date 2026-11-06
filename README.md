@@ -92,9 +92,8 @@ The application initializer creates these users when they do not already exist:
 | Role | Employee code | Password |
 | --- | --- | --- |
 | `ADMIN` | `25-00001` | `admin123` |
-| `FINANCE` | `25-00002` | `finance123` |
 
-Existing users are not modified. Use the Finance account to add invoices and record payments.
+Existing users are not modified. Create a user with the `FINANCE` role in User Management to add invoices and record payments.
 
 ### Invoice form
 
@@ -135,4 +134,4 @@ A ready-to-run seed is provided at `src/main/resources/db/seed/master-data.sql`.
 mariadb --skip-ssl -ucmsuser -proot cms_system < src/main/resources/db/seed/master-data.sql
 ```
 
-The application initializer creates the default `ADMIN` and `FINANCE` roles and users listed above. Payment statuses must be named `Pending`, `Paid`, `Overdue`, and `Partially Paid` (any code is accepted; the service looks up by code first, then by name).
+The application initializer creates only the default `ADMIN` role and user listed above. Create Finance users manually. Payment statuses must be named `Pending`, `Paid`, `Overdue`, and `Partially Paid` (any code is accepted; the service looks up by code first, then by name).

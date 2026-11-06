@@ -17,8 +17,6 @@ import java.time.LocalDateTime;
 public class DataInitializer implements CommandLineRunner {
 
     private static final String DEFAULT_ADMIN_CODE = "25-00001";
-    private static final String DEFAULT_FINANCE_CODE = "25-00002";
-
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final DepartmentRepository departmentRepository;
@@ -40,11 +38,6 @@ public class DataInitializer implements CommandLineRunner {
         Department management = ensureDepartment("MGMT", "Management");
         ensureUser(DEFAULT_ADMIN_CODE, "System Administrator", "admin@cms.com", "admin123",
                 "ADMIN", "Administrator", "Full system access", management);
-
-        Department financeDepartment = departmentRepository.findByDeptCodeIgnoreCase("D006")
-                .orElse(management);
-        ensureUser(DEFAULT_FINANCE_CODE, "Finance User", "finance@cms.com", "finance123",
-                "FINANCE", "Finance", "View all contracts and manage payment records", financeDepartment);
     }
 
     private Department ensureDepartment(String code, String name) {

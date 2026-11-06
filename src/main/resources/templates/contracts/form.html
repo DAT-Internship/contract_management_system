@@ -33,7 +33,7 @@ tration')}"></head>
 						<div class="col-md-6"><label class="form-label required" for="partyId">Customer / Supplier</label><select class="form-select" id="partyId" th:field="*{partyId}" required><option value="">Select customer or supplier</option><option th:each="item : ${parties}" th:value="${item.partyId}" th:text="${item.partyName}"></option></select></div>
 						<div class="col-md-6"><label class="form-label" for="projectId">Project ID</label><select class="form-select" id="projectId" th:field="*{projectId}"><option value="">No project selected</option><option th:each="item : ${projects}" th:value="${item.projectId}" th:text="${item.projectCode + ' — ' + item.projectName}"></option></select><div class="form-text">Select a project when this contract is tied to a project.</div></div>
 						<div class="col-md-4"><label class="form-label required" for="paymentTypeId">Payment Type</label><select class="form-select" id="paymentTypeId" th:field="*{paymentTypeId}" required><option value="">Select payment type</option><option th:each="item : ${paymentTypes}" th:value="${item.id}" th:text="${item.name}"></option></select></div>
-						<div class="col-md-4"><label class="form-label required" for="statusId">Status</label><select class="form-select" id="statusId" th:field="*{statusId}" required><option value="">Select status</option><option th:each="item : ${statuses}" th:value="${item.id}" th:text="${item.name}"></option></select></div>
+						<div class="col-md-4"><label class="form-label required" for="statusId">Status</label><select class="form-select" id="statusId" th:field="*{statusId}" required th:style="${submitForApproval} ? 'pointer-events:none;background-color:#e9ecef' : null" th:attr="tabindex=${submitForApproval} ? '-1' : null"><option value="">Select status</option><option th:each="item : ${statuses}" th:value="${item.id}" th:text="${item.name}"></option></select><div class="form-text" th:if="${submitForApproval}">Status becomes Active after approval.</div></div>
 						<div class="col-md-4"><label class="form-label" for="poNoRef">PO Reference (optional)</label><input class="form-control" id="poNoRef" th:field="*{poNoRef}" maxlength="40" placeholder="Reference number"></div>
 						<div class="col-12"><label class="form-label required" for="description">Description</label><textarea class="form-control" id="description" th:field="*{description}" rows="3" placeholder="Purpose and scope of agreement" required></textarea></div>
 					</div>
@@ -99,7 +99,8 @@ tration')}"></head>
 				<div class="contract-form-actions">
 					<a class="btn btn-outline-secondary" th:href="@{/contracts}">Cancel</a>
 					<button th:if="${contractForm.contractId == null or isDraft}" class="btn btn-outline-secondary" type="submit" name="action" value="draft" formnovalidate>Save Draft</button>
-					<button class="btn btn-primary" type="submit" name="action" value="submit">Submit for Approval</button>
+					<button th:if="${contractForm.contractId == null or isDraft or submitForApproval}" class="btn btn-primary" type="submit" name="action" value="submit">Submit for Approval</button>
+					<button th:if="${contractForm.contractId != null and !isDraft and !submitForApproval}" class="btn btn-primary" type="submit" name="action" value="save">Save Changes</button>
 				</div>
 			</form>
 		</main>

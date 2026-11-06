@@ -11,7 +11,6 @@ public record PaymentHistoryEntry(
         String actorName,
         String actorRole,
         String actorEmployeeCode,
-        String ipAddress,
         LocalDateTime createdAt,
         JsonNode oldValue,
         JsonNode newValue) {

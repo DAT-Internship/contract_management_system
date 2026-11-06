@@ -1,0 +1,936 @@
+/* ===== Shared CMS Notification / Email UI (redesign) ===== */
+.ne-page { max-width: 1240px; margin: 0 auto; }
+
+/* ---------- Heading ---------- */
+.ne-heading { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 1rem; margin-bottom: 1.5rem; }
+.ne-heading h1 { font-size: 2rem; font-weight: 800; color: #0b1b3a; margin: 0 0 .3rem; letter-spacing: -.02em; }
+.ne-heading p { color: #64748b; margin: 0; font-size: .95rem; }
+.ne-actions { display: flex; gap: .6rem; flex-wrap: wrap; }
+
+/* ---------- Buttons ---------- */
+/* Primary & Outline Buttons */
+.btn-ne-primary,
+.btn-ne-outline {
+    display: inline-flex;
+    align-items: center;
+    gap: .45rem;
+    border-radius: 10px;
+    padding: .6rem 1.1rem;
+    font-size: .875rem;
+    font-weight: 600;
+    cursor: pointer;
+    line-height: 1.2;
+    transition: all .2s ease;
+}
+
+/* Primary Button */
+.btn-ne-primary {
+    background: #142B4A;
+    color: #fff;
+    border: 1px solid #142B4A;
+    box-shadow: 0 2px 6px rgba(20, 43, 74, .25);
+}
+
+.btn-ne-primary:hover {
+    background: #0D1F36;
+    color: #fff;
+    border-color: #0D1F36;
+}
+
+.btn-ne-primary:disabled {
+    opacity: .6;
+    cursor: not-allowed;
+}
+
+/* Outline Button */
+.btn-ne-outline {
+    background: #fff;
+    color: #142B4A;
+    border: 1px solid #AABBD0;
+}
+
+.btn-ne-outline:hover {
+    background: #EEF3F9;
+    color: #0D1F36;
+    border-color: #142B4A;
+}
+
+/* Small Button */
+.btn-ne-sm {
+    border: 1px solid #CBD5E1;
+    background: #fff;
+    border-radius: 8px;
+    padding: .35rem .8rem;
+    font-size: .8rem;
+    color: #1E293B;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all .2s ease;
+}
+
+.btn-ne-sm:hover {
+    background: #EEF3F9;
+    border-color: #AABBD0;
+}
+
+/* Retry Button */
+.btn-ne-retry {
+    color: #142B4A;
+    border-color: #AABBD0;
+}
+
+.btn-ne-retry:hover {
+    background: #EEF3F9;
+    border-color: #142B4A;
+}
+
+/* Action Buttons Container */
+.ne-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+/* Common Button Style */
+.ne-actions button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 18px;
+    border-radius: 9px;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.2;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+/* Refresh Button */
+.btn-ne-outline {
+    background: #ffffff;
+    color: #142B4A;
+    border: 1px solid #B8C6D8;
+}
+
+.btn-ne-outline:hover {
+    background: #EEF3F9;
+    border-color: #142B4A;
+    transform: translateY(-1px);
+}
+
+/* Mark All as Read Button */
+.btn-ne-primary {
+    background: #142B4A;
+    color: #ffffff;
+    border: 1px solid #142B4A;
+    box-shadow: 0 2px 5px rgba(20, 43, 74, 0.18);
+}
+
+.btn-ne-primary:hover {
+    background: #0D1F36;
+    border-color: #0D1F36;
+    transform: translateY(-1px);
+}
+
+.btn-ne-primary i,
+.btn-ne-outline i {
+    font-size: 14px;
+}
+
+/* Responsive */
+@media (max-width: 576px) {
+    .ne-actions {
+        flex-wrap: wrap;
+    }
+
+    .ne-actions button {
+        flex: 1;
+    }
+}
+/* ---------- Stat cards ---------- */
+.ne-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
+@media (max-width: 992px) { .ne-stats { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 576px) { .ne-stats { grid-template-columns: 1fr; } }
+.ne-stat {
+  background: #fff; border: 1px solid #e5eaf2; border-radius: 14px;
+  padding: 1.25rem 1.4rem; display: flex; align-items: center; gap: 1.1rem;
+  box-shadow: 0 2px 8px rgba(15,23,42,.04);
+}
+.ne-stat-icon {
+  width: 56px; height: 56px; border-radius: 14px;
+  display: flex; align-items: center; justify-content: center; font-size: 1.4rem; flex-shrink: 0;
+}
+.ne-stats.round .ne-stat-icon { border-radius: 50%; width: 60px; height: 60px; }
+.ne-stat-icon.blue { background: #e8f0fe; color: #1d5cf0; }
+.ne-stat-icon.indigo { background: #e6f0ff; color: #2563eb; }
+.ne-stat-icon.green { background: #e3f7ec; color: #059669; }
+.ne-stat-icon.pink { background: #fde8ee; color: #e11d48; }
+.ne-stat-icon.amber { background: #fff1dc; color: #d97706; }
+.ne-stat-icon.red { background: #fde4e4; color: #dc2626; }
+.ne-stat-label { font-size: .85rem; color: #475569; margin: 0 0 .15rem; }
+.ne-stat-value { font-size: 2rem; font-weight: 800; color: #0b1b3a; margin: 0; line-height: 1.1; }
+
+/* ---------- Panel / tabs ---------- */
+.ne-panel {
+  background: #fff; border: 1px solid #e5eaf2; border-radius: 14px;
+  box-shadow: 0 2px 8px rgba(15,23,42,.04);
+}
+.ne-tabs { display: flex; flex-wrap: wrap; gap: .25rem; padding: .5rem 1.25rem 0; border-bottom: 1px solid #e5eaf2; }
+.ne-tab {
+  border: 0; background: transparent; padding: .8rem 1rem; font-size: .9rem;
+  color: #475569; border-bottom: 2px solid transparent; cursor: pointer; font-weight: 500; margin-bottom: -1px;
+}
+.ne-tab:hover { color: #0b1b3a; }
+.ne-tab.active { color: #1d5cf0; border-bottom-color: #1d5cf0; font-weight: 600; }
+.ne-tab .pill {
+  display: inline-block; margin-left: .4rem; padding: .12rem .55rem; border-radius: 999px;
+  font-size: .72rem; font-weight: 700;
+}
+.ne-tab .pill.blue { background: #dbeafe; color: #1d4ed8; }
+.ne-tab .pill.green { background: #d6f5e3; color: #047857; }
+.ne-tab .pill.amber { background: #ffe9c2; color: #b45309; }
+.ne-tab .pill.red { background: #fde0e0; color: #b91c1c; }
+
+/* ---------- Toolbar ---------- */
+.ne-toolbar { display: flex; flex-wrap: wrap; gap: .75rem; padding: 1.1rem 1.25rem; align-items: stretch; }
+.ne-search { flex: 1; min-width: 220px; position: relative; }
+.ne-search i { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #94a3b8; }
+.ne-search input {
+  width: 100%; height: 100%; min-height: 48px; border: 1px solid #dbe3ee; border-radius: 10px;
+  padding: .55rem .75rem .55rem 2.5rem; font-size: .9rem; outline: none; background: #fff;
+}
+.ne-search input:focus { border-color: #93b4fb; box-shadow: 0 0 0 3px rgba(29,92,240,.12); }
+
+/* floating-label field (select / date range) */
+.ne-field {
+  position: relative; border: 1px solid #dbe3ee; border-radius: 10px; background: #fff;
+  min-width: 150px; padding: .3rem .75rem .25rem; display: flex; flex-direction: column; justify-content: center;
+}
+.ne-field:focus-within { border-color: #93b4fb; box-shadow: 0 0 0 3px rgba(29,92,240,.12); }
+.ne-field > label { font-size: .68rem; color: #64748b; margin: 0; line-height: 1.2; }
+.ne-field select, .ne-field input {
+  border: 0; outline: 0; background: transparent; font-size: .9rem; color: #0f172a; font-weight: 500;
+  padding: 0; margin: 0; min-height: 22px;
+}
+.ne-field select { cursor: pointer; padding-right: 1.25rem; }
+.ne-field.range { min-width: 300px; }
+.ne-range-row { display: flex; align-items: center; gap: .5rem; }
+.ne-range-row i { color: #64748b; font-size: .85rem; }
+.ne-range-row .sep { color: #94a3b8; font-size: .85rem; }
+.ne-clear {
+  border: 0; background: transparent; color: #1d5cf0; font-weight: 600; font-size: .9rem;
+  padding: 0 .5rem; cursor: pointer; align-self: center; white-space: nowrap;
+}
+.ne-clear:hover { text-decoration: underline; }
+
+/* ---------- Email table ---------- */
+.ne-table-wrap { overflow-x: auto; padding: 0 1.25rem; }
+.ne-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: .875rem;
+  border: 1px solid #e5eaf2; border-radius: 10px; overflow: hidden; }
+.ne-table th {
+  text-align: left; padding: .85rem 1rem; color: #475569; font-weight: 600; font-size: .8rem;
+  border-bottom: 1px solid #e5eaf2; background: #f6f8fc; white-space: nowrap;
+}
+.ne-table td { padding: .95rem 1rem; border-bottom: 1px solid #eef2f7; color: #1e293b; vertical-align: middle; }
+.ne-table tbody tr:last-child td { border-bottom: 0; }
+.ne-table tbody tr:hover td { background: #f9fbff; }
+.ne-table tr.failed td:first-child { box-shadow: inset 3px 0 0 #ef4444; }
+.ne-table tr.row-unread td { font-weight: 600; }
+.ne-table .id-cell { font-weight: 700; color: #0b1b3a; }
+
+.status-pill {
+  display: inline-flex; align-items: center; gap: .4rem; text-transform: uppercase; letter-spacing: .02em;
+  padding: .25rem .65rem; border-radius: 8px; font-size: .7rem; font-weight: 700;
+}
+.status-pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.status-pill.sent { background: #d9f5e5; color: #047857; }
+.status-pill.unread { background: #dbeafe; color: #1d4ed8; }
+.status-pill.pending { background: #ffe9c2; color: #b45309; }
+.status-pill.failed { background: #fde0e0; color: #b91c1c; }
+
+/* All Column Headers - Center */
+.ne-table th {
+    text-align: center;
+    padding: .85rem 1rem;
+    color: #475569;
+    font-weight: 600;
+    font-size: .8rem;
+    border-bottom: 1px solid #e5eaf2;
+    background: #f6f8fc;
+    white-space: nowrap;
+}
+
+/* All Table Data - Left */
+.ne-table td {
+    text-align: left;
+    padding: .95rem 1rem;
+    border-bottom: 1px solid #eef2f7;
+    color: #1e293b;
+    vertical-align: middle;
+}
+
+/* Subject Data - Left */
+.ne-table td:nth-child(2) {
+    text-align: left;
+}
+
+/* ---------- Footer / pagination ---------- */
+.ne-footer {
+  display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center;
+  gap: .75rem 1.25rem; padding: 1rem 1.25rem; color: #475569; font-size: .85rem;
+}
+.ne-pager-right { display: flex; align-items: center; gap: 1.25rem; flex-wrap: wrap; }
+.ne-rpp { display: flex; align-items: center; gap: .5rem; font-size: .85rem; color: #475569; margin: 0; }
+.ne-rpp select { border: 1px solid #dbe3ee; border-radius: 8px; padding: .35rem .7rem; background: #fff; font-size: .85rem; }
+.ne-pages { display: flex; align-items: center; gap: .4rem; }
+.ne-pages button {
+  min-width: 36px; height: 36px; border: 1px solid #dbe3ee; background: #fff; color: #334155;
+  border-radius: 8px; font-size: .85rem; cursor: pointer; padding: 0 .55rem;
+}
+.ne-pages button:hover:not(:disabled):not(.active) { background: #f1f5f9; }
+.ne-pages button.active { background: #1d5cf0; border-color: #1d5cf0; color: #fff; font-weight: 700; }
+.ne-pages button:disabled { opacity: .45; cursor: not-allowed; }
+.ne-pages .ne-ellipsis { color: #94a3b8; padding: 0 .2rem; }
+.ne-empty { text-align: center; padding: 3rem 1rem; color: #94a3b8; }
+
+/* ---------- Notification list ---------- */
+.ne-list { list-style: none; margin: 0; padding: 0; border-top: 1px solid #e5eaf2; }
+.ne-item {
+  position: relative; display: flex; gap: 1rem; padding: 1.1rem 1.25rem 1.1rem 2.25rem;
+  border-bottom: 1px solid #eef2f7; align-items: center; transition: background .15s;
+}
+.ne-item:hover { background: #f9fbff; }
+.ne-item.unread { background: #eaf2ff; }
+.ne-item.unread:hover { background: #e2edff; }
+.ne-dot {
+  position: absolute; left: 1rem; top: 50%; transform: translateY(-50%);
+  width: 9px; height: 9px; border-radius: 50%; background: #1d5cf0;
+}
+.ne-dot.read { background: transparent; }
+.ne-icon {
+  width: 46px; height: 46px; border-radius: 12px; display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; font-size: 1.1rem;
+}
+.ne-icon.approval { background: #ece8fd; color: #6d4aff; }
+.ne-icon.contract { background: #ddf5e8; color: #059669; }
+.ne-icon.payment  { background: #fde4ea; color: #e11d48; }
+.ne-icon.warning  { background: #fff0d1; color: #d97706; }
+.ne-icon.info     { background: #e3edff; color: #1d5cf0; }
+.ne-body { flex: 1; min-width: 0; }
+.ne-title { font-weight: 700; color: #0b1b3a; margin: 0 0 .15rem; font-size: .98rem; }
+.ne-msg { color: #475569; font-size: .87rem; margin: 0; white-space: pre-line; }
+.ne-link { font-size: .87rem; color: #1d5cf0; text-decoration: none; font-weight: 600; display: inline-block; margin-top: .15rem; }
+.ne-link:hover { text-decoration: underline; }
+.ne-meta { display: flex; align-items: center; gap: 1.5rem; flex-shrink: 0; }
+.ne-time { font-size: .8rem; color: #475569; min-width: 96px; line-height: 1.35; }
+.ne-badge {
+  display: inline-block; padding: .3rem .85rem; border-radius: 999px; font-size: .75rem; font-weight: 600;
+  min-width: 78px; text-align: center; white-space: nowrap;
+}
+.ne-badge.info     { background: #dbe8ff; color: #1d4ed8; }
+.ne-badge.approval { background: #e9e3ff; color: #5b34d6; }
+.ne-badge.contract { background: #d6f5e3; color: #047857; }
+.ne-badge.payment  { background: #fddbe4; color: #be123c; }
+.ne-badge.warning  { background: #ffe8bd; color: #b45309; }
+.ne-kebab {
+  border: 0; background: transparent; color: #475569; width: 32px; height: 32px; border-radius: 8px; cursor: pointer;
+}
+.ne-kebab:hover { background: #e2e8f0; }
+.ne-kebab-spacer { width: 32px; height: 32px; }
+@media (max-width: 768px) {
+  .ne-item { flex-wrap: wrap; }
+  .ne-meta { width: 100%; justify-content: space-between; gap: .75rem; }
+}
+
+/* ===== Email details modal (clean) ===== */
+.ne-modal { max-width: 480px; }
+.ne-modal-content { border: 0; border-radius: 16px; overflow: hidden; box-shadow: 0 20px 50px rgba(11,27,58,.22); border-top: 4px solid #1d5cf0; }
+.ne-modal-content[data-state="sent"]    { border-top-color: #10b981; }
+.ne-modal-content[data-state="pending"] { border-top-color: #f59e0b; }
+.ne-modal-content[data-state="failed"]  { border-top-color: #ef4444; }
+
+.ne-modal-head { display: flex; align-items: center; gap: .75rem; padding: 1.1rem 1.4rem .4rem; }
+.ne-modal-head h5 { margin: 0; flex: 1; font-size: 1.1rem; font-weight: 800; color: #0b1b3a; }
+.ne-modal-close { border: 0; background: transparent; color: #64748b; width: 32px; height: 32px; border-radius: 8px; cursor: pointer; }
+.ne-modal-close:hover { background: #f1f5f9; color: #0b1b3a; }
+
+.ne-modal-body { padding: .6rem 1.4rem 1.2rem; }
+.ne-subject-text { margin: 0 0 .25rem; font-size: 1.15rem; font-weight: 700; color: #0b1b3a; line-height: 1.35; }
+.ne-to { margin: 0 0 1.1rem; font-size: .88rem; color: #64748b; word-break: break-word; }
+.ne-to span { color: #1d5cf0; font-weight: 600; }
+
+.ne-rows { border-top: 1px solid #eef2f7; }
+.ne-row { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: .75rem 0; border-bottom: 1px solid #eef2f7; font-size: .88rem; }
+.ne-row span { color: #64748b; }
+.ne-row strong { color: #0b1b3a; font-weight: 600; text-align: right; }
+
+.ne-error-box { display: flex; gap: .6rem; align-items: flex-start; margin-top: 1rem; padding: .8rem 1rem; background: #fff1f1; border-radius: 10px; color: #b91c1c; }
+.ne-error-box > i { margin-top: .15rem; }
+.ne-error-text { margin: 0; font-size: .85rem; color: #7f1d1d; word-break: break-word; }
+
+.ne-modal-foot { display: flex; justify-content: flex-end; gap: .6rem; padding: 0 1.4rem 1.25rem; }
+
+/* ===== Notification details pop-up extras ===== */
+button.ne-link { border: 0; background: transparent; padding: 0; cursor: pointer; }
+.ne-note { margin: .85rem 0 0; font-size: .9rem; color: #334155; white-space: pre-line; word-break: break-word; }
+.ne-modal-foot a.btn-ne-outline { text-decoration: none; }
+.ne-modal-head .ne-badge { min-width: 0; }
+
+/* =================================
+   NOTIFICATION VIEW DETAILS BUTTON
+================================= */
+
+.ne-meta {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+.ne-view-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+
+    padding: 8px 14px;
+
+    border: 1px solid #dbe3ef;
+    border-radius: 8px;
+
+    background: #ffffff;
+    color: #334155;
+
+    font-size: 12px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    white-space: nowrap;
+
+    transition: all 0.2s ease;
+}
+
+.ne-view-btn i {
+    font-size: 12px;
+}
+
+.ne-view-btn:hover {
+    background: #eff6ff;
+    border-color: #3b82f6;
+    color: #2563eb;
+}
+
+.ne-view-btn:active {
+    transform: scale(0.97);
+}
+
+/* Responsive */
+
+@media (max-width: 768px) {
+
+    .ne-meta {
+        flex-wrap: wrap;
+        justify-content: flex-start;
+        gap: 8px;
+    }
+
+    .ne-view-btn {
+        padding: 7px 11px;
+    }
+
+}
+/* =========================================
+   NOTIFICATION & EMAIL TYPOGRAPHY
+   Match Contract Management UI
+========================================= */
+
+.ne-page {
+    font-family: inherit;
+    font-size: 13px;
+    color: #1b2b40;
+}
+
+/* Page Heading */
+.ne-heading h1 {
+    font-size: 25px;
+    font-weight: 750;
+    color: #13243a;
+    letter-spacing: -.45px;
+    margin-bottom: 4px;
+}
+
+.ne-heading p {
+    font-size: 12px;
+    color: #718096;
+    margin-bottom: 0;
+}
+
+/* Buttons */
+.btn-ne-primary,
+.btn-ne-outline {
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.btn-ne-sm,
+.btn-ne-retry,
+.ne-view-btn {
+    font-size: 11px;
+    font-weight: 600;
+}
+
+/* Statistics */
+.ne-stat-label {
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.ne-stat-value {
+    font-size: 22px;
+    font-weight: 750;
+}
+
+/* Tabs */
+.ne-tab {
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.ne-tab .pill {
+    font-size: 10px;
+}
+
+/* Search and Filters */
+.ne-search input,
+.ne-field select,
+.ne-field input {
+    font-size: 12px;
+}
+
+.ne-field > label {
+    font-size: 10px;
+}
+
+/* Email Table */
+/* Email Monitoring Table Typography & Alignment */
+.ne-table {
+    width: 100%;
+    font-size: 13px;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.ne-table th {
+    font-size: 12px;
+    font-weight: 700;
+    text-align: center;
+    vertical-align: middle;
+    white-space: nowrap;
+    padding: 13px 12px;
+}
+
+.ne-table td {
+    font-size: 13px;
+    font-weight: 400;
+    text-align: center;
+    vertical-align: middle;
+    padding: 13px 12px;
+}
+
+/* Status Badge */
+.ne-table .status-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    min-width: 65px;
+    padding: 5px 10px;
+    text-align: center;
+}
+
+/* Action Button */
+.ne-table .btn-ne-sm {
+    font-size: 11px;
+    white-space: nowrap;
+}
+
+/* Table Row */
+.ne-table tbody tr {
+    vertical-align: middle;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .ne-table th {
+        font-size: 11px;
+    }
+
+    .ne-table td {
+        font-size: 12px;
+        padding: 10px 8px;
+    }
+}
+/* Bold Email Monitoring Table */
+.ne-table th {
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.ne-table td {
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.ne-table .status-pill {
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.ne-table .btn-ne-sm {
+    font-weight: 700;
+}
+/* Notification List */
+.ne-title {
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.ne-msg {
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.ne-link {
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.ne-time {
+    font-size: 11px;
+}
+
+.ne-badge {
+    font-size: 10px;
+}
+
+/* Pagination */
+.ne-footer,
+.ne-rpp {
+    font-size: 11px;
+}
+#emailTable 
+tbody td:first-child {
+    text-align: left;
+}
+
+.ne-rpp select,
+.ne-pages button {
+    font-size: 11px;
+}
+
+/* Email Details Modal */
+.ne-modal-head h5 {
+    font-size: 15px;
+    font-weight: 750;
+}
+
+.ne-subject-text {
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.ne-to {
+    font-size: 11px;
+}
+
+.ne-row {
+    font-size: 12px;
+}
+
+.ne-error-text {
+    font-size: 11px;
+}
+
+.ne-note {
+    font-size: 12px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .ne-heading h1 {
+        font-size: 21px;
+    }
+
+    .ne-stat-value {
+        font-size: 19px;
+    }
+
+    .ne-title {
+        font-size: 12px;
+    }
+
+    .ne-msg {
+        font-size: 11px;
+    }
+}
+/* Clear Filters Button */
+.ne-clear {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+
+    padding: 9px 14px;
+    min-height: 36px;
+
+    background: #f8fafc;
+    color: #475569;
+
+    border: 1px solid #dbe2ea;
+    border-radius: 7px;
+
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+
+    cursor: pointer;
+    white-space: nowrap;
+
+    transition: all 0.2s ease;
+}
+
+.ne-clear:hover {
+    background: #eef2f7;
+    color: #1e293b;
+    border-color: #cbd5e1;
+}
+
+.ne-clear:active {
+    background: #e2e8f0;
+    transform: scale(0.97);
+}
+
+.ne-clear i {
+    font-size: 11px;
+}
+
+.ne-clear:focus-visible {
+    outline: 3px solid rgba(59, 130, 246, 0.2);
+    outline-offset: 2px;
+}
+
+/* =========================================
+   NOTIFICATION LIST - ALIGNED COLUMNS
+   badge | date/time | button have fixed widths,
+   so every row lines up regardless of text length
+========================================= */
+.ne-item { align-items: center; }
+
+.ne-meta {
+    display: grid;
+    grid-template-columns: 112px 140px 124px;
+    column-gap: 14px;
+    align-items: center;
+    justify-content: end;
+    flex: 0 0 auto;
+    width: auto;
+}
+
+.ne-meta .ne-badge {
+    display: block;
+    width: 112px;
+    min-width: 0;
+    padding: .32rem .5rem;
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ne-meta .ne-time {
+    width: 140px;
+    min-width: 0;
+    text-align: left;
+    white-space: nowrap;
+}
+
+.ne-meta .ne-view-btn {
+    width: 124px;
+    justify-self: end;
+}
+
+/* keep every row the same height: max 2 lines of message */
+.ne-item .ne-msg {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+@media (max-width: 768px) {
+    .ne-meta {
+        width: 100%;
+        grid-template-columns: auto 1fr auto;
+        column-gap: 10px;
+        justify-content: stretch;
+    }
+    .ne-meta .ne-badge,
+    .ne-meta .ne-time,
+    .ne-meta .ne-view-btn { width: auto; }
+    .ne-meta .ne-badge { padding: .32rem .75rem; }
+}
+
+/* ---------- Approval result colours ---------- */
+.ne-icon.rejected { background: #fde2e2; color: #dc2626; }
+.ne-icon.approved { background: #ddf5e8; color: #059669; }
+.ne-badge.rejected { background: #fddede; color: #b91c1c; }
+.ne-badge.approved { background: #d6f5e3; color: #047857; }
+
+/* ===== Notification row alignment (screenshot match) ===== */
+.ne-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid #e5eaf2;
+}
+
+.ne-item {
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.05rem 1.25rem 1.05rem 2.1rem;
+  border-bottom: 1px solid #eef2f7;
+  background: #fff;
+}
+
+.ne-item:hover { background: #f9fbff; }
+.ne-item.unread { background: #eaf2ff; }
+.ne-item.unread:hover { background: #e2edff; }
+
+.ne-dot {
+  position: absolute;
+  left: 0.95rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #1d5cf0;
+}
+.ne-dot.read { background: transparent; }
+
+.ne-icon {
+  width: 46px;
+  height: 46px;
+  min-width: 46px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 1.1rem;
+}
+
+.ne-body {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.ne-title {
+  margin: 0 0 0.2rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #0b1b3a;
+  line-height: 1.35;
+}
+
+.ne-msg {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #64748b;
+  line-height: 1.45;
+  white-space: pre-line;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Right column: fixed widths → every row aligns */
+.ne-meta {
+  display: grid;
+  grid-template-columns: 120px 150px 130px;
+  column-gap: 12px;
+  align-items: center;
+  flex: 0 0 auto;
+  margin-left: auto;
+}
+
+.ne-meta .ne-badge {
+  width: 120px;
+  text-align: center;
+  padding: 0.3rem 0.5rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ne-meta .ne-time {
+  width: 150px;
+  font-size: 0.8rem;
+  color: #64748b;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.ne-meta .ne-view-btn {
+  width: 130px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0.4rem 0.7rem;
+  border: 1px solid #dbe3ef;
+  border-radius: 8px;
+  background: #fff;
+  color: #334155;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.ne-meta .ne-view-btn:hover {
+  background: #eff6ff;
+  border-color: #3b82f6;
+  color: #2563eb;
+}
+
+.ne-kebab-spacer { display: none !important; }
+
+@media (max-width: 900px) {
+  .ne-meta {
+    grid-template-columns: 100px 120px 120px;
+    column-gap: 8px;
+  }
+  .ne-meta .ne-badge,
+  .ne-meta .ne-time,
+  .ne-meta .ne-view-btn { width: auto; min-width: 0; }
+}
+
+@media (max-width: 768px) {
+  .ne-item {
+    flex-wrap: wrap;
+    padding-left: 1.75rem;
+  }
+  .ne-meta {
+    width: 100%;
+    grid-template-columns: auto 1fr auto;
+    margin-left: 0;
+    padding-left: 54px;
+  }
+}

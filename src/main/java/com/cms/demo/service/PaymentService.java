@@ -555,7 +555,6 @@ public class PaymentService {
                 log.getActor() == null || log.getActor().getRole() == null
                         ? null : log.getActor().getRole().getRoleName(),
                 log.getActor() == null ? null : log.getActor().getEmployeeCode(),
-                log.getIpAddress(),
                 log.getCreatedAt(),
                 readJson(log.getOldValue()),
                 readJson(log.getNewValue()));

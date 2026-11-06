@@ -16,10 +16,10 @@ public class ApprovalStep {
     @Column(name = "step_id")
     private Long stepId;
 
-    @Column(name = "current_approval", length=50)
+    @Column(name = "current_approval", length=160)
     private String currentApproval;
 
-    @Column(name = "status", length=10)
+    @Column(name = "status", length=20)
     private String status;
 
     @Column(name = "comment", columnDefinition="text")
@@ -30,6 +30,10 @@ public class ApprovalStep {
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "approver_id")
+    private User approver;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "contract_id", nullable = true)

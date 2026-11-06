@@ -34,7 +34,7 @@ public class AuditLogService {
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void record(String employeeCode, String entityType, Long entityId, String action,
-            String method, String path, int responseStatus, String ipAddress) {
+            String oldValue, String newValue) { // 🔴 Parameter တွေ ပြောင်းပါ
         if (!List.of("CREATE", "UPDATE", "DELETE").contains(action == null ? "" : action.toUpperCase(Locale.ROOT))) return;
         var actor = userRepository.findByEmployeeCode(employeeCode).orElse(null);
         if (actor == null) return;
@@ -44,10 +44,12 @@ public class AuditLogService {
         log.setEntityType(entityType);
         log.setEntityId(entityId);
         log.setAction(action);
-        log.setIpAddress(ipAddress);
         log.setCreatedAt(LocalDateTime.now());
-        log.setNewValue("{\"method\":\"" + jsonEscape(method) + "\",\"path\":\""
-                + jsonEscape(path) + "\",\"responseStatus\":" + responseStatus + "}");
+        
+        // 🔴 ဒီနေရာမှာ ကိုယ်ပို့လိုက်တဲ့ Data တွေကို သိမ်းမယ်
+        log.setOldValue(oldValue); 
+        log.setNewValue(newValue); 
+        
         auditLogRepository.save(log);
     }
 
@@ -101,8 +103,12 @@ public class AuditLogService {
                 log.getLogId(),
                 log.getActor() == null ? "System" : log.getActor().getFullName(),
                 log.getActor() == null ? "-" : log.getActor().getEmployeeCode(),
-                log.getAction(), log.getEntityType(), log.getEntityId(), log.getNewValue(),
-                log.getIpAddress(), log.getCreatedAt()));
+                log.getAction(), 
+                log.getEntityType(), 
+                log.getEntityId(), 
+                log.getOldValue(), // 🔴 ဒါလေး ထည့်ပါ
+                log.getNewValue(), // 🔴 ဒါလေး ထည့်ပါ
+                log.getCreatedAt()));
     }
 
     private boolean hasText(String value) {

@@ -14,36 +14,47 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableWebSecurity
 public class SecurityConfig {
 
-    private final CustomUserDetailsService customUserDetailsService;
-    public SecurityConfig(CustomUserDetailsService customUserDetailsService) {
-        this.customUserDetailsService = customUserDetailsService;
-    }
+	private final CustomUserDetailsService customUserDetailsService;
 
-    // ၁။ Password ကို Hash လုပ်ဖို့
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
+	public SecurityConfig(CustomUserDetailsService customUserDetailsService) {
+		this.customUserDetailsService = customUserDetailsService;
+	}
 
-    // ၂။ Database ကနေ User ကို ရှာပြီး စစ်ဆေးမယ့် Provider
-    @Bean
-    public DaoAuthenticationProvider authenticationProvider() {
-        // 🔴 ဒီနေရာမှာ CustomUserDetailsService ကို Constructor ထဲ ထည့်ပေးရပါမယ်
-        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider(customUserDetailsService);
-        
-        authProvider.setPasswordEncoder(passwordEncoder()); 
-        return authProvider;
-    }
-    // ၃။ Security စည်းမျဉ်းများ
-    @Bean
+	// ၁။ Password ကို Hash လုပ်ဖို့
+	@Bean
+	public PasswordEncoder passwordEncoder() {
+		return new BCryptPasswordEncoder();
+	}
+
+	// ၂။ Database ကနေ User ကို ရှာပြီး စစ်ဆေးမယ့် Provider
+	@Bean
+	public DaoAuthenticationProvider authenticationProvider() {
+		// 🔴 ဒီနေရာမှာ CustomUserDetailsService ကို Constructor ထဲ ထည့်ပေးရပါမယ်
+		DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider(customUserDetailsService);
+
+		authProvider.setPasswordEncoder(passwordEncoder());
+		return authProvider;
+	}
+
+	// ၃။ Security စည်းမျဉ်းများ
+	@Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/audit", "/audit/**").hasRole("ADMIN")
+//                .requestMatchers("/audit", "/audit/**").hasRole("ADMIN")
                 .requestMatchers("/uploads/**").denyAll()
-                .requestMatchers("/", "/login", "/css/**", "/js/**", "/images/**").permitAll() 
-                .anyRequest().authenticated() 
+
+                .requestMatchers(
+                        "/login",
+                        "/forgot-password",
+                        "/css/**",
+                        "/js/**",
+                        "/images/**"
+                ).permitAll()
+                .requestMatchers("/ws/**").authenticated()  // login ဝင်မှ WebSocket
+                .anyRequest().authenticated()
+
             )
             .formLogin(form -> form
                 .loginPage("/login")
