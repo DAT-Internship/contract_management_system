@@ -977,14 +977,14 @@
               <input type="hidden" th:field="*{invoiceId}" />
               <div class="mb-3">
                 <label class="form-label required" for="paidAmount"
-                  >Cumulative paid amount</label
+                  >Paid Amount</label
                 >
                 <input
                   class="form-control"
                   id="paidAmount"
                   type="number"
-                  step="1"
-                  min="0"
+                  step="0.01"
+                  min="0.01"
                   th:field="*{paidAmount}"
                   th:classappend="${#fields.hasErrors('paidAmount')} ? ' is-invalid'"
                 />
@@ -993,9 +993,7 @@
                   th:if="${#fields.hasErrors('paidAmount')}"
                   th:errors="*{paidAmount}"
                 ></div>
-                <div class="form-text">
-                  Enter the total received so far, not only this payment.
-                </div>
+                <div class="form-text" id="paymentAmountHelp">Amount &lt; invoiced amount.</div>
               </div>
               <div class="mb-3">
                 <label class="form-label" for="paidDate">Payment date</label>
@@ -1065,6 +1063,7 @@
           "paymentInvoiceLabel",
         );
         const paymentTotalLabel = document.getElementById("paymentTotalLabel");
+        const paymentAmountInput = document.getElementById("paidAmount");
 
         const setValue = (form, name, value) => {
           if (form && form.elements[name])
@@ -1336,11 +1335,13 @@
         document.querySelectorAll(".js-pay-invoice").forEach((button) => {
           button.addEventListener("click", () => {
             setValue(paymentForm, "invoiceId", button.dataset.invoiceId);
-            setValue(
-              paymentForm,
-              "paidAmount",
-              Math.round(parseFloat(button.dataset.paidAmount) || 0),
-            );
+            setValue(paymentForm, "paidAmount", "");
+            const invoiceTotal = parseFloat((button.dataset.totalAmount || "").replaceAll(",", "")) || 0;
+            const alreadyPaid = parseFloat((button.dataset.paidAmount || "").replaceAll(",", "")) || 0;
+            if (paymentAmountInput) {
+              paymentAmountInput.max = Math.max(0, invoiceTotal - alreadyPaid).toFixed(2);
+              paymentAmountInput.dataset.alreadyPaid = alreadyPaid.toFixed(2);
+            }
             setValue(
               paymentForm,
               "paidDate",
@@ -1352,11 +1353,27 @@
                 button.dataset.invoiceNo || "Invoice";
             if (paymentTotalLabel)
               paymentTotalLabel.textContent = formatMoney(
-                parseFloat(button.dataset.totalAmount) || 0,
+                invoiceTotal,
               );
             paymentModal?.show();
           });
         });
+
+        paymentForm?.addEventListener("submit", (event) => {
+          if (!paymentAmountInput) return;
+          const amount = parseFloat(paymentAmountInput.value);
+          const alreadyPaid = parseFloat(paymentAmountInput.dataset.alreadyPaid) || 0;
+          const maximum = parseFloat(paymentAmountInput.max) || 0;
+          if (!Number.isFinite(amount) || amount <= 0 || amount > maximum) {
+            event.preventDefault();
+            paymentAmountInput.setCustomValidity("Enter an amount no greater than the outstanding invoice amount.");
+            paymentAmountInput.reportValidity();
+            return;
+          }
+          paymentAmountInput.setCustomValidity("");
+          paymentAmountInput.value = (amount + alreadyPaid).toFixed(2);
+        });
+        paymentAmountInput?.addEventListener("input", () => paymentAmountInput.setCustomValidity(""));
 
         const openInvoiceOnLoad = /*[[${openInvoiceModal != null and openInvoiceModal}]]*/ false;
         const openPaymentOnLoad = /*[[${openPaymentModal != null and openPaymentModal}]]*/ false;
