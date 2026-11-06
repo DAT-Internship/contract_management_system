@@ -49,7 +49,7 @@
             class="btn btn-primary btn-sm js-add-invoice"
             type="button"
             sec:authorize="hasRole('FINANCE')"
-            th:if="${contract.remainingInvoiceable != null and contract.remainingInvoiceable.signum() > 0}"
+            th:if="${contract.remainingInvoiceable != null and contract.remainingInvoiceable.signum() > 0 and (contract.invoiceLimit == 0 or contract.invoiceCount < contract.invoiceLimit)}"
           >
            Add Invoice
           </button>
@@ -297,8 +297,10 @@
                             <button
                               class="btn btn-sm btn-outline-success js-pay-invoice"
                               type="button"
+                              th:disabled="${invoice.statusCode == 'PAID'}"
                               th:attr="data-invoice-id=${invoice.invoiceId},
                                                              data-invoice-no=${invoice.invoiceNo != null ? invoice.invoiceNo : 'Unbilled'},
+                                                             data-currency=${invoice.currencyName ?: ''},
                                                              data-paid-amount=${invoice.paidAmount},
                                                              data-total-amount=${invoice.totalAmount}"
                             >
@@ -467,7 +469,10 @@
                            data-default-due-days=${defaultDueDays},
                            data-payment-type=${contract.paymentTypeName},
                            data-contract-gross=${contract.contractGross},
-                           data-total-invoiced=${contract.totalInvoiced}"
+                           data-total-invoiced=${contract.totalInvoiced},
+                           data-next-installment-amount=${contract.nextInstallmentAmount},
+                           data-invoice-count=${contract.invoiceCount},
+                           data-invoice-limit=${contract.invoiceLimit}"
           >
             <div class="modal-header invoice-modal-header">
               <div class="d-flex align-items-center gap-3">
@@ -531,8 +536,9 @@
                             class="form-control"
                             id="amount"
                             type="number"
-                            step="1"
+                            step="0.01"
                             min="0"
+                            th:readonly="${contract.invoiceLimit > 0}"
                             th:field="*{amount}"
                             th:classappend="${#fields.hasErrors('amount')} ? ' is-invalid'"
                           />
@@ -562,8 +568,9 @@
                             class="form-control"
                             id="taxAmount"
                             type="number"
-                            step="1"
+                            step="0.01"
                             min="0"
+                            readonly
                             th:field="*{taxAmount}"
                             th:classappend="${#fields.hasErrors('taxAmount')} ? ' is-invalid'"
                           />
@@ -573,12 +580,16 @@
                           th:if="${#fields.hasErrors('taxAmount')}"
                           th:errors="*{taxAmount}"
                         ></div>
-                        <div class="form-text">
-                          Leave blank to apply the contract rate (<span
+                        <div class="form-text" th:if="${contract.invoiceLimit > 0}">
+                          invoice for <span th:text="${contract.invoiceCount + 1}">1</span>
+                          of <span th:text="${contract.invoiceLimit}">1</span>.
+                        </div>
+                        <span class="form-text">
+                         tax rate: (<span
                             th:text="${contract.commercialTaxRate != null ? contract.commercialTaxRate + '%' : '0%'}"
                             >0%</span
                           >).
-                        </div>
+                        </span>
                       </div>
                     </div>
                   </section>
@@ -993,7 +1004,7 @@
                   th:if="${#fields.hasErrors('paidAmount')}"
                   th:errors="*{paidAmount}"
                 ></div>
-                <div class="form-text" id="paymentAmountHelp">Amount &lt; invoiced amount.</div>
+                <div class="form-text" id="paymentAmountHelp">Outstanding amount: -</div>
               </div>
               <div class="mb-3">
                 <label class="form-label" for="paidDate">Payment date</label>
@@ -1064,6 +1075,7 @@
         );
         const paymentTotalLabel = document.getElementById("paymentTotalLabel");
         const paymentAmountInput = document.getElementById("paidAmount");
+        const paymentAmountHelp = document.getElementById("paymentAmountHelp");
 
         const setValue = (form, name, value) => {
           if (form && form.elements[name])
@@ -1073,7 +1085,6 @@
         const taxRate = parseFloat(invoiceForm?.dataset.taxRate) || 0;
         const defaultDueDays =
           parseInt(invoiceForm?.dataset.defaultDueDays, 10) || 30;
-        let taxManuallyEdited = false;
         const paymentType = (invoiceForm?.dataset.paymentType || "")
           .trim()
           .toLowerCase();
@@ -1083,6 +1094,12 @@
           parseFloat(invoiceForm?.dataset.contractGross) || 0;
         const totalInvoiced =
           parseFloat(invoiceForm?.dataset.totalInvoiced) || 0;
+        const nextInstallmentAmount =
+          parseFloat(invoiceForm?.dataset.nextInstallmentAmount) || 0;
+        const invoiceCount =
+          parseInt(invoiceForm?.dataset.invoiceCount, 10) || 0;
+        const invoiceLimit =
+          parseInt(invoiceForm?.dataset.invoiceLimit, 10) || 0;
 
         const addDays = (isoDate, days) => {
           const base = isoDate ? new Date(isoDate + "T00:00:00") : new Date();
@@ -1095,10 +1112,17 @@
           `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 
         const recalculateTax = () => {
-          if (!invoiceForm || taxManuallyEdited) return;
+          if (!invoiceForm) return;
           const amount = parseFloat(invoiceForm.elements["amount"]?.value);
           if (Number.isNaN(amount)) return;
-          const tax = Math.round((amount * taxRate) / 100);
+          const isLastInstallment =
+            invoiceLimit > 0 && invoiceCount === invoiceLimit - 1;
+          const tax = isLastInstallment
+            ? Math.max(
+                0,
+                Math.round((contractGross - totalInvoiced - amount) * 100) / 100,
+              )
+            : Math.round(((amount * taxRate) / 100) * 100) / 100;
           setValue(invoiceForm, "taxAmount", tax);
         };
 
@@ -1141,7 +1165,7 @@
 
         const moneyFormatter = new Intl.NumberFormat("en-US", {
           minimumFractionDigits: 0,
-          maximumFractionDigits: 0,
+          maximumFractionDigits: 2,
         });
         const formatMoney = (value) => moneyFormatter.format(value);
 
@@ -1162,15 +1186,32 @@
 
         const maximumAmountBeforeTax = (available) => {
           const taxInput = invoiceForm?.elements["taxAmount"]?.value;
-          const manualTax =
-            taxManuallyEdited && taxInput !== "" && taxInput != null
+          const isLastInstallment =
+            invoiceLimit > 0 && invoiceCount === invoiceLimit - 1;
+          const automaticFinalTax =
+            isLastInstallment && taxInput !== "" && taxInput != null
               ? parseFloat(taxInput) || 0
               : null;
-          const max =
-            manualTax == null
+          let max =
+            automaticFinalTax == null
               ? available / (1 + taxRate / 100)
-              : available - manualTax;
-          return Math.max(0, Math.floor(max));
+              : available - automaticFinalTax;
+          max = Math.max(0, Math.floor(max * 100 + 0.000001) / 100);
+
+          // Find the largest cent amount whose rounded tax still fits.
+          // Division alone can leave a small remainder because tax is rounded.
+          const totalFor = (amount) =>
+            amount +
+            (automaticFinalTax == null
+              ? Math.round(((amount * taxRate) / 100) * 100) / 100
+              : automaticFinalTax);
+          while (totalFor(max + 0.01) <= available + 0.001) {
+            max = Math.round((max + 0.01) * 100) / 100;
+          }
+          while (max > 0 && totalFor(max) > available + 0.001) {
+            max = Math.round((max - 0.01) * 100) / 100;
+          }
+          return max;
         };
 
         const clampInvoiceAmount = (available) => {
@@ -1181,10 +1222,10 @@
           const typed = parseFloat(amountField.value);
           if (Number.isFinite(typed) && typed > maxAmount + 0.001) {
             amountField.value = maxAmount;
-            if (!taxManuallyEdited) recalculateTax();
+            recalculateTax();
           } else if (Number.isFinite(typed) && typed < 0) {
             amountField.value = "0";
-            if (!taxManuallyEdited) recalculateTax();
+            recalculateTax();
           }
           setSummaryText("invoiceSummaryMax", formatMoney(maxAmount));
           return parseFloat(amountField.value) || 0;
@@ -1197,7 +1238,7 @@
           const taxInput = invoiceForm.elements["taxAmount"]?.value;
           const tax =
             taxInput === "" || taxInput == null
-              ? Math.round((amount * taxRate) / 100)
+              ? Math.round(((amount * taxRate) / 100) * 100) / 100
               : parseFloat(taxInput) || 0;
           const total = amount + tax;
           const after = available - total;
@@ -1261,10 +1302,6 @@
             "input",
             validateInvoiceTotal,
           );
-          invoiceForm.elements["taxAmount"]?.addEventListener("input", () => {
-            taxManuallyEdited = true;
-            validateInvoiceTotal();
-          });
           invoiceForm.elements["invoiceDate"]?.addEventListener(
             "change",
             recalculateDueDate,
@@ -1280,10 +1317,14 @@
           if (!invoiceForm) return;
           invoiceForm.reset();
           setValue(invoiceForm, "invoiceId", "");
-          taxManuallyEdited = false;
+          if (invoiceLimit > 0) {
+            setValue(invoiceForm, "amount", nextInstallmentAmount.toFixed(2));
+            recalculateTax();
+          }
           if (invoiceTitle) invoiceTitle.textContent = "Add invoice";
           if (isManualDueDate) setValue(invoiceForm, "dueDate", "");
           recalculateDueDate();
+          recalculateTax();
           validateInvoiceTotal();
         };
 
@@ -1338,9 +1379,15 @@
             setValue(paymentForm, "paidAmount", "");
             const invoiceTotal = parseFloat((button.dataset.totalAmount || "").replaceAll(",", "")) || 0;
             const alreadyPaid = parseFloat((button.dataset.paidAmount || "").replaceAll(",", "")) || 0;
+            const outstanding = Math.max(0, invoiceTotal - alreadyPaid);
             if (paymentAmountInput) {
-              paymentAmountInput.max = Math.max(0, invoiceTotal - alreadyPaid).toFixed(2);
+              paymentAmountInput.max = outstanding.toFixed(2);
               paymentAmountInput.dataset.alreadyPaid = alreadyPaid.toFixed(2);
+            }
+            if (paymentAmountHelp) {
+              const currency = button.dataset.currency || "";
+              paymentAmountHelp.textContent =
+                `Outstanding amount: ${currency} ${formatMoney(outstanding)}`.trim();
             }
             setValue(
               paymentForm,
@@ -1379,6 +1426,10 @@
         const openPaymentOnLoad = /*[[${openPaymentModal != null and openPaymentModal}]]*/ false;
         if (openInvoiceOnLoad) {
           if (invoiceTitle) invoiceTitle.textContent = "Add invoice";
+          if (invoiceLimit > 0 && !invoiceForm?.elements["amount"]?.value) {
+            setValue(invoiceForm, "amount", nextInstallmentAmount.toFixed(2));
+          }
+          recalculateTax();
           invoiceModal?.show();
           validateInvoiceTotal();
         }

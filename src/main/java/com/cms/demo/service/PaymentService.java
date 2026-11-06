@@ -217,10 +217,25 @@ public class PaymentService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invoice currency is required");
         }
 
-        BigDecimal amount = PaymentCalculator.money(request.amount());
-        BigDecimal tax = request.taxAmount() == null
-                ? calculateTax(amount, contract.getCommercialTaxRate())
-                : PaymentCalculator.money(request.taxAmount());
+        List<Invoice> existingInvoices = invoiceRepository.findByContractId(contractId);
+        int invoiceLimit = invoiceLimit(contract);
+        if (invoiceLimit > 0 && existingInvoices.size() >= invoiceLimit) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "This contract allows a maximum of " + invoiceLimit + " invoices.");
+        }
+
+        BigDecimal amount = invoiceLimit == 0
+                ? PaymentCalculator.money(request.amount())
+                : calculateInstallmentAmount(contract, existingInvoices, invoiceLimit);
+        boolean lastInstallment = invoiceLimit > 0 && existingInvoices.size() == invoiceLimit - 1;
+        BigDecimal tax = lastInstallment
+                ? remainingGrossAfterPriorInvoices(contract, existingInvoices).subtract(amount)
+                : calculateTax(amount, contract.getCommercialTaxRate());
+        if (tax.signum() < 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Existing invoice amounts leave no room for the final scheduled invoice.");
+        }
+        tax = PaymentCalculator.money(tax);
         BigDecimal total = PaymentCalculator.money(amount.add(tax));
         validateContractGrossLimit(contract, total, null);
 
@@ -455,6 +470,9 @@ public class PaymentService {
                 contract.getPaymentType() == null ? null : contract.getPaymentType().getName(),
                 contract.getCurrency() == null ? null : contract.getCurrency().getName(),
                 PaymentCalculator.money(contract.getContractValue()),
+                invoiceLimit(contract) > invoices.size()
+                        ? calculateInstallmentAmount(contract, invoices, invoiceLimit(contract))
+                        : BigDecimal.ZERO.setScale(2),
                 contract.getCommercialTaxRate(),
                 contractGross,
                 remainingInvoiceable,
@@ -462,6 +480,7 @@ public class PaymentService {
                 PaymentCalculator.money(totalPaid),
                 PaymentCalculator.money(outstanding),
                 invoices.size(),
+                invoiceLimit(contract),
                 nextDueDate,
                 PaymentCalculator.OVERDUE.equals(statusCode),
                 statusCode,
@@ -690,6 +709,49 @@ public class PaymentService {
         BigDecimal taxRate = rate == null ? BigDecimal.ZERO : rate;
         return PaymentCalculator.money(amount.multiply(taxRate)
                 .divide(HUNDRED, 2, RoundingMode.HALF_UP));
+    }
+
+    /** Returns zero for milestone-based contracts, which have no fixed invoice count. */
+    private int invoiceLimit(Contract contract) {
+        String paymentType = contract.getPaymentType() == null || contract.getPaymentType().getName() == null
+                ? "" : contract.getPaymentType().getName().trim().toLowerCase(java.util.Locale.ROOT);
+        if ("milestone-based".equals(paymentType)) {
+            return 0;
+        }
+        int months = contract.getPeriodMonths() == null ? 1 : Math.max(1, contract.getPeriodMonths());
+        int cadenceMonths = switch (paymentType) {
+            case "monthly" -> 1;
+            case "quarterly" -> 3;
+            case "semi-annual" -> 6;
+            case "annual" -> 12;
+            case "lump sum" -> months;
+            default -> months;
+        };
+        if ("lump sum".equals(paymentType)) {
+            return 1;
+        }
+        return (months + cadenceMonths - 1) / cadenceMonths;
+    }
+
+    private BigDecimal calculateInstallmentAmount(Contract contract, List<Invoice> invoices, int invoiceLimit) {
+        BigDecimal invoiced = invoices.stream()
+                .map(invoice -> PaymentCalculator.money(invoice.getAmount()))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        int remainingInstallments = invoiceLimit - invoices.size();
+        if (remainingInstallments <= 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No scheduled invoices remain.");
+        }
+        return PaymentCalculator.money(contract.getContractValue().subtract(invoiced)
+                .divide(BigDecimal.valueOf(remainingInstallments), 2, RoundingMode.HALF_UP));
+    }
+
+    private BigDecimal remainingGrossAfterPriorInvoices(Contract contract, List<Invoice> invoices) {
+        BigDecimal alreadyInvoiced = invoices.stream()
+                .map(invoice -> PaymentCalculator.money(invoice.getTotalAmount()))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal gross = PaymentCalculator.grossWithTax(
+                contract.getContractValue(), contract.getCommercialTaxRate());
+        return PaymentCalculator.remaining(gross, alreadyInvoiced);
     }
 
     private LocalDate resolveDueDate(Contract contract, LocalDate invoiceDate, LocalDate dueDate) {
